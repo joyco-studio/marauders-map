@@ -1,5 +1,5 @@
-import { mapPoint, type Point } from '../map/data'
-import { MAX_RENDERED_PEOPLE, roster, type Person, type Waypoint } from './roster'
+import { elements, mapPoint, type Point } from '../map/data'
+import { MAX_RENDERED_PEOPLE, roster, type Person, type Waypoint, type Room } from './roster'
 import { WINDOW_MS, recentEvents, safeActivityUrl, type ActivityEvent, type ActivitySnapshot } from './types'
 const point = mapPoint
 export const waypoints:Record<Waypoint,Point> = {
@@ -28,15 +28,33 @@ export function shortestPath(from:Waypoint,to:Waypoint):Waypoint[] {
   }
   return [from]
 }
+// The roster index reserves one interior objective per person, even while hidden.
+// Room-local margins keep every objective away from the doorway and outer walls.
+export function roomObjective(person:Person,room:Room):Point {
+  const element=elements.find(element=>element.id===room)!
+  const index=roster.findIndex(candidate=>candidate.id===person.id)
+  const column=index%4,row=Math.floor(index/4)
+  // The Observatory is circular: inset its corner slots further than rectangular rooms.
+  const inset=room==='tower'?.5:.6
+  return [element.center[0]+element.size[0]*(column/3-.5)*inset,
+    element.center[1]+element.size[1]*(row/3-.5)*inset]
+}
+function roomRoute(person:Person,from:Room,to:Room):Point[] {
+  const origin=roomObjective(person,from),destination=roomObjective(person,to)
+  let corridor=shortestPath(from,to)
+  // Activity in the home room still creates a walk rather than an instant arrival.
+  if(from===to){const neighbor=edges.find(([a,b])=>a===from||b===from)!;corridor=[from,neighbor[0]===from?neighbor[1]:neighbor[0],from]}
+  const points:Point[]=[origin,[waypoints[from][0],origin[1]],...corridor.map(id=>waypoints[id]),[waypoints[to][0],destination[1]],destination]
+  return points.filter((point,index)=>index===0||point[0]!==points[index-1][0]||point[1]!==points[index-1][1])
+}
 export function eligible(person:Person, events:readonly ActivityEvent[],now=Date.now()) {
   return person.group==='ecosystem'||events.some(e=>e.personId===person.id&&e.source==='github'&&Date.parse(e.occurredAt)>now-WINDOW_MS&&Date.parse(e.occurredAt)<=now&&!!safeActivityUrl(e.url,'github'))
 }
-type Walk = {path:Waypoint[]; segment:number; distance:number}
+type Walk = {path:Point[]; segment:number; distance:number}
 export type Journey = Walk & {event:ActivityEvent; phase:'outbound'|'arrival'|'return'; pause:number}
 export type ActorState = {person:Person; point:Point; angle:number; queue:ActivityEvent[]; journey?:Journey; wander?:Walk; rendered:boolean; eligible:boolean; visible:boolean; delay:number; ink:number; retired:boolean}
 export class ActivityJourneys {
-  actors:ActorState[]=roster.map(person=>({person,point:waypoints[person.home],angle:0,queue:[],eligible:person.group==='ecosystem',visible:person.group==='ecosystem',delay:0,ink:1,retired:false,rendered:false}))
-  private wandering=false
+  actors:ActorState[]=roster.map(person=>({person,point:roomObjective(person,person.home),angle:0,queue:[],eligible:person.group==='ecosystem',visible:person.group==='ecosystem',delay:0,ink:1,retired:false,rendered:false}))
   private maxPeople:number
   constructor(maxPeople=MAX_RENDERED_PEOPLE, private random= Math.random) {
     this.maxPeople=Math.max(1,Math.min(roster.length,Number.isFinite(maxPeople)?Math.floor(maxPeople):MAX_RENDERED_PEOPLE))
@@ -48,7 +66,6 @@ export class ActivityJourneys {
   private latestGithub=new Map<string,number>()
   arrivals: {personId:string;event:ActivityEvent}[]=[]
   setActivity(snapshot:ActivitySnapshot, now=Date.now()) {
-    this.wandering=snapshot.mode==='wandering'
     this.events=recentEvents(snapshot.events,now)
     this.latestGithub.clear()
     for(const event of this.events)if(event.source==='github')this.latestGithub.set(event.personId,Math.max(this.latestGithub.get(event.personId)??0,Date.parse(event.occurredAt)))
@@ -89,7 +106,7 @@ export class ActivityJourneys {
   private walk(actor:ActorState,walk:Walk,dt:number,speed:number) {
     let remaining=dt*speed
     while(remaining>0&&walk.segment<walk.path.length-1) {
-      const a=waypoints[walk.path[walk.segment]],b=waypoints[walk.path[walk.segment+1]]
+      const a=walk.path[walk.segment],b=walk.path[walk.segment+1]
       const length=Math.hypot(b[0]-a[0],b[1]-a[1]),step=Math.min(remaining,length-walk.distance)
       walk.distance+=step;remaining-=step
       const t=walk.distance/length
@@ -108,34 +125,33 @@ export class ActivityJourneys {
       actor.delay=Math.max(0,actor.delay-dt)
       if(!actor.rendered)continue
       if(actor.wander) {
-        if(this.walk(actor,actor.wander,dt,26)){actor.wander=undefined;actor.point=waypoints[actor.person.home]}
+        if(this.walk(actor,actor.wander,dt,26)){actor.wander=undefined;actor.point=roomObjective(actor.person,actor.person.home)}
         continue
       }
       if(!actor.journey&&actor.eligible&&actor.queue.length&&actor.delay===0) {
         const event=actor.queue.shift()!,destination=eventDestination[event.kind]
-        let path=shortestPath(actor.person.home,destination)
-        if(path.length===1){const neighbor=edges.find(([a,b])=>a===destination||b===destination)!;path=[destination,neighbor[0]===destination?neighbor[1]:neighbor[0],destination]}
+        const path=roomRoute(actor.person,actor.person.home,destination)
         actor.journey={event,path,segment:0,distance:0,phase:'outbound',pause:0}
       }
       const journey=actor.journey
       if(!journey) {
-        // No token: explicitly fictional roaming, with no invented events or arrivals.
-        if(this.wandering&&actor.person.group==='ecosystem'&&!actor.queue.length) {
-          const choices=(Object.keys(waypoints) as Waypoint[]).filter(id=>id!==actor.person.home)
+        // Idle roaming is fictional, regardless of token availability; it emits no events.
+        if(actor.eligible&&!actor.queue.length) {
+          const choices=(Object.keys(waypoints) as Waypoint[]).filter((id):id is Room=>id!=='west'&&id!=='center'&&id!=='east'&&id!==actor.person.home)
           const destination=choices[Math.min(choices.length-1,Math.floor(this.random()*choices.length))]
-          const outbound=shortestPath(actor.person.home,destination)
+          const outbound=roomRoute(actor.person,actor.person.home,destination)
           actor.wander={path:[...outbound,...outbound.slice(0,-1).reverse()],segment:0,distance:0}
         }
         continue
       }
       if(journey.phase==='arrival') {
         journey.pause+=dt
-        if(journey.pause>=6){journey.phase='return';journey.path=shortestPath(eventDestination[journey.event.kind],actor.person.home);journey.segment=0;journey.distance=0}
+        if(journey.pause>=6){journey.phase='return';journey.path=journey.path.slice().reverse();journey.segment=0;journey.distance=0}
         continue
       }
       if(this.walk(actor,journey,dt,26)) {
         if(journey.phase==='outbound'){journey.phase='arrival';this.arrivals.push({personId:actor.person.id,event:journey.event})}
-        else {actor.journey=undefined;actor.point=waypoints[actor.person.home];actor.visible=actor.eligible}
+        else {actor.journey=undefined;actor.point=roomObjective(actor.person,actor.person.home);actor.visible=actor.eligible}
       }
     }
     this.updateRendered()
