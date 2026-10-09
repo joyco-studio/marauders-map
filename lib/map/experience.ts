@@ -332,7 +332,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     // Preserve the source's 2:1 aspect and a broad-plank scale on the large desk.
     deskMaterial.colorNode=texture(getTexture("desk/worn-oak.png"),uv().mul(vec2(20,40))).rgb
     const floor=new Mesh(disposer.add(new PlaneGeometry(200,200)),deskMaterial)
-    floor.position.z=-.9;floor.receiveShadow=true;scene.add(floor)
+    floor.position.z=-3.8;floor.receiveShadow=true;scene.add(floor)
     let zoom=1,panX=0,panY=0,baseDistance=15
     const updateCamera=(fold=0)=> {
       const tangent=Math.tan(35*Math.PI/360)
@@ -360,9 +360,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         panel.hinge.rotation.y=pose.angle
         panel.hinge.position.z=pose.z
       }
-      // Keep the desk close at rest, with room for the leaves to swing underneath.
-      const foldClearance=Math.max(...panels.filter(panel=>panel.depth===1).map(panel=>Math.abs(Math.sin(panel.hinge.rotation.y))))
-      floor.position.z=-.9-3.4*foldClearance
       coverAmount.value=smooth(clamp((fold-.2)/.6))
       reliefAmount.value=1-smooth(clamp(fold/.2))
       updateCamera(fold)
@@ -532,6 +529,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       else{tuning.fold=fold;tuning.reveal=clamp(reveal/3)}
       noise.value=tuning.noise;light.intensity=tuning.light
       foldPaper(fold)
+      // Approach the desk only after unfolding; restore clearance while ink erases.
+      const deskApproach=tuning.manual?(fold===0?1:0):state.phase==="revealing"?smooth(age/.8):state.phase==="exploring"?1:state.phase==="erasing"?1-smooth(age):0
+      floor.position.z=-3.8+2.9*deskApproach
       const casting=["enchanting","opening","revealing","erasing","closing"].includes(state.phase)
       paper.updateMatrixWorld(true)
       const wandPanels=panels.map(panel=>panel.mesh)
