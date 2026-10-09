@@ -69,3 +69,8 @@ Character names sit on original curled parchment banners and follow the same ink
 The supplied pack was integrated on the local `main` checkout after a fast-forward merge of the previous scene. The plan is [.codex/plans/artwork-sdf.md](.codex/plans/artwork-sdf.md). Browser checks in desktop WebGPU and a 390 × 844 WebGL2 viewport cover the new cover, corridor routes, layered banners, discoverable passage and close/reopen; the renderer uses the same SDF decoding on WebGPU and WebGL2.
 
 Submitted-frame sampling for the supplied pack: approximately 144 fps desktop WebGPU and 28.8 fps WebGL2 at the emulated mobile viewport on the same Mac. This is not GPU timing or a physical-device benchmark; mobile overview details require zoom.
+
+### Paper relief and banner fitting
+Registered web height and OpenGL full normal textures from the supplied relief pack are loaded as non-color data. Five 64 × 128 panel grids sample continuous sheet coordinates; front, back and perimeter receive matching vertex displacement. The 0.14-unit height range follows the supplied scale for a 7-unit-tall sheet. Relief fades to zero before the panels stack. The image-loader workflow deliberately uses the supplied 8-bit web height, not the 16-bit precision master.
+
+Character banners now measure actual Tangerine glyph layout rather than assigning width by character count. Height preserves the existing safe baseline area; width uses the fitted name plus 0.42 world units of allowance, and the safe-text rectangle still bounds lettering. Hermione’s width falls from 2.6 to approximately 1.22 units.

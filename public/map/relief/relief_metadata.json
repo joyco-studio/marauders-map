@@ -1,0 +1,87 @@
+{
+  "schema": "unfolded-map-relief/1.0",
+  "source_layout": {
+    "file": "magic_map_pack/composition/mapa_general.svg",
+    "canvas": [
+      2400,
+      1200
+    ],
+    "aspect_ratio": "2:1"
+  },
+  "resolution": [
+    4096,
+    2048
+  ],
+  "reference_plane_dimensions": [
+    2.0,
+    1.0
+  ],
+  "reference_displacement_scale": 0.02,
+  "reference_displacement_bias": -0.01,
+  "height_equation": "z = (sample - 0.5) * displacementScale",
+  "recommended_scale_relative_to_sheet_height": 0.02,
+  "normal_bake_amplitude_relative_to_sheet_height": 0.02,
+  "reference_normal_scale": [
+    1,
+    1
+  ],
+  "texture_top_matches": "top edge of the main unfolded map",
+  "orientation": "OpenGL +X right, +Y up, +Z out of front face; image scanlines run downward",
+  "uv_mapping": "One full 0..1 UV rectangle over a 2:1 sheet. No atlas padding or transparency. Use clamp-to-edge.",
+  "folds": [
+    {
+      "u": 0.2,
+      "map_x": 480.0,
+      "type": "mountain"
+    },
+    {
+      "u": 0.4,
+      "map_x": 960.0,
+      "type": "valley"
+    },
+    {
+      "u": 0.6,
+      "map_x": 1440.0,
+      "type": "mountain"
+    },
+    {
+      "u": 0.8,
+      "map_x": 1920.0,
+      "type": "valley"
+    }
+  ],
+  "fold_note": "Five accordion panels inferred from the existing 2:1 open sheet and 2:5 cover; shallow alternating ridge/valley creases, not a folding animation.",
+  "height_min_max": [
+    0.18758395314216614,
+    0.8518879413604736
+  ],
+  "reference_world_displacement_min_max": [
+    -0.006248320918530226,
+    0.007037758827209473
+  ],
+  "frequency_split": {
+    "displacement": "Broad fold creases, gentle paper waviness, slight perimeter lift.",
+    "normal_full": "Normals from the same broad height field plus fine fibrous microrelief.",
+    "normal_detail": "Microrelief only, for geometry/shaders that already calculate displaced fold normals."
+  },
+  "data_color_space": "No color transform / non-color data",
+  "png_color_metadata": "No gamma, sRGB or ICC color profile chunks",
+  "height_precision": {
+    "master": "16-bit unsigned grayscale PNG",
+    "web_fallback": "8-bit unsigned grayscale PNG"
+  },
+  "ink_in_relief": false,
+  "generated_source_pixels": [
+    1774,
+    887
+  ],
+  "source_processing": "Image-generated grayscale paper grain; band-pass normalization; registered analytical folds; mathematical tangent-space normal encoding. Final texture resolution is 4096x2048; the source image is not native 4K.",
+  "procedural_seed": 20261009,
+  "sources": [
+    "https://threejs.org/docs/pages/MeshStandardMaterial.html",
+    "https://threejs.org/docs/pages/TextureLoader.html",
+    "https://threejs.org/docs/pages/Texture.html",
+    "https://threejs.org/docs/pages/DataTexture.html",
+    "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#material-normaltexture"
+  ]
+}

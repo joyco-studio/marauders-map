@@ -4,9 +4,9 @@ import {
   AmbientLight, BackSide, BufferGeometry, Float32BufferAttribute, Color, DirectionalLight, Group, Mesh,
   MeshBasicNodeMaterial, MeshStandardNodeMaterial, OrthographicCamera,
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
-  Vector2, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
+  Vector2, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
-import { mix, texture, uniform, uv, vec2, smoothstep } from "three/tsl"
+import { mix, texture, uniform, uv, vec2, vec3, positionLocal, normalMap, smoothstep } from "three/tsl"
 import { createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
 import { loadAssets } from "./assets"
@@ -122,9 +122,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       // Draw each banner and its inscription together, so later banners occlude both.
       title.handle.mesh.renderOrder=3+index*2
       const variant=route.name.length>14?"largo":route.name.length>=12?"mediano":"corto"
-      const bannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
+      const legacyBannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
       const viewWidth=variant==="mediano"?620:variant==="corto"?420:840
-      const bannerHeight=bannerWidth*240/viewWidth
+      const bannerHeight=legacyBannerWidth*240/viewWidth
+      const textScale=Math.min(1,(bannerHeight*.25-.025)/title.height)
+      const bannerWidth=Math.max(.95,title.width*textScale+.42)
       const fitText=Math.min(1,(bannerWidth*(viewWidth-198)/viewWidth-.08)/title.width,(bannerHeight*.25-.025)/title.height)
       title.handle.mesh.scale.setScalar(fitText)
       const bannerInk=createInk(bannerWidth,bannerHeight,index+90,noise)
@@ -202,8 +204,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     paper.rotation.z=-.028
     const panels:Panel[]=[]
     const coverAmount=uniform(1)
+    const reliefAmount=uniform(0)
     const createPanel=(index:number,hinge:Group,offset:number,side:number,depth:number)=> {
-      const geo=disposer.add(new PlaneGeometry(2.8,7,24,48))
+      const geo=disposer.add(new PlaneGeometry(2.8,7,64,128))
       const positions=geo.attributes.position
       for(let i=0;i<positions.count;i++){
         const x=positions.getX(i),y=positions.getY(i)
@@ -223,19 +226,23 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const print=index===2?mix(mapInk,coverInk,coverAmount):mapInk
       const crease=smoothstep(0,.035,uv().x).oneMinus().add(smoothstep(.965,1,uv().x)).mul(.1)
       mat.colorNode=mix(base,print.rgb,print.a).mul(crease.oneMinus())
+      const displaced=(coordinates:Node<"vec2">)=>positionLocal.add(vec3(0,0,texture(getTexture("relief/main_unfolded_displacement_web_8bit.png"),coordinates).r.sub(.5).mul(.14).mul(reliefAmount)))
+      mat.positionNode=displaced(mapUV)
+      mat.normalNode=normalMap(texture(getTexture("relief/main_unfolded_normal_opengl.png"),mapUV).rgb,vec2(reliefAmount,reliefAmount))
       const front=new Mesh(geo,mat);front.position.set(offset,0,.013);front.castShadow=true;front.receiveShadow=true;hinge.add(front)
       const backMat=disposer.add(new MeshStandardNodeMaterial({roughness:1,side:BackSide}))
       backMat.colorNode=base.mul(.93)
+      backMat.positionNode=displaced(mapUV)
       const back=new Mesh(geo,backMat);back.position.set(offset,0,-.015);back.castShadow=true;back.receiveShadow=true;hinge.add(back)
       const edgeMat=disposer.add(new MeshStandardNodeMaterial({color:"#a7804d",roughness:1}))
       // Only perimeter strips connect the curved faces. A solid box would poke
       // through curled paper and obscure the ink with large flat triangles.
       const perimeter:number[]=[]
-      const grid=25
+      const grid=65
       for(let x=0;x<grid;x++)perimeter.push(x)
-      for(let y=1;y<49;y++)perimeter.push(y*grid+24)
-      for(let x=23;x>=0;x--)perimeter.push(48*grid+x)
-      for(let y=47;y>0;y--)perimeter.push(y*grid)
+      for(let y=1;y<129;y++)perimeter.push(y*grid+64)
+      for(let x=63;x>=0;x--)perimeter.push(128*grid+x)
+      for(let y=127;y>0;y--)perimeter.push(y*grid)
       const edgeVertices:number[]=[]
       for(let i=0;i<perimeter.length;i++){
         const a=perimeter[i],b=perimeter[(i+1)%perimeter.length]
@@ -246,7 +253,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         edgeVertices.push(...af,...ab,...bf,...ab,...bb,...bf)
       }
       const edgeGeometry=disposer.add(new BufferGeometry())
-      edgeGeometry.setAttribute("position",new Float32BufferAttribute(edgeVertices,3));edgeGeometry.computeVertexNormals()
+      edgeGeometry.setAttribute("position",new Float32BufferAttribute(edgeVertices,3));
+      const edgeUV:number[]=[]
+      for(let i=0;i<edgeVertices.length;i+=3)edgeUV.push((edgeVertices[i]+1.4)/14+index/5,(edgeVertices[i+1]+3.5)/7)
+      edgeGeometry.setAttribute("uv",new Float32BufferAttribute(edgeUV,2))
+      edgeMat.positionNode=displaced(uv());edgeGeometry.computeVertexNormals()
       const edgeMesh=new Mesh(edgeGeometry,edgeMat);edgeMesh.position.x=offset;hinge.add(edgeMesh)
       const panel={index,hinge,mesh:front,side,depth};panels.push(panel);return panel
     }
@@ -288,6 +299,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         panel.hinge.position.z=pose.z
       }
       coverAmount.value=smooth(clamp((fold-.2)/.6))
+      reliefAmount.value=1-smooth(clamp(fold/.2))
       updateCamera(fold)
     }
     foldPaper(1)

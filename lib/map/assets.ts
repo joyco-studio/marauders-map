@@ -5,7 +5,7 @@ import { sdfImages } from "./sdf"
 import type { Disposer } from "@joycostudio/xyz"
 
 export async function loadAssets(disposer: Disposer, progress: (n:number)=>void, retry: boolean) {
-  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "parchment.jpg", ...Object.values(sdfImages).map(entry=>entry.texture), ...["corto","mediano","largo"].map(name=>`artwork/banners/banner_${name}_color.png`), "fonts/tangerine-700.png", "fonts/cinzel-400.png"]
+  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "parchment.jpg", "relief/main_unfolded_displacement_web_8bit.png", "relief/main_unfolded_normal_opengl.png", ...Object.values(sdfImages).map(entry=>entry.texture), ...["corto","mediano","largo"].map(name=>`artwork/banners/banner_${name}_color.png`), "fonts/tangerine-700.png", "fonts/cinzel-400.png"]
   const jsons = ["fonts/tangerine-700.json", "fonts/cinzel-400.json"]
   const jsonArgs = (url:string) => ({ loadFn: ({done,error}: Parameters<GenericLoadFn>[0]) => {
     fetch(url).then(r=> { if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json() }).then(done,error)
