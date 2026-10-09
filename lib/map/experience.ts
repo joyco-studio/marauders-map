@@ -119,7 +119,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const actors=characters.map((route,index)=> {
       const title=addText({text:route.name,center:route.points[0],size:12},mapScene,true)
       title.ink.progress.value=0
-      title.handle.mesh.renderOrder=3
+      // Draw each banner and its inscription together, so later banners occlude both.
+      title.handle.mesh.renderOrder=3+index*2
       const variant=route.name.length>14?"largo":route.name.length>=12?"mediano":"corto"
       const bannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
       const viewWidth=variant==="mediano"?620:variant==="corto"?420:840
@@ -135,7 +136,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       bannerMaterial.colorNode=mix(texture(getTexture(`${base}_color.png`)).rgb,bannerInk.pigment,outlineCoverage)
       bannerMaterial.opacityNode=silhouetteCoverage.mul(bannerInk.coverage)
       const banner=new Mesh(disposer.add(new PlaneGeometry(bannerWidth,bannerHeight)),bannerMaterial)
-      banner.position.z=.035;banner.renderOrder=2;mapScene.add(banner)
+      banner.position.z=.035;banner.renderOrder=2+index*2;mapScene.add(banner)
       const footprints:Footprint[]=Array.from({length:20},(_,i)=> {
         const drawing=addDrawing(`artwork/ornaments/footprint_${i%2?"right":"left"}.svg`,[9,17.2],[700,350],index*20+i)
         drawing.mesh.position.z=.025
