@@ -126,3 +126,21 @@ Acceptance means Akella’s latest public upload can produce a classroom journey
 - [JOYCO Return, Don’t Throw](https://hub.joyco.studio/logs/17-return-dont-throw): represent expected upstream failures as typed outcomes and keep partial results usable.
 
 Both JOYCO Logs and Toolbox indexes were reviewed while preparing this plan. No application code or configuration was changed.
+
+## Implementation progress
+
+Implementation was authorized on October 9, 2026. Work proceeds in the specified order: collection and normalization, journey simulation, scene and accessible cards, copy and documentation, then focused tests and build verification. The existing rendering and motion policy remain in place.
+
+### Authorized scope changes
+
+During implementation, the user requested random roaming when no GitHub token is provided and a maximum number of people rendered at once. The user subsequently configured `GITHUB_TOKEN` and asked to focus on implementation without further browser work. Missing-token responses now explicitly select fictional wandering for ecosystem actors; real YouTube events can still stage journeys. Invalid credentials do not select this fallback. Cards and notices distinguish fictional wandering from actual provider events. JOYCO visibility remains gated by public activity.
+
+The simultaneous canvas limit is configured locally in `MAX_RENDERED_PEOPLE` (eight, confirmed by the user). All fourteen actor resource pools remain preallocated. Ongoing real journeys retain their slots; queued activity rotates into free slots, so the cap cannot silently discard a configured person's unseen events. Eligible profiles remain keyboard-accessible. Browser verification was stopped at the user's request; all temporary collection fixtures were removed.
+
+### Verification record
+
+The implementation includes the normalized GitHub/Atom adapters, server-only collection route, typed source failures and rate-limit guards, fourteen pooled actors, corridor journeys and bounded queues, eight-person render cap, explicit missing-token roaming, eligibility expiry, keyboard roster and source cards, approved identity copy, updated fallback and font atlases, and README configuration guidance.
+
+Thirty-seven offline activity and existing cinematic state tests pass. Typechecking, linting, the production build, and `git diff --check` pass. The reserved source strings and complete mockery were compared against the original source and match verbatim. Static composition excludes every pooled banner, label and footprint, and hidden/expired prints are excluded from rendering. Request aborts, polling timers, visibility listeners and arrival timers are disposed on unmount.
+
+Partial desktop WebGPU inspection covered the folded title, opening, empty sources, keyboard roster and unavailable-source card before browser work was stopped at the user's request. Full mobile WebGL2 and final browser inspection are deferred. No deployment or service provisioning was performed. The temporary local collection fixture was restored to the real server-only collector. The configured token is never copied to tracked files or client code.

@@ -12,22 +12,25 @@ import { layout } from "lettra"
 import { loadAssets } from "./assets"
 import { sdfCoverage } from "./sdf"
 import { createInk, type Ink } from "./ink"
-import { mapPoint, mapSize, characters, elements, hotspots, labels, sheetPoint, routeAt, type Label, type RevealTiming } from "./data"
+import { mapPoint, mapSize, elements, hotspots, labels, sheetPoint, type Label, type RevealTiming } from "./data"
 import { advance, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
 import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } from "./triggers"
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
+import { ActivityJourneys } from "../activity/journeys"
+import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
 
 export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting }
-export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; dispose:()=>void }
+export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
 type Panel = {index:number; hinge:Group; mesh:Mesh<PlaneGeometry,MeshStandardNodeMaterial>; side:number; depth:number}
+const bannerOffsets:readonly (readonly [number,number])[]=[[0,0],[0,.9],[0,-.9],[1.4,0],[-1.4,0],[1.4,.9],[-1.4,.9],[0,1.8],[0,-1.8],[1.4,-.9],[-1.4,-.9]]
 const abort = () => new DOMException("Scene disposed","AbortError")
 
-export async function startMap(container:HTMLElement,onStatus:(status:Status)=>void,signal:AbortSignal,retry=false):Promise<MapControls> {
+export async function startMap(container:HTMLElement,onStatus:(status:Status)=>void,signal:AbortSignal,retry=false,onSelect?:(personId:string)=>void,onArrival?:(personId:string,event:ActivityEvent)=>void):Promise<MapControls> {
   const disposer=new Disposer()
   const check=()=>{if(signal.aborted) throw abort()}
   let state:MapState={phase:"loading",enteredAt:0}
@@ -43,7 +46,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     renderer.shadowMap.enabled=true
     renderer.shadowMap.type=PCFShadowMap
     renderer.domElement.className="map-canvas"
-    renderer.domElement.setAttribute("aria-label","Interactive Marauder’s Map. Drag to pan, scroll to zoom. Keyboard controls follow the canvas.")
+    renderer.domElement.setAttribute("aria-label","Interactive Makers’ Map. Drag to pan, scroll to zoom. Keyboard controls follow the canvas.")
     renderer.domElement.setAttribute("role","img")
     container.appendChild(renderer.domElement)
     await renderer.init(); check()
@@ -105,9 +108,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
     const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
-    const secret=addText({text:"Dissendium",center:mapPoint([1630,150]),size:16,angle:-.12},mapScene,true)
+    const secret=addText({text:"One more thing to try…",center:mapPoint([1630,150]),size:16,angle:-.12},mapScene,true)
     secret.ink.progress.value=0
-    const note=addText({text:"A passage to Honeydukes",center:mapPoint([1640,175]),size:11},mapScene,true)
+    const note=addText({text:"A passage to The Rabbit Hole",center:mapPoint([1640,175]),size:11},mapScene,true)
     note.ink.progress.value=0
     // Reusable static snapshot quad: updated only when ink/static discovery changes.
     const cachedMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
@@ -117,12 +120,13 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const cached=new Mesh(disposer.add(new PlaneGeometry(14,7)),cachedMaterial)
     cached.position.z=-.02;mapScene.add(cached);cached.visible=false
 
-    const actors=characters.map((route,index)=> {
-      const title=addText({text:route.name,center:route.points[0],size:12},mapScene,true)
+    const journeys=new ActivityJourneys()
+    const actors=journeys.actors.map((simulation,index)=> {
+      const title=addText({text:simulation.person.shortName,center:simulation.point,size:12},mapScene,true)
       title.ink.progress.value=0
       // Draw each banner and its inscription together, so later banners occlude both.
       title.handle.mesh.renderOrder=3+index*2
-      const variant=route.name.length>14?"largo":route.name.length>=12?"mediano":"corto"
+      const variant=simulation.person.shortName.length>14?"largo":simulation.person.shortName.length>=12?"mediano":"corto"
       const legacyBannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
       const viewWidth=variant==="mediano"?620:variant==="corto"?420:840
       const bannerHeight=legacyBannerWidth*240/viewWidth
@@ -137,7 +141,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const outlineCoverage=sdfCoverage(getTexture(outline.texture),outline)
       const silhouetteCoverage=sdfCoverage(getTexture(silhouette.texture),silhouette)
       bannerMaterial.colorNode=mix(texture(getTexture(`${base}_color.png`)).rgb,bannerInk.pigment,outlineCoverage)
-      bannerMaterial.opacityNode=silhouetteCoverage.mul(bannerInk.coverage)
+      bannerMaterial.opacityNode=silhouetteCoverage.mul(bannerInk.coverage).mul(bannerInk.opacity)
       const banner=new Mesh(disposer.add(new PlaneGeometry(bannerWidth,bannerHeight)),bannerMaterial)
       banner.position.z=.035;banner.renderOrder=2+index*2;mapScene.add(banner)
       const footprints:Footprint[]=Array.from({length:20},(_,i)=> {
@@ -146,12 +150,12 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
       })
-      return {route,title,banner,bannerInk,footprints,step:0,lastStep:-1}
+      return {simulation,title,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight}
     })
     // Cover lives on the center panel and uses the same real MSDF lettering.
     const coverContent = {
       choices: [
-        {text:"The Marauder's",center:[700,181],size:20,heading:true},
+        {text:"The Makers’",center:[700,181],size:20,heading:true},
         {text:"Map",center:[700,222],size:35,heading:true},
         {text:"Reveal your secrets",center:[700,288],size:18},
         {text:"or",center:[700,308],size:11},
@@ -159,14 +163,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         {text:"that I am up to no good",center:[700,342],size:13},
       ],
       welcome: [
-        {text:"Messrs.",center:[700,158],size:14},
-        {text:"Moony",center:[700,180],size:17,heading:true},
-        {text:"Wormtail",center:[700,198],size:17,heading:true},
-        {text:"Padfoot",center:[700,216],size:17,heading:true},
-        {text:"& Prongs",center:[700,234],size:17,heading:true},
-        {text:"are proud to present",center:[700,287],size:16},
-        {text:"The Marauder's",center:[700,311],size:20,heading:true},
-        {text:"Map",center:[700,336],size:26,heading:true},
+        {text:"For those who turn",center:[700,180],size:14},
+        {text:"strange ideas into pixels.",center:[700,205],size:13},
+        {text:"The Makers’",center:[700,285],size:20,heading:true},
+        {text:"Map",center:[700,316],size:26,heading:true},
       ],
       mockery: [
         {text:"Moony, Wormtail,",center:[700,170],size:17},
@@ -382,7 +382,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     composite(coverBase,coverScene,coverCamera)
     progress=1
     state=transition(state,"ready",time);syncPhase(state)
-    let staticCached=false,staticDirty=true,actorTime=0
+    let staticCached=false,staticDirty=true
     const staticObjects=mapScene.children.filter(obj=>obj!==cached && obj!==accents && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
     const setStatic=(visible:boolean)=>staticObjects.forEach(obj=>{obj.visible=visible})
     const snapshot=()=> {
@@ -392,18 +392,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       setStatic(false);cached.visible=true;staticCached=true;staticDirty=false
     }
     const reset=()=> {
-      actorTime=0
       discovered=false;staticCached=false;staticDirty=true;cached.visible=false;setStatic(true)
       zoom=1;panX=panY=0
       passage.ink.progress.value=0;secret.ink.progress.value=0;note.ink.progress.value=0
-      for(const a of actors){a.step=0;a.lastStep=-1;a.title.ink.progress.value=0;a.bannerInk.progress.value=0;for(const f of a.footprints){f.born=-100;f.ink.opacity.value=0}}
+      for(const a of actors){a.step=0;a.lastStep=0;a.title.ink.progress.value=0;a.bannerInk.progress.value=0;for(const f of a.footprints){f.born=-100;f.ink.opacity.value=0}}
     }
     const change=(command:Command)=> {
       const next=transition(state,command,time)
       if(next===state)return
       cast()
       if(command==="open")reset()
-      if(command==="close"){staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
+      if(command==="close"){for(const a of actors)for(const f of a.footprints){f.born=-100;f.ink.opacity.value=0}staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
       clearHover();focused=null
       state=next;syncPhase(state);emit()
     }
@@ -415,6 +414,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const zoomBy=(delta:number)=> {if(state.phase!=="exploring")return;cast();zoom=clamp(zoom+delta,1,2);if(zoom===1)panX=panY=0;updateCamera()}
     const resetView=()=>{cast();zoom=1;panX=panY=0;updateCamera()}
     const canvas=renderer.domElement
+    canvas.tabIndex=-1
     const ray=new Raycaster(),pointer=new Vector2()
     const hit=(x:number,y:number)=> {
       const r=canvas.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1)
@@ -430,6 +430,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
       canvas.style.cursor=hover?"pointer":state.phase==="exploring"?"grab":"default"
+    }
+    const actorAt=(clientX:number,clientY:number)=> {
+      if(state.phase!=="exploring"||state.greeting==="mockery")return
+      const p=hit(clientX,clientY);if(!p)return
+      // Match banner draw order, with passage/close hotspots always taking priority.
+      return [...actors].reverse().find(actor=> {
+        const sim=actor.simulation
+        return sim.eligible&&sim.rendered&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
+      })?.simulation.person.id
     }
     const pointers=new Map<number,{x:number;y:number}>()
     let dragDistance=0,startX=0,startY=0,pinch=0
@@ -469,6 +478,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         if(spot==="passage")discover()
         else if(spot==="open-left"||spot==="open-right")change("open")
         else if(spot)change(spot)
+        else {const personId=actorAt(e.clientX,e.clientY);if(personId){canvas.focus();onSelect?.(personId)}}
       }
       const rect=canvas.getBoundingClientRect()
       latest=e.pointerType!=="touch"&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom?{x:e.clientX,y:e.clientY}:null
@@ -481,7 +491,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
+    const controls:MapControls={setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -530,23 +540,44 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!staticCached)for(const entry of reveals)entry.ink.progress.value=revealProgress(reveal,entry.timing.start,entry.timing.duration)
       const erase=state.phase==="erasing"?1-smooth(age):state.phase==="closing"||state.phase==="folded"?0:1
       if(discovered){const p=revealProgress(time-discoveredAt,0,1.6)*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}
-      if(state.phase==="exploring")actorTime=age
+      const activityActive=state.phase==="exploring"&&state.greeting!=="mockery"&&!tuning.manual
+      if(!tuning.manual)journeys.tick(dt,activityActive)
+      if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
+      const placed:{x:number;y:number;width:number;height:number}[]=[]
       for(const actor of actors){
-        const p=routeAt(actor.route,actorTime),[x,y]=sheetPoint(p.point)
-        actor.title.handle.mesh.position.set(x,y+.5,.04)
-        actor.banner.position.set(x,y+.5,.035)
+        const simulation=actor.simulation,[x,y]=sheetPoint(simulation.point)
+        const visible=simulation.rendered&&(state.phase==="error"||state.greeting!=="mockery")
+        actor.title.handle.mesh.visible=visible;actor.banner.visible=visible
+        // Separate banners sharing a home or corridor without moving the footprint route.
+        let labelX=x,labelY=y+.5
+        if(visible){
+          for(const [dx,dy] of bannerOffsets){
+            const cx=x+dx,cy=y+.5+dy
+            if(Math.abs(cx)+actor.bannerWidth/2>6.7||Math.abs(cy)+actor.bannerHeight/2>3.25)continue
+            if(placed.some(p=>Math.abs(p.x-cx)<(p.width+actor.bannerWidth)/2+.06&&Math.abs(p.y-cy)<(p.height+actor.bannerHeight)/2+.04))continue
+            labelX=cx;labelY=cy;break
+          }
+          placed.push({x:labelX,y:labelY,width:actor.bannerWidth,height:actor.bannerHeight})
+        }
+        actor.title.handle.mesh.position.set(labelX,labelY,.04)
+        actor.banner.position.set(labelX,labelY,.035)
         actor.title.ink.progress.value=(state.phase==="exploring"?revealProgress(age,0,.6):revealProgress(reveal,2.3,.7))*erase
+        actor.title.ink.opacity.value=simulation.ink
         actor.bannerInk.progress.value=actor.title.ink.progress.value
-        if(state.phase==="exploring"&&!tuning.manual){
-          const currentStep=Math.floor(actorTime/.42)
-          if(currentStep!==actor.lastStep){
+        actor.bannerInk.opacity.value=simulation.ink
+        if(activityActive&&(simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
+          actor.lastStep+=dt
+          if(actor.lastStep>=.42){
             const f=actor.footprints[actor.step%actor.footprints.length]
             const lateral=(actor.step%2?1:-1)*.04
-            f.mesh.position.set(x+Math.cos(p.angle)*lateral,y+Math.sin(p.angle)*lateral,.025)
-            f.mesh.rotation.z=p.angle;f.born=time;actor.step++;actor.lastStep=currentStep
+            f.mesh.position.set(x+Math.cos(simulation.angle)*lateral,y+Math.sin(simulation.angle)*lateral,.025)
+            f.mesh.rotation.z=simulation.angle;f.born=time;actor.step++;actor.lastStep=0
           }
         }
-        for(const f of actor.footprints){const life=time-f.born;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*erase}
+        for(const f of actor.footprints){
+          if(!visible)f.born=-100
+          const life=time-f.born;f.mesh.visible=visible&&life>=0&&life<8;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*erase
+        }
       }
       if(state.phase==="exploring"&&!tuning.manual&&(!discovered||time-discoveredAt>1.6)&&staticDirty)snapshot()
       // During exploration only pooled dynamic prints/names are redrawn over the cached map.

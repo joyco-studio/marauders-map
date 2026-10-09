@@ -23,22 +23,15 @@ export const elements:MapElement[]=[
   {id:"compass",src:"artwork/ornaments/compass_rose.svg",center:point([2250,240]),size:mapSize([180,180]),timing:{start:1,duration:.8,seed:9}},
 ]
 export const labels:Label[]=[
-  {text:"The Marauder's Map",center:sheet([1200,115]),size:24,start:1},
-  {text:"The Great Hall",center:point([500,125]),size:18},
-  {text:"The Library",center:point([1215,65]),size:18},
-  {text:"The Courtyard",center:point([1215,1100]),size:16},
-  {text:"Classrooms",center:point([500,1090]),size:18},
-  {text:"Moving Staircases",center:point([1990,1110]),size:18},
-  {text:"North Tower",center:point([1960,95]),size:17},
-  {text:"Mischief managed",center:sheet([1200,1120]),size:18,start:2.1},
-  {text:"Tap the key to find a secret",center:sheet([1645,1120]),size:12},
-]
-const route=(name:string,points:Point[],speed:number,offset:number):CharacterRoute=>({name,points:points.map(point),speed,offset})
-export const characters:CharacterRoute[]=[
-  route("Harry Potter",[[500,570],[1215,570],[1215,465],[1215,570],[1960,570],[1960,460],[1960,570],[500,570],[500,495]],30,0),
-  route("Hermione Granger",[[1215,570],[1215,465],[1215,570],[500,570],[500,710],[500,570]],23,100),
-  route("Ron Weasley",[[1215,570],[1215,640],[1215,570],[1960,570],[1960,710],[1960,570]],28,240),
-  route("Argus Filch",[[500,570],[1960,570],[1960,710],[1960,570],[1215,570],[1215,465],[1215,570]],19,430),
+  {text:"The Makers’ Map",center:sheet([1200,115]),size:24,start:1},
+  {text:"The Commons",center:point([500,125]),size:18},
+  {text:"The Source Library",center:point([1215,65]),size:18},
+  {text:"The Playground",center:point([1215,1100]),size:16},
+  {text:"The Shader Atelier",center:point([500,1090]),size:18},
+  {text:"The Render Pipeline",center:point([1990,1110]),size:18},
+  {text:"The Observatory",center:point([1960,95]),size:17},
+  {text:"Enough experimenting. For now.",center:sheet([1200,1120]),size:18,start:2.1},
+  {text:"Every good experiment has a rabbit hole.",center:sheet([1645,1120]),size:12},
 ]
 export const hotspots:Hotspot[]=[
   {id:"close",center:sheet([1200,1120]),radius:[140,24]},

@@ -1,6 +1,6 @@
-# The Marauder’s Map
+# The Makers’ Map
 
-An original Hogwarts-inspired parchment scene built with Next.js 16, Three.js WebGPURenderer, TSL, Lettra, XYZ, and Susano. Five accordion panels unfold themselves; individual drawings, words, and footprints bloom through an organic ink field.
+An enchanted atlas of the creative web built with Next.js 16, Three.js WebGPURenderer, TSL, Lettra, XYZ, and Susano. Five accordion panels unfold themselves; individual drawings, words, and footprints bloom through an organic ink field.
 
 ## Run
 
@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Choose a spell on the folded cover, read its response, then click a paper edge to unfold. Drag to pan, scroll or pinch to zoom (1–2×), tap the key near the North Tower to discover a passage, and tap **Mischief managed** to erase and close it. Choose a spell and pull an edge to reopen. Tab reveals equivalent keyboard controls; Enter activates them.
+Open http://localhost:3000. Choose a spell on the folded cover, read its response, then click a paper edge to unfold. Drag to pan, scroll or pinch to zoom (1–2×), tap the key near the The Observatory to discover a passage, and tap **Enough experimenting. For now.** to erase and close it. Choose a spell and pull an edge to reopen. Tab reveals equivalent keyboard controls; Enter activates them.
 
 The scene is silent. The complete animation plays regardless of system motion preferences. Rendering pauses in hidden tabs.
 
@@ -26,7 +26,7 @@ npm test
 npm run build
 ```
 
-The eight tests protect cinematic transitions, rapid command guards, replay, cover transitions, and exact ink-reveal endpoints. Assets and GPU resources belong to the scene; disposal also covers a setup aborted during loading or shader compilation. Asset errors present a static SVG map and a retry action.
+The focused tests protect public-feed normalization, cache and credential failures, deterministic journeys, eligibility, and cinematic transitions, rapid command guards, replay, cover transitions, and exact ink-reveal endpoints. Assets and GPU resources belong to the scene; disposal also covers a setup aborted during loading or shader compilation. Asset errors present a static SVG map and a retry action.
 
 ## Artwork and SDF preparation
 
@@ -47,11 +47,11 @@ npm run test:sdf
 
 ## Fonts
 
-Tangerine script and Cinzel headings are self-hosted with their SIL Open Font Licenses in `public/map/fonts/`. Their committed PNG/JSON MSDF atlases were baked at size 64 and distance range 8 with Lettra’s bundled CLI. To rebake, install Python `fonttools`, then run `npm run bake:fonts`. The baker reports kerning counts; the atlases preserve each face’s font metrics.
+Tangerine script and Cinzel headings are self-hosted with their SIL Open Font Licenses in `public/map/fonts/`. Their committed PNG/JSON MSDF atlases were baked at size 64 and distance range 8 with Lettra’s bundled CLI and `scripts/map-charset.txt`, including the cast’s accented names and approved punctuation. To rebake, install Python `fonttools`, then run `npm run bake:fonts`. The baker reports kerning counts; the atlases preserve each face’s font metrics.
 
 ## Rendering architecture
 
-`lib/map/data.ts` contains artwork placement, reveal timing, hotspots, and character routes. `ink.ts` supplies the shared TSL absorption field and Lettra effect. `experience.ts` owns the paper rig, offscreen composition, input, and render loop. Static map ink is cached at 4096 × 2048 desktop / 2048 × 1024 mobile, while 80 pooled prints and four character labels remain live. Explicit render-target Y normalization keeps the map upright on WebGPU and WebGL2.
+`lib/map/data.ts` contains artwork placement, reveal timing and hotspots. `lib/activity/roster.ts` holds the explicit cast, and `journeys.ts` owns corridor routing and queued movement. `ink.ts` supplies the shared TSL absorption field and Lettra effect. `experience.ts` owns the paper rig, offscreen composition, input, and render loop. Static map ink is cached at 4096 × 2048 desktop / 2048 × 1024 mobile, while 280 pooled prints and fourteen preallocated community banners remain live. Ineligible JOYCO actors stay hidden. Explicit render-target Y normalization keeps the map upright on WebGPU and WebGL2.
 
 Implementation plan: [.codex/plans/marauders-map.md](.codex/plans/marauders-map.md).
 
@@ -74,3 +74,23 @@ Submitted-frame sampling for the supplied pack: approximately 144 fps desktop We
 Registered web height and OpenGL full normal textures from the supplied relief pack are loaded as non-color data. Five 64 × 128 panel grids sample continuous sheet coordinates; front, back and perimeter receive matching vertex displacement. The 0.14-unit height range follows the supplied scale for a 7-unit-tall sheet. Relief fades to zero before the panels stack. The image-loader workflow deliberately uses the supplied 8-bit web height, not the 16-bit precision master.
 
 Character banners now measure actual Tangerine glyph layout rather than assigning width by character count. Height preserves the existing safe baseline area; width uses the fitted name plus 0.42 world units of allowance, and the safe-text rectangle still bounds lettering. Hermione’s width falls from 2.6 to approximately 1.22 units.
+
+## Public ecosystem activity
+
+The Makers’ Map follows recent public work from seven ecosystem makers and seven explicitly configured JOYCO team members. GitHub code visits The Source Library, opened/reopened proposals and releases visit The Commons, conversations visit The Playground, and Akella’s published YouTube lessons visit The Shader Atelier. These destinations are imaginative interpretations: “Real public activity, imagined as journeys.” Selecting a banner or using the keyboard roster shows the actual event, repository, absolute publication time, relative age and original provider link. Escape closes the card and restores focus.
+
+GitHub collection **requires a user-supplied, server-only `GITHUB_TOKEN`**. Add the token to an untracked `.env.local` for development, then restart the dev server. Configure the same variable in the hosting environment when deploying. Do not prefix it with `NEXT_PUBLIC_`, commit it, or give it private repository or organization membership permissions. A fine-grained personal access token with public read-only access is sufficient. Token creation and deployment are outside this implementation.
+
+Without valid credentials, GitHub sources report unavailable; the map and independent YouTube feed remain functional. If no token is configured, ecosystem makers roam randomly along the corridors, as an explicitly fictional fallback. Real YouTube uploads still stage activity journeys. Cards and notices explain that random roaming is unrelated to public activity or online presence. Invalid configured credentials retain the activity mode and do not silently switch to wandering. There is no unauthenticated fallback and visitors never sign in. The read-only `/api/activity` route accepts no handles or arbitrary URLs. It fetches only the configured fourteen public GitHub Events feeds (at most 100 entries each) and Akella’s public Atom feed, using channel `UCDo7RTzizoOdPjY8A-xDR7g`. No paid data source, database, cron, realtime hosting, YouTube API project, scraping, or embedded video player is required. Existing app hosting and bandwidth costs are separate.
+
+Supported GitHub events are pushes, opened/reopened pull requests, created issue/review comments and reviews, opened issues, and published releases. Push payloads without commit detail use a truthful repository-level description and link. Stars, forks, deletes and other unsupported actions are ignored. YouTube uses video IDs and Atom `published`, never `updated`, so metadata edits do not create journeys. Malformed items are discarded independently; source text renders as text and links are restricted to HTTPS GitHub/YouTube hosts.
+
+Successful upstream responses use Next’s server fetch cache for 30 minutes. A process-local cache deduplicates refreshes, retains last good results and honors rate-limit and retry headers; this is not persistent history or a global shared cache across deployments. Manual refresh uses the same endpoint and cannot bypass that interval. Fourteen feeds refreshed twice an hour cost approximately 28 GitHub requests per shared cache; authenticated reads generally have a 5,000 requests/hour primary allowance, shared with other token use. Secondary limits still apply. No API usage fee is introduced. [GitHub rate-limit documentation](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
+
+Only the last 14 days and at most ten items per person are retained, with five shown in a card. The browser fetches after scene readiness, refreshes every 30 minutes while visible, and refreshes on tab return only when due. GitHub’s public Events feed may lag 30 seconds to six hours, so this is recent public activity, with no realtime or online-presence guarantee. Feeds are a bounded window, not a complete archive. [GitHub Events documentation](https://docs.github.com/en/rest/activity/events).
+
+With a configured token, ecosystem actors remain at home when no activity is available. The simultaneous canvas limit defaults to **eight people**, configured by `MAX_RENDERED_PEOPLE` in `lib/activity/roster.ts`. Ongoing real journeys retain their slots; waiting events rotate into free slots without being discarded or advancing offscreen. All eligible profiles remain available through the keyboard roster. All fourteen actors and their 280 prints remain pooled; the cap controls rendering and movement, not GPU allocation. JOYCO actors appear only with qualifying public GitHub activity inside the 14-day window. Last known eligibility survives a temporary failure until that event expires. An expired actor finishes its current journey, then hides; selection and roster eligibility end immediately. Public inactivity says nothing about private work. Runtime never discovers members, fetches private activity or ranks people.
+
+Each person stages their newest initial event, staggered in roster order. Later unseen IDs queue in publication order, keeping the newest three. Movement follows deterministic corridor paths, pauses six seconds at arrival and returns home. Closing clears prints and pauses journeys; reopening resumes them after reveal. Hidden tabs and manual debug mode pause simulation. Reloading intentionally permits recent journeys to replay. The hidden passage leads to The Rabbit Hole; a playable experiment there remains deferred.
+
+The fictional mockery and reserved spells remain verbatim, including the blank-map opening. No network failure blocks parchment exploration. Scene-owned resource disposal and shader warmup are retained using [JOYCO XYZ](https://hub.joyco.studio/toolbox/xyz); expected provider failures use typed outcomes following [Return, Don’t Throw](https://hub.joyco.studio/logs/17-return-dont-throw).

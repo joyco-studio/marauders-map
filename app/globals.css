@@ -28,3 +28,29 @@ button:focus-visible { outline: 2px solid #593724; outline-offset: 5px; }
 .fallback-message button { padding: 8px 16px; border: 1px solid #593724; background: transparent; }
 
 .accessible-controls, .fallback-message { font-size: 28px; line-height: 1.15; }
+
+.activity-notice { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: min(560px,90vw); padding: 12px 24px; background: #ddc89ce8; border: 1px solid #ab8a52; color: #593724; pointer-events: none; text-align: center; box-shadow: 0 8px 32px #0005; }
+.activity-notice p { margin: 0; font-size: 30px; line-height: 1.1; }
+.activity-notice small { display: block; font-family: system-ui,sans-serif; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.activity-card { margin: auto; padding: 0; width: min(540px,calc(100vw - 32px)); max-height: 85dvh; border: 1px solid #ab8a52; background: #ddc89c url('/map/parchment.jpg') center/cover; color: #593724; box-shadow: 0 24px 100px #0009; }
+.activity-card::backdrop { background: #15171499; }
+.activity-card-content { padding: 24px; }
+.activity-card h2 { margin: 12px 0 0; font-size: 42px; line-height: 1.1; }
+.activity-card .activity-explanation { margin: 8px 0 20px; font-size: 28px; }
+.activity-card ol { list-style: none; margin: 0; padding: 0; }
+.activity-card li { border-top: 1px solid #59372455; padding: 16px 0; }
+.activity-card h3 { font-family: system-ui,sans-serif; font-weight: 600; font-size: 16px; line-height: 1.5; margin: 8px 0; overflow-wrap: anywhere; }
+.activity-card small, .activity-card time, .activity-card a, .activity-card .activity-source, .activity-repository { font-family: system-ui,sans-serif; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.activity-card time, .activity-card a { display: block; }
+.activity-card a { color: #593724; text-decoration: underline; padding: 10px 0; min-height: 44px; }
+.activity-card button { background: transparent; color: #593724; border: 1px solid #59372466; padding: 6px 12px; min-height: 44px; font-size: 28px; }
+.activity-dismiss { float: right; }
+.accessible-controls:focus-within { max-height: 65dvh; overflow-y: auto; width: min(900px,90vw); }
+.accessible-controls button { min-height: 44px; }
+@media(max-width:700px) { .activity-notice { bottom: 12px; padding: 10px 16px; } .activity-card-content { padding: 20px; } }
+
+.map-introduction { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); width: 90vw; text-align: center; z-index: 1; pointer-events: none; font-size: 28px; line-height: 1.15; }
+.map-introduction p { margin: 0 0 4px; }
+@media(max-height:600px) { .map-introduction { top: 8px; font-size: 22px; } }
+
+.activity-empty { font-size: 28px; line-height: 1.2; margin: 16px 0; }
