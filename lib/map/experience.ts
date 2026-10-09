@@ -9,7 +9,8 @@ import {
 import { mix, texture, uniform, uv, vec2, smoothstep } from "three/tsl"
 import { createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
-import { loadAssets, type Assets } from "./assets"
+import { loadAssets } from "./assets"
+import { sdfCoverage } from "./sdf"
 import { createInk, type Ink } from "./ink"
 import { characters, elements, hotspots, labels, sheetPoint, routeAt, type Label, type RevealTiming } from "./data"
 import { advance, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
@@ -84,13 +85,14 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!always)reveals.push({ink:measured,timing:{start:spec.start??1.3,duration:.85,seed:spec.center[0]}})
       return {handle,ink:measured,width:metrics.width*scale,height:metrics.height*scale}
     }
-    const addDrawing=(src:string,size:readonly[number,number],center:readonly[number,number],seed:number,parent:Scene=mapScene,atlasRect?:readonly[number,number,number,number],revealCenter?:readonly[number,number])=> {
+    const addDrawing=(src:string,size:readonly[number,number],center:readonly[number,number],seed:number,parent:Scene=mapScene,revealCenter?:readonly[number,number])=> {
       const w=size[0]/100,h=size[1]/100
       const ink=createInk(w,h,seed,noise,revealCenter)
       const material=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
-      const coords=atlasRect?vec2(uv().x.mul(atlasRect[2]).add(atlasRect[0]),uv().y.mul(atlasRect[3]).add(atlasRect[1])):uv()
+      const entry=assets.sdf[src]
+      if(!entry)throw new Error(`Missing SDF: ${src}`)
       material.colorNode=ink.pigment
-      material.opacityNode=texture(getTexture(src),coords).a.mul(ink.coverage).mul(ink.opacity)
+      material.opacityNode=sdfCoverage(getTexture(entry.texture),entry).mul(ink.coverage).mul(ink.opacity)
       const mesh=new Mesh(geometry,material);mesh.scale.set(w,h,1)
       // positionLocal refers to unit-plane coordinates; use physical geometry for the radial field.
       mesh.geometry=disposer.add(new PlaneGeometry(w,h));mesh.scale.set(1,1,1)
@@ -99,21 +101,12 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     for(const element of elements){const drawing=addDrawing(element.src,element.size,element.center,element.timing.seed);reveals.push({ink:drawing.ink,timing:element.timing})}
     for(const label of labels)addText(label)
-    const spriteRect=(name:keyof Assets["atlas"]["sprites"]):[number,number,number,number]=> {
-      const [x,y,w,h]=assets.atlas.sprites[name].bounds
-      const [aw,ah]=assets.atlas.size
-      return [x/aw,1-(y+h)/ah,w/aw,h/ah]
-    }
-    const spriteCenter=(name:keyof Assets["atlas"]["sprites"]):[number,number]=> {
-      const sprite=assets.atlas.sprites[name]
-      return [sprite.center[0]/sprite.bounds[2],sprite.center[1]/sprite.bounds[3]]
-    }
-    const key=addDrawing("sprites/atlas.png",[50,50],[1110,545],24,mapScene,spriteRect("key"),spriteCenter("key"))
+    const key=addDrawing("artwork/ornaments/antique_key.svg",[76,36],[1645*7/12,1040*7/12],24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
-    const passage=addDrawing("passage.svg",[1400,700],[700,350],31)
-    const secret=addText({text:"Dissendium",center:[1210,496],size:20,angle:-.12},mapScene,true)
+    const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",[1400,700],[700,350],31)
+    const secret=addText({text:"Dissendium",center:[1630*7/12,150*7/12],size:16,angle:-.12},mapScene,true)
     secret.ink.progress.value=0
-    const note=addText({text:"A passage to Honeydukes",center:[1185,521],size:14},mapScene,true)
+    const note=addText({text:"A passage to Honeydukes",center:[1640*7/12,175*7/12],size:11},mapScene,true)
     note.ink.progress.value=0
     // Reusable static snapshot quad: updated only when ink/static discovery changes.
     const cachedMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
@@ -124,20 +117,27 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     cached.position.z=-.02;mapScene.add(cached);cached.visible=false
 
     const actors=characters.map((route,index)=> {
-      const title=addText({text:route.name.replace(" ","\n"),center:route.points[0],size:14},mapScene,true)
+      const title=addText({text:route.name,center:route.points[0],size:12},mapScene,true)
       title.ink.progress.value=0
       title.handle.mesh.renderOrder=3
-      const bannerWidth=Math.max(1.25,(title.width+.18)/.72)
-      const bannerHeight=Math.max(.72,(title.height+.15)/.58)
+      const variant=route.name.length>14?"largo":route.name.length>=12?"mediano":"corto"
+      const bannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
+      const viewWidth=variant==="mediano"?620:variant==="corto"?420:840
+      const bannerHeight=bannerWidth*240/viewWidth
+      const fitText=Math.min(1,(bannerWidth*(viewWidth-198)/viewWidth-.08)/title.width,(bannerHeight*.25-.025)/title.height)
+      title.handle.mesh.scale.setScalar(fitText)
       const bannerInk=createInk(bannerWidth,bannerHeight,index+90,noise)
       const bannerMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
-      const bannerTexture=texture(getTexture("name-banner.svg"))
-      bannerMaterial.colorNode=bannerTexture.rgb
-      bannerMaterial.opacityNode=bannerTexture.a.mul(bannerInk.coverage)
+      const base=`artwork/banners/banner_${variant}`
+      const outline=assets.sdf[`${base}_contornos.svg`],silhouette=assets.sdf[`${base}_silueta.svg`]
+      const outlineCoverage=sdfCoverage(getTexture(outline.texture),outline)
+      const silhouetteCoverage=sdfCoverage(getTexture(silhouette.texture),silhouette)
+      bannerMaterial.colorNode=mix(texture(getTexture(`${base}_color.png`)).rgb,bannerInk.pigment,outlineCoverage)
+      bannerMaterial.opacityNode=silhouetteCoverage.mul(bannerInk.coverage)
       const banner=new Mesh(disposer.add(new PlaneGeometry(bannerWidth,bannerHeight)),bannerMaterial)
       banner.position.z=.035;banner.renderOrder=2;mapScene.add(banner)
       const footprints:Footprint[]=Array.from({length:20},(_,i)=> {
-        const drawing=addDrawing("sprites/atlas.png",[10,18],[700,350],index*20+i,mapScene,spriteRect(i%2?"right":"left"),spriteCenter(i%2?"right":"left"))
+        const drawing=addDrawing(`artwork/ornaments/footprint_${i%2?"right":"left"}.svg`,[9,17.2],[700,350],index*20+i)
         drawing.mesh.position.z=.025
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
@@ -147,36 +147,36 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     // Cover lives on the center panel and uses the same real MSDF lettering.
     const coverContent = {
       choices: [
-        {text:"The Marauder's",center:[700,210],size:22,heading:true},
-        {text:"Map",center:[700,253],size:38,heading:true},
-        {text:"Reveal your secrets",center:[700,355],size:20},
-        {text:"or",center:[700,410],size:14},
-        {text:"I solemnly swear",center:[700,467],size:19},
-        {text:"that I am up to no good",center:[700,497],size:16},
+        {text:"The Marauder's",center:[700,181],size:20,heading:true},
+        {text:"Map",center:[700,222],size:35,heading:true},
+        {text:"Reveal your secrets",center:[700,288],size:18},
+        {text:"or",center:[700,308],size:11},
+        {text:"I solemnly swear",center:[700,326],size:15},
+        {text:"that I am up to no good",center:[700,342],size:13},
       ],
       welcome: [
-        {text:"Messrs.",center:[700,175],size:18},
-        {text:"Moony",center:[700,221],size:25,heading:true},
-        {text:"Wormtail",center:[700,265],size:23,heading:true},
-        {text:"Padfoot",center:[700,309],size:25,heading:true},
-        {text:"& Prongs",center:[700,353],size:23,heading:true},
-        {text:"are proud to present",center:[700,408],size:16},
-        {text:"The Marauder's",center:[700,454],size:22,heading:true},
-        {text:"Map",center:[700,495],size:37,heading:true},
+        {text:"Messrs.",center:[700,158],size:14},
+        {text:"Moony",center:[700,180],size:17,heading:true},
+        {text:"Wormtail",center:[700,198],size:17,heading:true},
+        {text:"Padfoot",center:[700,216],size:17,heading:true},
+        {text:"& Prongs",center:[700,234],size:17,heading:true},
+        {text:"are proud to present",center:[700,287],size:16},
+        {text:"The Marauder's",center:[700,311],size:20,heading:true},
+        {text:"Map",center:[700,336],size:26,heading:true},
       ],
       mockery: [
-        {text:"Moony, Wormtail,",center:[700,223],size:18},
-        {text:"Padfoot & Prongs",center:[700,253],size:18},
-        {text:"send their compliments",center:[700,310],size:17},
-        {text:"to Professor Snape",center:[700,340],size:18},
-        {text:"...and request he keep",center:[700,402],size:17},
-        {text:"his abnormally large nose",center:[700,432],size:16},
-        {text:"out of other people's",center:[700,462],size:17},
-        {text:"business.",center:[700,492],size:21},
+        {text:"Moony, Wormtail,",center:[700,170],size:17},
+        {text:"Padfoot & Prongs",center:[700,190],size:17},
+        {text:"send their compliments",center:[700,212],size:15},
+        {text:"to Professor Snape",center:[700,234],size:16},
+        {text:"...and request he keep",center:[700,283],size:15},
+        {text:"his abnormally large nose",center:[700,302],size:14},
+        {text:"out of other people's",center:[700,321],size:15},
+        {text:"business.",center:[700,340],size:17},
       ],
     } satisfies Record<string, Label[]>
     const coverGroups = Object.fromEntries(Object.entries(coverContent).map(([name,content])=>[name,content.map(label=>addText(label,coverScene,true))]))
-    const edgeHint = addText({text:"Pull an edge to unfold",center:[700,598],size:14},coverScene,true)
+    const edgeHint = addText({text:"Pull an edge to unfold",center:[700,655],size:10},coverScene,true)
     let coverKey="", previousCover:string|null=null, coverChangedAt=0, coverDirty=true
     const updateCover=()=> {
       const key=state.phase==="folded"?state.greeting??"choices":coverKey||"choices"
@@ -194,8 +194,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       else previousCover=null
     }
     updateCover()
-    const coverBorder=addDrawing("cover.svg",[280,700],[700,350],13,coverScene);coverBorder.ink.progress.value=1
-    const coverOrnament=addDrawing("sprites/atlas.png",[70,70],[700,90],7,coverScene,spriteRect("compass"),spriteCenter("compass"));coverOrnament.ink.progress.value=1
+    const coverBorder=addDrawing("artwork/cover/enchanted_map_cover.svg",[280,700],[700,350],13,coverScene);coverBorder.ink.progress.value=1
+
     // Paper rig: center fixed; both side chains fold back into a stack.
     const paper=new Group();scene.add(paper)
     paper.rotation.z=-.028
@@ -352,8 +352,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const p=hit(x,y);if(!p)return null
       if(state.phase==="folded") {
         if(state.greeting) return (p.x<587||p.x>813) ? "open" : null
-        if(Math.abs(p.x-700)<115&&Math.abs(p.y-355)<28)return "mockery"
-        if(Math.abs(p.x-700)<120&&p.y>445&&p.y<525)return "welcome"
+        if(Math.abs(p.x-700)<115&&Math.abs(p.y-288)<13)return "mockery"
+        if(Math.abs(p.x-700)<120&&p.y>315&&p.y<352)return "welcome"
         return null
       }
       return hotspots.find(h=> {

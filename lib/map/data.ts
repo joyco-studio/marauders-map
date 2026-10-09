@@ -5,41 +5,41 @@ export type MapElement = { id: string; center: Point; size: Point; src: string; 
 export type Label = { text: string; center: Point; size: number; heading?: boolean; start?: number; angle?: number }
 export type CharacterRoute = { name: string; points: readonly Point[]; speed: number; offset: number }
 export type Hotspot = { id: "close" | "open" | "passage"; center: Point; radius: Point }
-export const elements: MapElement[] = [
-  { id: "border", center: [700,350], size: [1400,700], src:"border.svg", timing: { start:0,duration:1.8,seed:1 } },
-  { id: "corridors", center: [700,350], size: [1400,700], src:"corridors.svg", timing: { start:.15,duration:1.9,seed:2 } },
-  { id: "great-hall", center: [240,260], size: [260,240], src:"great-hall.svg", timing: { start:.2,duration:1.1,seed:3 } },
-  { id: "library", center: [465,390], size: [240,210], src:"library.svg", timing: { start:.35,duration:1.1,seed:4 } },
-  { id: "courtyard", center: [700,265], size: [260,260], src:"courtyard.svg", timing: { start:.1,duration:1.2,seed:5 } },
-  { id: "stairs", center: [915,380], size: [210,260], src:"stairs.svg", timing: { start:.5,duration:1.1,seed:6 } },
-  { id: "classrooms", center: [1160,230], size: [260,205], src:"classrooms.svg", timing: { start:.65,duration:1.1,seed:7 } },
+// The art pack uses 2400×1200 units. Preserve its registered viewBoxes and doors.
+const point=([x,y]:Point):[number,number]=>[x*7/12,y*7/12]
+const room=(id:string,file:string,x:number,y:number,w:number,h:number,start:number,seed:number):MapElement=>({id,src:`artwork/architecture/${file}.svg`,center:point([x+w/2,y+h/2]),size:point([w,h]),timing:{start,duration:1.15,seed}})
+export const elements:MapElement[]=[
+  {id:"border",src:"artwork/ornaments/frame_2400x1200.svg",center:[700,350],size:[1400,700],timing:{start:0,duration:1.8,seed:1}},
+  room("great-hall","gran_salon",180,160,640,350,.2,3),
+  room("library","biblioteca",910,100,610,370,.35,4),
+  room("courtyard","patio_fuente",910,630,610,440,.1,5),
+  room("classrooms","aulas",180,700,640,350,.65,7),
+  room("stairs","escaleras",1760,700,460,370,.5,6),
+  room("tower","torre_escalera",1790,130,340,340,.45,8),
+  room("corridors","pasillos",0,0,2400,1200,.15,2),
+  {id:"compass",src:"artwork/ornaments/compass_rose.svg",center:point([2250,240]),size:point([180,180]),timing:{start:1,duration:.8,seed:9}},
 ]
-export const labels: Label[] = [
-  { text:"The Marauder's Map", center:[700,83], size:40, heading:true, start:1 },
-  { text:"Hogwarts School of Witchcraft & Wizardry", center:[700,125],size:17,start:1.1 },
-  { text:"The Great Hall",heading:true,center:[240,410],size:23 },
-  { text:"The Library",heading:true,center:[465,530],size:23 },
-  { text:"The Courtyard",heading:true,center:[700,425],size:23 },
-  { text:"Moving Staircases",heading:true,center:[915,540],size:22 },
-  { text:"Classrooms",heading:true,center:[1160,362],size:23 },
-  { text:"North Tower",heading:true,center:[1190,420],size:15,angle:-.15 },
-  { text:"The castle never sleeps",center:[320,571],size:15,angle:.08 },
-  { text:"Messrs. Moony, Wormtail, Padfoot & Prongs",center:[700,580],size:17 },
-  { text:"Purveyors of Aids to Magical Mischief-Makers",center:[700,606],size:13 },
-  { text:"Tap the key to find a secret",center:[1110,582],size:15 },
-  { text:"Mischief managed",center:[700,646],size:22,heading:true,start:2.1 },
-  { text:"N",center:[98,525],size:15,heading:true },
+export const labels:Label[]=[
+  {text:"The Marauder's Map",center:point([1200,90]),size:24,start:1},
+  {text:"The Great Hall",center:point([500,137]),size:18},
+  {text:"The Library",center:point([1215,485]),size:18},
+  {text:"The Courtyard",center:point([1215,1078]),size:16},
+  {text:"Classrooms",center:point([500,1070]),size:18},
+  {text:"Moving Staircases",center:point([1990,1090]),size:18},
+  {text:"North Tower",center:point([1960,112]),size:17},
+  {text:"Mischief managed",center:point([1200,1120]),size:18,start:2.1},
+  {text:"Tap the key to find a secret",center:point([1645,1120]),size:12},
 ]
-export const characters: CharacterRoute[] = [
-  { name:"Harry Potter",points:[[220,320],[570,320],[570,172],[1050,172],[1050,315],[795,315],[795,455],[330,455],[330,320]],speed:30,offset:0 },
-  { name:"Hermione Granger",points:[[465,455],[575,455],[575,315],[330,315],[330,455],[465,455]],speed:23,offset:110 },
-  { name:"Ron Weasley",points:[[690,172],[795,172],[795,315],[1060,315],[1060,455],[575,455],[575,172]],speed:28,offset:200 },
-  { name:"Argus Filch",points:[[1190,455],[1060,455],[1060,172],[330,172],[330,315],[1060,315],[1060,455]],speed:19,offset:430 },
+const route=(name:string,points:Point[],speed:number,offset:number):CharacterRoute=>({name,points:points.map(point),speed,offset})
+export const characters:CharacterRoute[]=[
+  route("Harry Potter",[[500,570],[1215,570],[1215,465],[1215,570],[1960,570],[1960,460],[1960,570],[500,570],[500,495]],30,0),
+  route("Hermione Granger",[[1215,570],[1215,465],[1215,570],[500,570],[500,710],[500,570]],23,100),
+  route("Ron Weasley",[[1215,570],[1215,640],[1215,570],[1960,570],[1960,710],[1960,570]],28,240),
+  route("Argus Filch",[[500,570],[1960,570],[1960,710],[1960,570],[1215,570],[1215,465],[1215,570]],19,430),
 ]
-export const hotspots: Hotspot[] = [
-  {id:"close",center:[700,646],radius:[140,24]},
-  {id:"passage",center:[1110,545],radius:[32,32]},
-  {id:"open",center:[700,490],radius:[120,44]},
+export const hotspots:Hotspot[]=[
+  {id:"close",center:point([1200,1120]),radius:[140,24]},
+  {id:"passage",center:point([1645,1040]),radius:[32,32]},
 ]
 // Pixel-space map coordinates convert once to the compositing camera's y-up space.
 export function sheetPoint([x,y]: Point): [number,number] { return [(x-700)/100,(350-y)/100] }

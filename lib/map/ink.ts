@@ -19,7 +19,7 @@ export function createInk(width: number, height: number, seed: number, noiseAmou
   const expanding = smoothstep(-.045,.045,front)
   const coverage = select(progress.lessThanEqual(0),float(0),select(progress.greaterThanEqual(1),float(1),expanding))
   const wet = smoothstep(-.01,.03,front).mul(smoothstep(.04,.12,front).oneMinus()).mul(select(progress.lessThan(1),float(1),float(0)))
-  const pigment = mix(color("#69432c"),color("#352218"),wet)
+  const pigment = mix(color("#4a2d1b"),color("#2d1b0f"),wet)
   const effect: TextEffect = {
     uniforms: {progress,opacity},
     stages: {

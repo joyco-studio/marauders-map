@@ -1,0 +1,204 @@
+{
+  "canvas": [
+    2400,
+    1200
+  ],
+  "purpose": "Ejemplo estático de alternancia; cada huella se puede animar por separado.",
+  "steps": [
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        650,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        682,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        714,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        746,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        778,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        810,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        842,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        874,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        906,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        938,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        970,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        1002,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        1034,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_right.svg",
+      "position": [
+        1066,
+        578
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    },
+    {
+      "file": "ornaments/footprint_left.svg",
+      "position": [
+        1098,
+        562
+      ],
+      "rotation_degrees": 90,
+      "scale": 0.1,
+      "pivot": [
+        55,
+        105
+      ]
+    }
+  ]
+}

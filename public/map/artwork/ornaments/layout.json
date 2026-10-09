@@ -1,0 +1,236 @@
+{
+  "ink": "#4A2D1B",
+  "all_visible_geometry": "Closed filled paths. No strokes, text, images, gradients, filters or masks.",
+  "frame": {
+    "assembled": {
+      "file": "frame_2400x1200.svg",
+      "viewBox": [
+        0,
+        0,
+        2400,
+        1200
+      ],
+      "primary_rails": {
+        "left_x": 55,
+        "right_x": 2345,
+        "top_y": 55,
+        "bottom_y": 1145
+      },
+      "horizontal_run": [
+        100,
+        2300
+      ],
+      "vertical_run": [
+        100,
+        1100
+      ]
+    },
+    "horizontal": {
+      "file": "frame_edge_horizontal.svg",
+      "viewBox": [
+        0,
+        0,
+        432,
+        88
+      ],
+      "repeat_vector": [
+        400,
+        0
+      ],
+      "start_anchors": [
+        [
+          16,
+          47
+        ],
+        [
+          16,
+          58
+        ]
+      ],
+      "end_anchors": [
+        [
+          416,
+          47
+        ],
+        [
+          416,
+          58
+        ]
+      ],
+      "decoration_side": "negative Y"
+    },
+    "vertical": {
+      "file": "frame_edge_vertical.svg",
+      "viewBox": [
+        0,
+        0,
+        88,
+        432
+      ],
+      "repeat_vector": [
+        0,
+        400
+      ],
+      "start_anchors": [
+        [
+          47,
+          16
+        ],
+        [
+          58,
+          16
+        ]
+      ],
+      "end_anchors": [
+        [
+          47,
+          416
+        ],
+        [
+          58,
+          416
+        ]
+      ],
+      "decoration_side": "negative X"
+    },
+    "corners": [
+      {
+        "file": "frame_corner_top_left.svg",
+        "viewBox": [
+          0,
+          0,
+          108,
+          108
+        ],
+        "horizontal_anchors": [
+          [
+            92,
+            47
+          ],
+          [
+            92,
+            58
+          ]
+        ],
+        "vertical_anchors": [
+          [
+            47,
+            92
+          ],
+          [
+            58,
+            92
+          ]
+        ]
+      },
+      {
+        "file": "frame_corner_top_right.svg",
+        "viewBox": [
+          0,
+          0,
+          108,
+          108
+        ],
+        "horizontal_anchors": [
+          [
+            16,
+            47
+          ],
+          [
+            16,
+            58
+          ]
+        ],
+        "vertical_anchors": [
+          [
+            61,
+            92
+          ],
+          [
+            50,
+            92
+          ]
+        ]
+      },
+      {
+        "file": "frame_corner_bottom_right.svg",
+        "viewBox": [
+          0,
+          0,
+          108,
+          108
+        ],
+        "horizontal_anchors": [
+          [
+            16,
+            61
+          ],
+          [
+            16,
+            50
+          ]
+        ],
+        "vertical_anchors": [
+          [
+            61,
+            16
+          ],
+          [
+            50,
+            16
+          ]
+        ]
+      },
+      {
+        "file": "frame_corner_bottom_left.svg",
+        "viewBox": [
+          0,
+          0,
+          108,
+          108
+        ],
+        "horizontal_anchors": [
+          [
+            92,
+            61
+          ],
+          [
+            92,
+            50
+          ]
+        ],
+        "vertical_anchors": [
+          [
+            47,
+            16
+          ],
+          [
+            58,
+            16
+          ]
+        ]
+      }
+    ],
+    "assembly_notes_es": "Los márgenes transparentes se superponen. Trasladar módulos 400 unidades para repetir. Unir los dos puntos de cada extremo con los dos puntos correspondientes de la esquina. Reflejar el módulo de borde en su eje transversal para el lado opuesto; mantener las decoraciones hacia el exterior. Para longitudes intermedias, escalar solamente el eje longitudinal del tramo, sin deformar las esquinas."
+  },
+  "footprints": {
+    "viewBox": [
+      0,
+      0,
+      110,
+      210
+    ],
+    "direction": "Toe points toward negative Y. Rotate each complete asset to the walking tangent.",
+    "left_medial_arch": "Right side of its own unrotated canvas",
+    "right_medial_arch": "Left side of its own unrotated canvas",
+    "suggested_placement": {
+      "step_advance_units": 130,
+      "lateral_offset_units": 42,
+      "alternate": [
+        "footprint_left.svg",
+        "footprint_right.svg"
+      ]
+    },
+    "notes_es": "Suelas izquierda y derecha distinguibles con arco medial, puntera asimétrica, talón separado y marcas amplias de desgaste. Las variantes no son dos copias del mismo pie."
+  }
+}

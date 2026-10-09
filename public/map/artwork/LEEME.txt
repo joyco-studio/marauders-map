@@ -1,0 +1,156 @@
+PAQUETE DE ILUSTRACIONES — MAPA MÁGICO
+
+Ilustraciones originales de arquitectura, ornamentación, huellas, etiquetas y
+portada para un mapa interactivo. Las referencias aportan el lenguaje de tinta
+y pergamino; la planta y los dibujos de este paquete fueron construidos como
+geometría vectorial independiente.
+
+ARCHIVOS PARA EMPEZAR
+
+presentation/hoja_presentacion.png
+  Hoja completa, con fondo transparente y rótulos de presentación.
+presentation/hoja_presentacion_vista.jpg
+  La misma hoja sobre un fondo claro liso, únicamente para revisión visual.
+presentation/catalogo_ornamentos.png
+  Catálogo de todas las piezas ornamentales individuales.
+composition/mapa_general.svg
+  Composición horizontal 2400 x 1200, sin mostrar el pasaje secreto.
+composition/mapa_general_con_pasaje.svg
+  Composición horizontal completa, incluyendo el pasaje secreto.
+cover/enchanted_map_cover.svg
+  Portada vertical 800 x 2000, sin texto.
+
+Todos los dibujos SVG y las capas PNG de dibujo tienen fondo transparente.
+Las dos vistas JPG de presentación tienen un fondo claro de revisión; no son
+assets de dibujo. No se incorporó papel envejecido al mapa ni a la portada.
+El papel del mapa puede colocarse por debajo como una capa independiente.
+
+1. ARQUITECTURA
+
+architecture/gran_salon.svg
+  Cuatro mesas largas, bancos, mesa ceremonial, columnas y puertas abiertas.
+architecture/biblioteca.svg
+  Estanterías, cuerpos dobles de libros, mesas de lectura, atril y rincones.
+architecture/patio_fuente.svg
+  Fuente octogonal, galerías, columnas, parterres y bancos.
+architecture/escaleras.svg
+  Escalera de retorno, descansos, hueco central y tramo auxiliar.
+architecture/aulas.svg
+  Dos aulas amuebladas con vestíbulo común y puertas interiores abiertas.
+architecture/torre_escalera.svg
+  Torre circular con escalera y descanso de acceso.
+architecture/pasillos.svg
+  Corredor común con seis conexiones, pilastras y ornamentos de pavimento.
+architecture/pasaje_secreto.svg
+  Capa independiente que conecta biblioteca y torre.
+
+ESCALA Y COLOCACIÓN
+
+El sistema común mide 2400 x 1200 unidades de dibujo. Cada habitación está
+dibujada a escala 1 y tiene un margen transparente nominal de 20 unidades.
+En layout/layout.json se indican el viewBox local, la traslación al mapa,
+los centros y extremos de las puertas, y las conexiones entre zonas.
+Aplicá la transformación indicada al viewBox completo; no recortes el margen
+antes de colocar la pieza, porque cambiaría el registro de las puertas.
+
+Pasillos y pasaje secreto conservan el viewBox completo de 2400 x 1200 y se
+pueden superponer directamente. Los accesos principales tienen 72 unidades
+de ancho; el pasaje secreto, 40. El corredor se estrecha a 56 unidades junto
+a las pilastras dibujadas. El JSON describe registro y conectividad visual;
+el mobiliario y las puertas dibujadas son ilustración, no un sistema de física.
+
+2. ORNAMENTOS
+
+ornaments/frame_edge_horizontal.svg y frame_edge_vertical.svg
+  Módulos repetibles del marco. La repetición nominal es de 400 unidades.
+ornaments/frame_corner_top_left.svg, frame_corner_top_right.svg,
+frame_corner_bottom_left.svg y frame_corner_bottom_right.svg
+  Cuatro piezas de esquina, orientadas y con detalles propios.
+ornaments/frame_2400x1200.svg
+  Marco ya ensamblado para la composición horizontal.
+ornaments/compass_rose.svg
+  Rosa de los vientos sin letras, con centro calado.
+ornaments/antique_key.svg
+  Llave antigua de cabeza ornamental.
+ornaments/flourish_acanthus.svg, flourish_celestial.svg,
+ornament_quatrefoil.svg, separator_double_vine.svg, separator_star_knot.svg
+  Cinco adornos y separadores independientes.
+ornaments/footprint_left.svg y footprint_right.svg
+  Huellas con puntera asimétrica, arco medial, talón separado y desgaste calado.
+
+ornaments/layout.json incluye los puntos exactos de unión del marco, la
+dirección de repetición y el pivote/orientación de las huellas. La puntera de
+ambos archivos apunta hacia arriba. Para una caminata, alterná los archivos
+izquierdo/derecho y rotalos según la tangente del recorrido.
+
+composition/huellas_recorrido_ejemplo.svg y layout/recorrido_ejemplo.json
+incluyen un ejemplo independiente de colocación de huellas en el corredor.
+
+3. BANNERS POR CAPAS
+
+Cada variante tiene cuatro archivos:
+  banner_[corto|mediano|largo]_silueta.svg
+  banner_[corto|mediano|largo]_contornos.svg
+  banner_[corto|mediano|largo]_color.png
+  banner_[corto|mediano|largo]_preview.png
+
+La silueta es una forma llena con huecos transparentes. El archivo de
+contornos contiene solo tinta y los pliegues grabados. La capa de color
+contiene únicamente el material del pergamino; no tiene tinta ni texto.
+El preview es una superposición de color y tinta para revisar el resultado.
+
+                 SVG / unidades       PNG / píxeles
+  Corto          420 x 240            1680 x 960
+  Mediano        620 x 240            2480 x 960
+  Largo          840 x 240            3360 x 960
+
+El PNG y los dos SVG se colocan con exactamente el mismo origen y tamaño
+visual. Los PNG están exportados a 4x. Su alfa coincide con la silueta SVG.
+La capa de color usa alfa straight, sin matte: los píxeles completamente
+transparentes tienen RGB cero. Los huecos de los extremos se conservan.
+
+El centro está despejado para dos líneas. Caja segura: x=99, y=94,
+ancho=(ancho del viewBox - 198), alto=60. Líneas base orientativas: y=116 y
+y=144. Todas estas coordenadas están en banners/metadata.json. No hay nombres
+ni caracteres generados dentro de los banners.
+
+4. PORTADA
+
+cover/enchanted_map_cover.svg tiene proporción 2:5 y viewBox 800 x 2000.
+Incluye cintas, vegetación caligráfica y un castillo en alzado frontal plano,
+sin perspectiva. cover/portada.png es su exportación transparente 1600 x 4000.
+
+cover/layout.json define cinco espacios vacíos para tipografía real:
+encabezado de la cinta superior, título principal, mensaje, dedicatoria del
+cuerpo central y rótulo de la cinta inferior. Las cinco cajas se comprobaron
+contra el canal alfa y están libres de tinta.
+
+5. CONTRATO TÉCNICO
+
+Los 36 SVG del paquete son vector real. Su geometría visible está formada
+por paths cerrados rellenos. Todos los trazos se expandieron a contornos;
+no se utilizan atributos stroke. Los huecos se conservan con fill-rule evenodd.
+
+No hay imágenes incrustadas, elementos text, filtros, degradados, máscaras,
+clip-path, opacidades decorativas ni referencias externas. Los grupos transform
+solo colocan geometría vectorial cerrada en las composiciones.
+
+Todos los SVG usan una sola tinta: #4A2D1B. Ese color es una vista previa de
+la tinta sepia. Se puede reemplazar el fill o utilizar la cobertura alfa para
+aplicar un color uniforme desde el shader. Las capas de color de los banners
+se mantienen separadas de esa tinta.
+
+Los mapas generales PNG miden 4800 x 2400. La hoja de presentación transparente
+mide 3600 x 2780. El catálogo de ornamentos mide 2400 x 2120. Las ilustraciones
+vectoriales pueden rasterizarse a otra resolución según el uso final.
+
+6. VERIFICACIÓN
+
+VALIDACION.json resume la inspección estructural de todos los SVG, el registro
+de los banners, los accesos abiertos y las zonas vacías de la portada.
+MANIFIESTO.json enumera archivos, dimensiones y huellas SHA-256.
+
+Se revisó la composición montada y los dibujos individuales. La hoja de
+presentación contiene rótulos tipográficos fuera de los dibujos para identificar
+las piezas; esos rótulos no están incluidos en los SVG de los assets.
+

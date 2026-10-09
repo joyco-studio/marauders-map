@@ -28,27 +28,22 @@ npm run build
 
 The eight tests protect cinematic transitions, rapid command guards, replay, cover transitions, and exact ink-reveal endpoints. Assets and GPU resources belong to the scene; disposal also covers a setup aborted during loading or shader compilation. Asset errors present a static SVG map and a retry action.
 
-## Artwork and Atlas handoff
+## Artwork and SDF preparation
 
-All architectural drawings, parchment texture, footprints, and ornaments are original local assets in `public/map/`. The prepared sprite sheet is `public/map/sprites/atlas.png`, with editable source `source.svg`. Atlas cropper preparation belongs to the user.
+The supplied `magic_map_pack` sources and layout metadata live in `public/map/artwork/`. Architecture, cover, ornaments, footprints and banner masks use 31 single-channel SDF textures in `public/map/sdf/`. Text continues to use Lettra MSDF. Banner color is sampled separately from its silhouette and outline fields.
 
-Use [JOYCO Atlas](https://atlas.joyco.studio) to crop/pack the four sprite regions, then replace the PNG and `atlas.json`. Keep these keys:
+The bake rasterizes every original SVG path together, preserving overlapping shapes and even-odd holes, then computes signed Euclidean distance from coverage. Fields use distance range 8, 16 pixels of padding, and up to 4096 pixels per dimension. The manifest preserves viewBoxes and padded UV rectangles. TSL reconstructs coverage with derivative-based antialiasing before the shared center-out ink reveal. Final readability remains bounded by the map composition texture resolution.
 
-```json
-{
-  "size": [512, 128],
-  "sprites": {
-    "left": { "bounds": [0, 0, 128, 128], "center": [64, 64] },
-    "right": { "bounds": [128, 0, 128, 128], "center": [64, 64] },
-    "compass": { "bounds": [256, 0, 128, 128], "center": [64, 64] },
-    "key": { "bounds": [384, 0, 128, 128], "center": [64, 64] }
-  }
-}
+To regenerate the committed fields and static fallback:
+
+```sh
+python3 -m venv .context/sdf-venv
+.context/sdf-venv/bin/pip install -r scripts/sdf-requirements.txt
+npm run bake:art
+npm run test:sdf
 ```
 
-`size` is the packed image’s pixel dimensions. `bounds` is `[x, y, width, height]` from its top-left corner. `center` is the reveal origin in pixels within the crop. Preserve generous transparent padding for feathered ink edges. Atlas’s exported configuration may need converting to this small runtime manifest; the renderer does not depend on its authoring format.
-
-Regenerate original artwork with `python3 scripts/prepare-map.py` (requires Pillow). Rasterize the generated sprite source with `node scripts/rasterize-atlas.mjs`. These commands overwrite local generated assets, so keep a user-supplied Atlas export separately.
+`SDF_PYTHON` can select another Python interpreter for baking. The two SDF tests protect holes, signs, subpixel coverage and saturation. All 31 generated field thresholds were also compared against source raster coverage with identical inside/outside results. Atlas cropper preparation remains with the user; no cropper export is required by this integration. Legacy sprite assets remain available but are no longer loaded by the scene.
 
 ## Fonts
 
@@ -64,8 +59,13 @@ Implementation plan: [.codex/plans/marauders-map.md](.codex/plans/marauders-map.
 The folded cover offers two spells. **Reveal your secrets** shows a shortened film mockery; **I solemnly swear that I am up to no good** shows the welcome. Either remains on the closed paper until a left or right edge is clicked. Keyboard equivalents are available with Tab. Closing resets this choice. Outer flaps fold first, then inner pairs take separate turns beneath the cover, with distinct stack depths.
 
 ### Verification record
-Checked in Chrome on an Apple M4 Pro MacBook Pro (24 GB RAM): desktop WebGPU, 390 × 844 viewport with WebGL2, both spell responses, left/right edge opening, close/reopen, intermediate hinge poses, resizing, and reduced-motion passage discovery. The earlier desktop WebGPU run submitted approximately 144 frames/sec at a 2048 × 978 viewport. This is not a physical mobile-device benchmark. Typechecking, linting, seven focused tests, and the production build pass.
+Checked in Chrome on an Apple M4 Pro MacBook Pro (24 GB RAM): desktop WebGPU, 390 × 844 viewport with WebGL2, both spell responses, left/right edge opening, close/reopen, intermediate hinge poses, resizing, and reduced-motion passage discovery. The earlier desktop WebGPU run submitted approximately 144 frames/sec at a 2048 × 978 viewport. This is not a physical mobile-device benchmark. Typechecking, linting, eight focused state tests and two SDF tests, and the production build pass.
 
 Typography follows the cover concept: uppercase Cinzel titles on the folded cover and Tangerine Bold for every inscription on the unfolded map and supporting text. Tangerine’s local file comes from the [Google Fonts repository](https://github.com/google/fonts/tree/main/ofl/tangerine), with its OFL license retained.
 
 Character names sit on original curled parchment banners and follow the same ink reveal/erase as their lettering. On closing, the current cover inscription remains throughout folding, then erases before the initial spell choices bloom back in.
+
+### Supplied artwork verification
+The supplied pack was integrated on the local `main` checkout after a fast-forward merge of the previous scene. The plan is [.codex/plans/artwork-sdf.md](.codex/plans/artwork-sdf.md). Browser checks in desktop WebGPU and a 390 × 844 WebGL2 viewport cover the new cover, corridor routes, layered banners, discoverable passage and close/reopen; the renderer uses the same SDF decoding on WebGPU and WebGL2.
+
+Submitted-frame sampling for the supplied pack: approximately 144 fps desktop WebGPU and 28.8 fps WebGL2 at the emulated mobile viewport on the same Mac. This is not GPU timing or a physical-device benchmark; mobile overview details require zoom.

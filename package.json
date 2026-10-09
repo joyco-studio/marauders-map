@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test lib/map/state.test.ts",
-    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset ascii --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset ascii --size 64 --pxrange 8 --out public/map/fonts/cinzel"
+    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset ascii --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset ascii --size 64 --pxrange 8 --out public/map/fonts/cinzel",
+    "bake:art": "node scripts/bake-art.mjs && tsx scripts/prepare-fallback.mts",
+    "test:sdf": ".context/sdf-venv/bin/python scripts/test-sdf.py"
   },
   "dependencies": {
     "@joycostudio/susano": "^1.1.0",
@@ -33,6 +35,7 @@
     "msdf-bmfont-xml": "^2.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "sharp": "^0.34.5"
   }
 }

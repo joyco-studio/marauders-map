@@ -1,0 +1,1198 @@
+{
+  "schema": "magic-map-layout/1.0",
+  "units": "shared drawing units; all zones authored at scale 1",
+  "canvas": {
+    "width": 2400,
+    "height": 1200,
+    "aspect_ratio": "2:1",
+    "safe_frame_inset": 70
+  },
+  "ink": "#4A2D1B",
+  "geometry": "closed filled path outlines; all SVG strokes expanded",
+  "view": "orthographic top-down",
+  "default_secret_visible": false,
+  "main_corridor": {
+    "nominal_clear_width": 72,
+    "minimum_clear_width_at_pilasters": 56,
+    "centerline_y": 570
+  },
+  "assets": [
+    {
+      "id": "gran_salon",
+      "file": "architecture/gran_salon.svg",
+      "bounds_world": [
+        200,
+        180,
+        600,
+        310
+      ],
+      "canvas": [
+        640,
+        350
+      ],
+      "transform": {
+        "translate": [
+          180,
+          160
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "sur",
+          "world": [
+            500,
+            490
+          ],
+          "local": [
+            320,
+            330
+          ],
+          "opening_endpoints_world": [
+            [
+              464.0,
+              490.0
+            ],
+            [
+              536.0,
+              490.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              284.0,
+              330.0
+            ],
+            [
+              356.0,
+              330.0
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "pasillos",
+          "kind": "main"
+        }
+      ],
+      "contents": [
+        "cuatro mesas largas con bancos",
+        "mesa ceremonial sobre tres gradas",
+        "columnas",
+        "ventanas con parteluces",
+        "puerta doble abierta"
+      ]
+    },
+    {
+      "id": "biblioteca",
+      "file": "architecture/biblioteca.svg",
+      "bounds_world": [
+        930,
+        120,
+        570,
+        330
+      ],
+      "canvas": [
+        610,
+        370
+      ],
+      "transform": {
+        "translate": [
+          910,
+          100
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "sur",
+          "world": [
+            1215,
+            450
+          ],
+          "local": [
+            305,
+            350
+          ],
+          "opening_endpoints_world": [
+            [
+              1179.0,
+              450.0
+            ],
+            [
+              1251.0,
+              450.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              269.0,
+              350.0
+            ],
+            [
+              341.0,
+              350.0
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "pasillos",
+          "kind": "main"
+        },
+        {
+          "id": "secreto_este",
+          "world": [
+            1500,
+            255
+          ],
+          "local": [
+            590,
+            155
+          ],
+          "opening_endpoints_world": [
+            [
+              1500.0,
+              235.0
+            ],
+            [
+              1500.0,
+              275.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              590.0,
+              135.0
+            ],
+            [
+              590.0,
+              175.0
+            ]
+          ],
+          "width": 40,
+          "side": "E",
+          "connects_to": "pasaje_secreto",
+          "kind": "secret"
+        }
+      ],
+      "contents": [
+        "estanterías perimetrales",
+        "cuatro cuerpos dobles de biblioteca",
+        "mesas de lectura y libros abiertos",
+        "rincón con atril",
+        "acceso secreto al este"
+      ]
+    },
+    {
+      "id": "patio_fuente",
+      "file": "architecture/patio_fuente.svg",
+      "bounds_world": [
+        930,
+        650,
+        570,
+        400
+      ],
+      "canvas": [
+        610,
+        440
+      ],
+      "transform": {
+        "translate": [
+          910,
+          630
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "norte",
+          "world": [
+            1215,
+            650
+          ],
+          "local": [
+            305,
+            20
+          ],
+          "opening_endpoints_world": [
+            [
+              1179.0,
+              650.0
+            ],
+            [
+              1251.0,
+              650.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              269.0,
+              20.0
+            ],
+            [
+              341.0,
+              20.0
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "pasillos",
+          "kind": "main"
+        }
+      ],
+      "contents": [
+        "fuente octogonal central",
+        "cuatro galerías de claustro",
+        "columnas y arranques de bóveda",
+        "cuatro parterres",
+        "bancos de piedra"
+      ]
+    },
+    {
+      "id": "aulas",
+      "file": "architecture/aulas.svg",
+      "bounds_world": [
+        200,
+        720,
+        600,
+        310
+      ],
+      "canvas": [
+        640,
+        350
+      ],
+      "transform": {
+        "translate": [
+          180,
+          700
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "norte",
+          "world": [
+            500,
+            720
+          ],
+          "local": [
+            320,
+            20
+          ],
+          "opening_endpoints_world": [
+            [
+              464.0,
+              720.0
+            ],
+            [
+              536.0,
+              720.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              284.0,
+              20.0
+            ],
+            [
+              356.0,
+              20.0
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "pasillos",
+          "kind": "main"
+        }
+      ],
+      "internal_doors": [
+        {
+          "world": [
+            408,
+            801
+          ],
+          "width": 50,
+          "connects": [
+            "vestibulo",
+            "aula_oeste"
+          ]
+        },
+        {
+          "world": [
+            592,
+            801
+          ],
+          "width": 50,
+          "connects": [
+            "vestibulo",
+            "aula_este"
+          ]
+        }
+      ],
+      "contents": [
+        "dos aulas amuebladas",
+        "vestíbulo común",
+        "seis pupitres dobles",
+        "bancos de prácticas",
+        "atriles y armarios",
+        "dos puertas interiores abiertas"
+      ]
+    },
+    {
+      "id": "escaleras",
+      "file": "architecture/escaleras.svg",
+      "bounds_world": [
+        1780,
+        720,
+        420,
+        330
+      ],
+      "canvas": [
+        460,
+        370
+      ],
+      "transform": {
+        "translate": [
+          1760,
+          700
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "norte",
+          "world": [
+            1960,
+            720
+          ],
+          "local": [
+            200,
+            20
+          ],
+          "opening_endpoints_world": [
+            [
+              1924.0,
+              720.0
+            ],
+            [
+              1996.0,
+              720.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              164.0,
+              20.0
+            ],
+            [
+              236.0,
+              20.0
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "pasillos",
+          "kind": "main"
+        }
+      ],
+      "contents": [
+        "escalera de retorno",
+        "descanso superior e inferior",
+        "descanso intermedio",
+        "hueco central con balaustrada",
+        "tramo auxiliar estrecho"
+      ]
+    },
+    {
+      "id": "torre_escalera",
+      "file": "architecture/torre_escalera.svg",
+      "bounds_world": [
+        1810,
+        150,
+        300,
+        300
+      ],
+      "canvas": [
+        340,
+        340
+      ],
+      "transform": {
+        "translate": [
+          1790,
+          130
+        ],
+        "scale": 1
+      },
+      "margin": 20,
+      "ports": [
+        {
+          "id": "sur",
+          "world": [
+            1960,
+            450
+          ],
+          "local": [
+            170,
+            320
+          ],
+          "opening_endpoints_world": [
+            [
+              1924.0,
+              450.0
+            ],
+            [
+              1996.0,
+              450.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              134.0,
+              320.0
+            ],
+            [
+              206.0,
+              320.0
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "pasillos",
+          "kind": "main"
+        },
+        {
+          "id": "secreto_oeste",
+          "world": [
+            1810,
+            300
+          ],
+          "local": [
+            20,
+            170
+          ],
+          "opening_endpoints_world": [
+            [
+              1810.0,
+              280.0
+            ],
+            [
+              1810.0,
+              320.0
+            ]
+          ],
+          "opening_endpoints_local": [
+            [
+              20.0,
+              150.0
+            ],
+            [
+              20.0,
+              190.0
+            ]
+          ],
+          "width": 40,
+          "side": "W",
+          "connects_to": "pasaje_secreto",
+          "kind": "secret"
+        }
+      ],
+      "contents": [
+        "muro circular de sillería",
+        "escalera circular de veintisiete peldaños",
+        "poste central",
+        "descanso de entrada",
+        "acceso oculto occidental"
+      ],
+      "circle": {
+        "world_center": [
+          1960,
+          300
+        ],
+        "radius": 150,
+        "wall_thickness": 15
+      }
+    },
+    {
+      "id": "pasillos",
+      "file": "architecture/pasillos.svg",
+      "bounds_world": [
+        452,
+        450,
+        1556,
+        270
+      ],
+      "canvas": [
+        2400,
+        1200
+      ],
+      "transform": {
+        "translate": [
+          0,
+          0
+        ],
+        "scale": 1
+      },
+      "margin": "full-map registration",
+      "clear_width": 72,
+      "clear_floor_rects_world": [
+        [
+          464,
+          534,
+          1532,
+          72
+        ],
+        [
+          464,
+          490,
+          72,
+          44
+        ],
+        [
+          1179,
+          450,
+          72,
+          84
+        ],
+        [
+          1924,
+          450,
+          72,
+          84
+        ],
+        [
+          464,
+          606,
+          72,
+          114
+        ],
+        [
+          1179,
+          606,
+          72,
+          44
+        ],
+        [
+          1924,
+          606,
+          72,
+          114
+        ]
+      ],
+      "centerlines_world": [
+        {
+          "id": "galeria_principal",
+          "points": [
+            [
+              500,
+              570
+            ],
+            [
+              1215,
+              570
+            ],
+            [
+              1960,
+              570
+            ]
+          ]
+        },
+        {
+          "id": "ramal_salon",
+          "points": [
+            [
+              500,
+              490
+            ],
+            [
+              500,
+              570
+            ]
+          ]
+        },
+        {
+          "id": "ramal_biblioteca",
+          "points": [
+            [
+              1215,
+              450
+            ],
+            [
+              1215,
+              570
+            ]
+          ]
+        },
+        {
+          "id": "ramal_torre",
+          "points": [
+            [
+              1960,
+              450
+            ],
+            [
+              1960,
+              570
+            ]
+          ]
+        },
+        {
+          "id": "ramal_aulas",
+          "points": [
+            [
+              500,
+              570
+            ],
+            [
+              500,
+              720
+            ]
+          ]
+        },
+        {
+          "id": "ramal_patio",
+          "points": [
+            [
+              1215,
+              570
+            ],
+            [
+              1215,
+              650
+            ]
+          ]
+        },
+        {
+          "id": "ramal_escaleras",
+          "points": [
+            [
+              1960,
+              570
+            ],
+            [
+              1960,
+              720
+            ]
+          ]
+        }
+      ],
+      "clear_boundary_world": [
+        [
+          464,
+          490
+        ],
+        [
+          536,
+          490
+        ],
+        [
+          536,
+          534
+        ],
+        [
+          1179,
+          534
+        ],
+        [
+          1179,
+          450
+        ],
+        [
+          1251,
+          450
+        ],
+        [
+          1251,
+          534
+        ],
+        [
+          1924,
+          534
+        ],
+        [
+          1924,
+          450
+        ],
+        [
+          1996,
+          450
+        ],
+        [
+          1996,
+          720
+        ],
+        [
+          1924,
+          720
+        ],
+        [
+          1924,
+          606
+        ],
+        [
+          1251,
+          606
+        ],
+        [
+          1251,
+          650
+        ],
+        [
+          1179,
+          650
+        ],
+        [
+          1179,
+          606
+        ],
+        [
+          536,
+          606
+        ],
+        [
+          536,
+          720
+        ],
+        [
+          464,
+          720
+        ]
+      ],
+      "boundary_chains_world": [
+        [
+          [
+            536,
+            490
+          ],
+          [
+            536,
+            534
+          ],
+          [
+            1179,
+            534
+          ],
+          [
+            1179,
+            450
+          ]
+        ],
+        [
+          [
+            1251,
+            450
+          ],
+          [
+            1251,
+            534
+          ],
+          [
+            1924,
+            534
+          ],
+          [
+            1924,
+            450
+          ]
+        ],
+        [
+          [
+            1996,
+            450
+          ],
+          [
+            1996,
+            720
+          ]
+        ],
+        [
+          [
+            1924,
+            720
+          ],
+          [
+            1924,
+            606
+          ],
+          [
+            1251,
+            606
+          ],
+          [
+            1251,
+            650
+          ]
+        ],
+        [
+          [
+            1179,
+            650
+          ],
+          [
+            1179,
+            606
+          ],
+          [
+            536,
+            606
+          ],
+          [
+            536,
+            720
+          ]
+        ],
+        [
+          [
+            464,
+            720
+          ],
+          [
+            464,
+            490
+          ]
+        ]
+      ],
+      "ports": [
+        {
+          "id": "salon",
+          "world": [
+            500,
+            490
+          ],
+          "local": [
+            500,
+            490
+          ],
+          "opening_endpoints_world": [
+            [
+              464,
+              490
+            ],
+            [
+              536,
+              490
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "gran_salon"
+        },
+        {
+          "id": "biblioteca",
+          "world": [
+            1215,
+            450
+          ],
+          "local": [
+            1215,
+            450
+          ],
+          "opening_endpoints_world": [
+            [
+              1179,
+              450
+            ],
+            [
+              1251,
+              450
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "biblioteca"
+        },
+        {
+          "id": "torre",
+          "world": [
+            1960,
+            450
+          ],
+          "local": [
+            1960,
+            450
+          ],
+          "opening_endpoints_world": [
+            [
+              1924,
+              450
+            ],
+            [
+              1996,
+              450
+            ]
+          ],
+          "width": 72,
+          "side": "N",
+          "connects_to": "torre_escalera"
+        },
+        {
+          "id": "aulas",
+          "world": [
+            500,
+            720
+          ],
+          "local": [
+            500,
+            720
+          ],
+          "opening_endpoints_world": [
+            [
+              464,
+              720
+            ],
+            [
+              536,
+              720
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "aulas"
+        },
+        {
+          "id": "patio",
+          "world": [
+            1215,
+            650
+          ],
+          "local": [
+            1215,
+            650
+          ],
+          "opening_endpoints_world": [
+            [
+              1179,
+              650
+            ],
+            [
+              1251,
+              650
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "patio_fuente"
+        },
+        {
+          "id": "escaleras",
+          "world": [
+            1960,
+            720
+          ],
+          "local": [
+            1960,
+            720
+          ],
+          "opening_endpoints_world": [
+            [
+              1924,
+              720
+            ],
+            [
+              1996,
+              720
+            ]
+          ],
+          "width": 72,
+          "side": "S",
+          "connects_to": "escaleras"
+        }
+      ],
+      "contents": [
+        "galería longitudinal continua",
+        "seis conexiones abiertas",
+        "pilastras laterales",
+        "rosetas de pavimento"
+      ]
+    },
+    {
+      "id": "pasaje_secreto",
+      "file": "architecture/pasaje_secreto.svg",
+      "bounds_world": [
+        1500,
+        182,
+        310,
+        146
+      ],
+      "canvas": [
+        2400,
+        1200
+      ],
+      "transform": {
+        "translate": [
+          0,
+          0
+        ],
+        "scale": 1
+      },
+      "margin": "full-map registration",
+      "clear_width": 40,
+      "default_visible": false,
+      "centerline_world": [
+        [
+          1500,
+          255
+        ],
+        [
+          1570,
+          255
+        ],
+        [
+          1570,
+          210
+        ],
+        [
+          1700,
+          210
+        ],
+        [
+          1700,
+          300
+        ],
+        [
+          1810,
+          300
+        ]
+      ],
+      "clear_floor_rects_world": [
+        [
+          1500,
+          235,
+          90,
+          40
+        ],
+        [
+          1550,
+          190,
+          40,
+          85
+        ],
+        [
+          1550,
+          190,
+          170,
+          40
+        ],
+        [
+          1680,
+          190,
+          40,
+          130
+        ],
+        [
+          1680,
+          280,
+          130,
+          40
+        ]
+      ],
+      "ports": [
+        {
+          "id": "biblioteca",
+          "world": [
+            1500,
+            255
+          ],
+          "local": [
+            1500,
+            255
+          ],
+          "opening_endpoints_world": [
+            [
+              1500,
+              235
+            ],
+            [
+              1500,
+              275
+            ]
+          ],
+          "width": 40,
+          "side": "W",
+          "connects_to": "biblioteca"
+        },
+        {
+          "id": "torre",
+          "world": [
+            1810,
+            300
+          ],
+          "local": [
+            1810,
+            300
+          ],
+          "opening_endpoints_world": [
+            [
+              1810,
+              280
+            ],
+            [
+              1810,
+              320
+            ]
+          ],
+          "width": 40,
+          "side": "E",
+          "connects_to": "torre_escalera"
+        }
+      ],
+      "contents": [
+        "pasaje oculto independiente",
+        "dos accesos abiertos de cuarenta unidades",
+        "tres recodos de circulación"
+      ]
+    }
+  ],
+  "connectivity": [
+    {
+      "from_node": "gran_salon",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "biblioteca",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "patio_fuente",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "aulas",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "escaleras",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "torre_escalera",
+      "to_node": "pasillos",
+      "kind": "main"
+    },
+    {
+      "from_node": "biblioteca",
+      "to_node": "pasaje_secreto",
+      "kind": "secret"
+    },
+    {
+      "from_node": "pasaje_secreto",
+      "to_node": "torre_escalera",
+      "kind": "secret"
+    }
+  ],
+  "notes": [
+    "Las coordenadas de mundo se convierten a píxeles del mapa final mediante una escala uniforme.",
+    "Los SVG de habitaciones tienen veinte unidades transparentes de margen; el manifest indica la traslación exacta.",
+    "Pasillos y pasaje secreto usan el lienzo entero de 2400×1200 para conservar su registro.",
+    "No añadir muros ni tapas en los puertos: todas las uniones se han dejado abiertas.",
+    "Las puertas de la biblioteca y la torre incluyen un hueco secreto independiente de cuarenta unidades."
+  ]
+}

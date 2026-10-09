@@ -1,0 +1,24 @@
+{
+  "canvas": [
+    2400,
+    1200
+  ],
+  "ink": "#4A2D1B",
+  "main": "composition/mapa_general.svg",
+  "with_secret": "composition/mapa_general_con_pasaje.svg",
+  "footprint_overlay": "composition/huellas_recorrido_ejemplo.svg",
+  "compass": {
+    "file": "ornaments/compass_rose.svg",
+    "position": [
+      2160,
+      155
+    ],
+    "scale": 0.4444444444444444
+  },
+  "layers": [
+    "ornaments/frame_2400x1200.svg",
+    "layout/arquitectura_ensamblada.svg",
+    "ornaments/compass_rose.svg"
+  ],
+  "notes": "Todos los SVG conservan una única tinta y formas cerradas. El recorrido es una capa opcional."
+}

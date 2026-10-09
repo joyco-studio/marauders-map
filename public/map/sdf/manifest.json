@@ -1,0 +1,596 @@
+{
+  "version": 1,
+  "kind": "sdf",
+  "range": 8,
+  "images": {
+    "artwork/architecture/aulas.svg": {
+      "texture": "sdf/architecture/aulas.png",
+      "size": [
+        1312,
+        732
+      ],
+      "viewBox": [
+        0,
+        0,
+        640,
+        350
+      ],
+      "uv": [
+        0.012195121951219513,
+        0.02185792349726776,
+        0.975609756097561,
+        0.9562841530054644
+      ]
+    },
+    "artwork/architecture/biblioteca.svg": {
+      "texture": "sdf/architecture/biblioteca.png",
+      "size": [
+        1252,
+        772
+      ],
+      "viewBox": [
+        0,
+        0,
+        610,
+        370
+      ],
+      "uv": [
+        0.012779552715654952,
+        0.02072538860103627,
+        0.9744408945686901,
+        0.9585492227979274
+      ]
+    },
+    "artwork/architecture/escaleras.svg": {
+      "texture": "sdf/architecture/escaleras.png",
+      "size": [
+        952,
+        772
+      ],
+      "viewBox": [
+        0,
+        0,
+        460,
+        370
+      ],
+      "uv": [
+        0.01680672268907563,
+        0.02072538860103627,
+        0.9663865546218487,
+        0.9585492227979274
+      ]
+    },
+    "artwork/architecture/gran_salon.svg": {
+      "texture": "sdf/architecture/gran_salon.png",
+      "size": [
+        1312,
+        732
+      ],
+      "viewBox": [
+        0,
+        0,
+        640,
+        350
+      ],
+      "uv": [
+        0.012195121951219513,
+        0.02185792349726776,
+        0.975609756097561,
+        0.9562841530054644
+      ]
+    },
+    "artwork/architecture/pasaje_secreto.svg": {
+      "texture": "sdf/architecture/pasaje_secreto.png",
+      "size": [
+        4128,
+        2080
+      ],
+      "viewBox": [
+        0,
+        0,
+        2400,
+        1200
+      ],
+      "uv": [
+        0.003875968992248062,
+        0.007692307692307693,
+        0.9922480620155039,
+        0.9846153846153847
+      ]
+    },
+    "artwork/architecture/pasillos.svg": {
+      "texture": "sdf/architecture/pasillos.png",
+      "size": [
+        4128,
+        2080
+      ],
+      "viewBox": [
+        0,
+        0,
+        2400,
+        1200
+      ],
+      "uv": [
+        0.003875968992248062,
+        0.007692307692307693,
+        0.9922480620155039,
+        0.9846153846153847
+      ]
+    },
+    "artwork/architecture/patio_fuente.svg": {
+      "texture": "sdf/architecture/patio_fuente.png",
+      "size": [
+        1252,
+        912
+      ],
+      "viewBox": [
+        0,
+        0,
+        610,
+        440
+      ],
+      "uv": [
+        0.012779552715654952,
+        0.017543859649122806,
+        0.9744408945686901,
+        0.9649122807017544
+      ]
+    },
+    "artwork/architecture/torre_escalera.svg": {
+      "texture": "sdf/architecture/torre_escalera.png",
+      "size": [
+        712,
+        712
+      ],
+      "viewBox": [
+        0,
+        0,
+        340,
+        340
+      ],
+      "uv": [
+        0.02247191011235955,
+        0.02247191011235955,
+        0.9550561797752809,
+        0.9550561797752809
+      ]
+    },
+    "artwork/ornaments/antique_key.svg": {
+      "texture": "sdf/ornaments/antique_key.png",
+      "size": [
+        792,
+        392
+      ],
+      "viewBox": [
+        0,
+        0,
+        380,
+        180
+      ],
+      "uv": [
+        0.020202020202020204,
+        0.04081632653061224,
+        0.9595959595959596,
+        0.9183673469387755
+      ]
+    },
+    "artwork/ornaments/compass_rose.svg": {
+      "texture": "sdf/ornaments/compass_rose.png",
+      "size": [
+        752,
+        752
+      ],
+      "viewBox": [
+        0,
+        0,
+        360,
+        360
+      ],
+      "uv": [
+        0.02127659574468085,
+        0.02127659574468085,
+        0.9574468085106383,
+        0.9574468085106383
+      ]
+    },
+    "artwork/ornaments/flourish_acanthus.svg": {
+      "texture": "sdf/ornaments/flourish_acanthus.png",
+      "size": [
+        532,
+        432
+      ],
+      "viewBox": [
+        0,
+        0,
+        250,
+        200
+      ],
+      "uv": [
+        0.03007518796992481,
+        0.037037037037037035,
+        0.9398496240601504,
+        0.9259259259259259
+      ]
+    },
+    "artwork/ornaments/flourish_celestial.svg": {
+      "texture": "sdf/ornaments/flourish_celestial.png",
+      "size": [
+        512,
+        312
+      ],
+      "viewBox": [
+        0,
+        0,
+        240,
+        140
+      ],
+      "uv": [
+        0.03125,
+        0.05128205128205128,
+        0.9375,
+        0.8974358974358975
+      ]
+    },
+    "artwork/ornaments/footprint_left.svg": {
+      "texture": "sdf/ornaments/footprint_left.png",
+      "size": [
+        252,
+        452
+      ],
+      "viewBox": [
+        0,
+        0,
+        110,
+        210
+      ],
+      "uv": [
+        0.06349206349206349,
+        0.035398230088495575,
+        0.873015873015873,
+        0.9292035398230089
+      ]
+    },
+    "artwork/ornaments/footprint_right.svg": {
+      "texture": "sdf/ornaments/footprint_right.png",
+      "size": [
+        252,
+        452
+      ],
+      "viewBox": [
+        0,
+        0,
+        110,
+        210
+      ],
+      "uv": [
+        0.06349206349206349,
+        0.035398230088495575,
+        0.873015873015873,
+        0.9292035398230089
+      ]
+    },
+    "artwork/ornaments/frame_2400x1200.svg": {
+      "texture": "sdf/ornaments/frame_2400x1200.png",
+      "size": [
+        4128,
+        2080
+      ],
+      "viewBox": [
+        0,
+        0,
+        2400,
+        1200
+      ],
+      "uv": [
+        0.003875968992248062,
+        0.007692307692307693,
+        0.9922480620155039,
+        0.9846153846153847
+      ]
+    },
+    "artwork/ornaments/frame_corner_bottom_left.svg": {
+      "texture": "sdf/ornaments/frame_corner_bottom_left.png",
+      "size": [
+        248,
+        248
+      ],
+      "viewBox": [
+        0,
+        0,
+        108,
+        108
+      ],
+      "uv": [
+        0.06451612903225806,
+        0.06451612903225806,
+        0.8709677419354839,
+        0.8709677419354839
+      ]
+    },
+    "artwork/ornaments/frame_corner_bottom_right.svg": {
+      "texture": "sdf/ornaments/frame_corner_bottom_right.png",
+      "size": [
+        248,
+        248
+      ],
+      "viewBox": [
+        0,
+        0,
+        108,
+        108
+      ],
+      "uv": [
+        0.06451612903225806,
+        0.06451612903225806,
+        0.8709677419354839,
+        0.8709677419354839
+      ]
+    },
+    "artwork/ornaments/frame_corner_top_left.svg": {
+      "texture": "sdf/ornaments/frame_corner_top_left.png",
+      "size": [
+        248,
+        248
+      ],
+      "viewBox": [
+        0,
+        0,
+        108,
+        108
+      ],
+      "uv": [
+        0.06451612903225806,
+        0.06451612903225806,
+        0.8709677419354839,
+        0.8709677419354839
+      ]
+    },
+    "artwork/ornaments/frame_corner_top_right.svg": {
+      "texture": "sdf/ornaments/frame_corner_top_right.png",
+      "size": [
+        248,
+        248
+      ],
+      "viewBox": [
+        0,
+        0,
+        108,
+        108
+      ],
+      "uv": [
+        0.06451612903225806,
+        0.06451612903225806,
+        0.8709677419354839,
+        0.8709677419354839
+      ]
+    },
+    "artwork/ornaments/frame_edge_horizontal.svg": {
+      "texture": "sdf/ornaments/frame_edge_horizontal.png",
+      "size": [
+        896,
+        208
+      ],
+      "viewBox": [
+        0,
+        0,
+        432,
+        88
+      ],
+      "uv": [
+        0.017857142857142856,
+        0.07692307692307693,
+        0.9642857142857143,
+        0.8461538461538461
+      ]
+    },
+    "artwork/ornaments/frame_edge_vertical.svg": {
+      "texture": "sdf/ornaments/frame_edge_vertical.png",
+      "size": [
+        208,
+        896
+      ],
+      "viewBox": [
+        0,
+        0,
+        88,
+        432
+      ],
+      "uv": [
+        0.07692307692307693,
+        0.017857142857142856,
+        0.8461538461538461,
+        0.9642857142857143
+      ]
+    },
+    "artwork/ornaments/ornament_quatrefoil.svg": {
+      "texture": "sdf/ornaments/ornament_quatrefoil.png",
+      "size": [
+        432,
+        392
+      ],
+      "viewBox": [
+        0,
+        0,
+        200,
+        180
+      ],
+      "uv": [
+        0.037037037037037035,
+        0.04081632653061224,
+        0.9259259259259259,
+        0.9183673469387755
+      ]
+    },
+    "artwork/ornaments/separator_double_vine.svg": {
+      "texture": "sdf/ornaments/separator_double_vine.png",
+      "size": [
+        872,
+        312
+      ],
+      "viewBox": [
+        0,
+        0,
+        420,
+        140
+      ],
+      "uv": [
+        0.01834862385321101,
+        0.05128205128205128,
+        0.963302752293578,
+        0.8974358974358975
+      ]
+    },
+    "artwork/ornaments/separator_star_knot.svg": {
+      "texture": "sdf/ornaments/separator_star_knot.png",
+      "size": [
+        952,
+        232
+      ],
+      "viewBox": [
+        0,
+        0,
+        460,
+        100
+      ],
+      "uv": [
+        0.01680672268907563,
+        0.06896551724137931,
+        0.9663865546218487,
+        0.8620689655172413
+      ]
+    },
+    "artwork/banners/banner_corto_contornos.svg": {
+      "texture": "sdf/banners/banner_corto_contornos.png",
+      "size": [
+        872,
+        512
+      ],
+      "viewBox": [
+        0,
+        0,
+        420,
+        240
+      ],
+      "uv": [
+        0.01834862385321101,
+        0.03125,
+        0.963302752293578,
+        0.9375
+      ]
+    },
+    "artwork/banners/banner_corto_silueta.svg": {
+      "texture": "sdf/banners/banner_corto_silueta.png",
+      "size": [
+        872,
+        512
+      ],
+      "viewBox": [
+        0,
+        0,
+        420,
+        240
+      ],
+      "uv": [
+        0.01834862385321101,
+        0.03125,
+        0.963302752293578,
+        0.9375
+      ]
+    },
+    "artwork/banners/banner_largo_contornos.svg": {
+      "texture": "sdf/banners/banner_largo_contornos.png",
+      "size": [
+        1056,
+        325
+      ],
+      "viewBox": [
+        0,
+        0,
+        840,
+        240
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.04923076923076923,
+        0.9696969696969697,
+        0.9015384615384615
+      ]
+    },
+    "artwork/banners/banner_largo_silueta.svg": {
+      "texture": "sdf/banners/banner_largo_silueta.png",
+      "size": [
+        1056,
+        325
+      ],
+      "viewBox": [
+        0,
+        0,
+        840,
+        240
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.04923076923076923,
+        0.9696969696969697,
+        0.9015384615384615
+      ]
+    },
+    "artwork/banners/banner_mediano_contornos.svg": {
+      "texture": "sdf/banners/banner_mediano_contornos.png",
+      "size": [
+        1056,
+        428
+      ],
+      "viewBox": [
+        0,
+        0,
+        620,
+        240
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.037383177570093455,
+        0.9696969696969697,
+        0.9252336448598131
+      ]
+    },
+    "artwork/banners/banner_mediano_silueta.svg": {
+      "texture": "sdf/banners/banner_mediano_silueta.png",
+      "size": [
+        1056,
+        428
+      ],
+      "viewBox": [
+        0,
+        0,
+        620,
+        240
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.037383177570093455,
+        0.9696969696969697,
+        0.9252336448598131
+      ]
+    },
+    "artwork/cover/enchanted_map_cover.svg": {
+      "texture": "sdf/cover/enchanted_map_cover.png",
+      "size": [
+        1261,
+        3104
+      ],
+      "viewBox": [
+        0,
+        0,
+        800,
+        2000
+      ],
+      "uv": [
+        0.012688342585249802,
+        0.005154639175257732,
+        0.9746233148295004,
+        0.9896907216494846
+      ]
+    }
+  }
+}

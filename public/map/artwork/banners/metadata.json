@@ -1,0 +1,112 @@
+{
+  "ink": "#4A2D1B",
+  "unit": "viewBox units",
+  "texture_pixel_ratio": 4,
+  "alpha": "Straight/unassociated alpha, no matte. Partially covered edge pixels retain material RGB; fully transparent pixels have zero RGB.",
+  "svg_geometry": "Only filled, closed SVG paths. Curves preserved in silhouette; all ink centerlines expanded to polygons.",
+  "material_source": "generated_images/exec-95342d98-9181-424e-b41d-ba429371513f.png",
+  "banner_layers": [
+    {
+      "name": "corto",
+      "viewBox": [
+        0,
+        0,
+        420,
+        240
+      ],
+      "svg_dimensions": [
+        420,
+        240
+      ],
+      "png_dimensions": [
+        1680,
+        960
+      ],
+      "safe_text_box": {
+        "x": 99,
+        "y": 94,
+        "width": 222,
+        "height": 60
+      },
+      "suggested_two_line_baselines": [
+        116,
+        144
+      ],
+      "transparent_margin_min": 17,
+      "layers": {
+        "silhouette": "banner_corto_silueta.svg",
+        "ink": "banner_corto_contornos.svg",
+        "color": "banner_corto_color.png",
+        "composite_preview": "banner_corto_preview.png"
+      }
+    },
+    {
+      "name": "mediano",
+      "viewBox": [
+        0,
+        0,
+        620,
+        240
+      ],
+      "svg_dimensions": [
+        620,
+        240
+      ],
+      "png_dimensions": [
+        2480,
+        960
+      ],
+      "safe_text_box": {
+        "x": 99,
+        "y": 94,
+        "width": 422,
+        "height": 60
+      },
+      "suggested_two_line_baselines": [
+        116,
+        144
+      ],
+      "transparent_margin_min": 17,
+      "layers": {
+        "silhouette": "banner_mediano_silueta.svg",
+        "ink": "banner_mediano_contornos.svg",
+        "color": "banner_mediano_color.png",
+        "composite_preview": "banner_mediano_preview.png"
+      }
+    },
+    {
+      "name": "largo",
+      "viewBox": [
+        0,
+        0,
+        840,
+        240
+      ],
+      "svg_dimensions": [
+        840,
+        240
+      ],
+      "png_dimensions": [
+        3360,
+        960
+      ],
+      "safe_text_box": {
+        "x": 99,
+        "y": 94,
+        "width": 642,
+        "height": 60
+      },
+      "suggested_two_line_baselines": [
+        116,
+        144
+      ],
+      "transparent_margin_min": 17,
+      "layers": {
+        "silhouette": "banner_largo_silueta.svg",
+        "ink": "banner_largo_contornos.svg",
+        "color": "banner_largo_color.png",
+        "composite_preview": "banner_largo_preview.png"
+      }
+    }
+  ]
+}

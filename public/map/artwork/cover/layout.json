@@ -1,0 +1,56 @@
+{
+  "file": "enchanted_map_cover.svg",
+  "viewBox": [
+    0,
+    0,
+    800,
+    2000
+  ],
+  "aspect_ratio": "2:5",
+  "ink": "#4A2D1B",
+  "text_in_artwork": false,
+  "background": "transparent",
+  "safe_text_rectangles": [
+    {
+      "id": "top_ribbon",
+      "x": 204,
+      "y": 199,
+      "width": 392,
+      "height": 48,
+      "suggested_use": "Small heading; optional"
+    },
+    {
+      "id": "main_title",
+      "x": 155,
+      "y": 432,
+      "width": 490,
+      "height": 273,
+      "suggested_use": "Main title in real typography"
+    },
+    {
+      "id": "message",
+      "x": 165,
+      "y": 790,
+      "width": 470,
+      "height": 200,
+      "suggested_use": "Opening message or subtitle"
+    },
+    {
+      "id": "castle_dedication",
+      "x": 305,
+      "y": 1385,
+      "width": 194,
+      "height": 168,
+      "suggested_use": "Optional short dedication in the blank keep panel"
+    },
+    {
+      "id": "bottom_ribbon",
+      "x": 234,
+      "y": 1858,
+      "width": 332,
+      "height": 30,
+      "suggested_use": "Optional short caption"
+    }
+  ],
+  "description_es": "Portada original en alzado frontal plano. Espacios indicados íntegramente libres de tinta. El fondo transparente permite colocar papel y tipografía en capas independientes."
+}
