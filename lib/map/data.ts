@@ -6,8 +6,11 @@ export type Label = { text: string; center: Point; size: number; heading?: boole
 export type CharacterRoute = { name: string; points: readonly Point[]; speed: number; offset: number }
 export type Hotspot = { id: "close" | "open" | "passage"; center: Point; radius: Point }
 // The art pack uses 2400×1200 units. Preserve its registered viewBoxes and doors.
-const point=([x,y]:Point):[number,number]=>[x*7/12,y*7/12]
-const room=(id:string,file:string,x:number,y:number,w:number,h:number,start:number,seed:number):MapElement=>({id,src:`artwork/architecture/${file}.svg`,center:point([x+w/2,y+h/2]),size:point([w,h]),timing:{start,duration:1.15,seed}})
+const sheet=([x,y]:Point):[number,number]=>[x*7/12,y*7/12]
+export const mapPoint=([x,y]:Point):[number,number]=>sheet([1200+(x-1200)*.82,160+y*.82])
+export const mapSize=([w,h]:Point):[number,number]=>sheet([w*.82,h*.82])
+const point=mapPoint
+const room=(id:string,file:string,x:number,y:number,w:number,h:number,start:number,seed:number):MapElement=>({id,src:`artwork/architecture/${file}.svg`,center:point([x+w/2,y+h/2]),size:mapSize([w,h]),timing:{start,duration:1.15,seed}})
 export const elements:MapElement[]=[
   {id:"border",src:"artwork/ornaments/frame_2400x1200.svg",center:[700,350],size:[1400,700],timing:{start:0,duration:1.8,seed:1}},
   room("great-hall","gran_salon",180,160,640,350,.2,3),
@@ -17,18 +20,18 @@ export const elements:MapElement[]=[
   room("stairs","escaleras",1760,700,460,370,.5,6),
   room("tower","torre_escalera",1790,130,340,340,.45,8),
   room("corridors","pasillos",0,0,2400,1200,.15,2),
-  {id:"compass",src:"artwork/ornaments/compass_rose.svg",center:point([2250,240]),size:point([180,180]),timing:{start:1,duration:.8,seed:9}},
+  {id:"compass",src:"artwork/ornaments/compass_rose.svg",center:point([2250,240]),size:mapSize([180,180]),timing:{start:1,duration:.8,seed:9}},
 ]
 export const labels:Label[]=[
-  {text:"The Marauder's Map",center:point([1200,90]),size:24,start:1},
-  {text:"The Great Hall",center:point([500,137]),size:18},
-  {text:"The Library",center:point([1215,485]),size:18},
-  {text:"The Courtyard",center:point([1215,1078]),size:16},
-  {text:"Classrooms",center:point([500,1070]),size:18},
-  {text:"Moving Staircases",center:point([1990,1090]),size:18},
-  {text:"North Tower",center:point([1960,112]),size:17},
-  {text:"Mischief managed",center:point([1200,1120]),size:18,start:2.1},
-  {text:"Tap the key to find a secret",center:point([1645,1120]),size:12},
+  {text:"The Marauder's Map",center:sheet([1200,115]),size:24,start:1},
+  {text:"The Great Hall",center:point([500,125]),size:18},
+  {text:"The Library",center:point([1215,65]),size:18},
+  {text:"The Courtyard",center:point([1215,1100]),size:16},
+  {text:"Classrooms",center:point([500,1090]),size:18},
+  {text:"Moving Staircases",center:point([1990,1110]),size:18},
+  {text:"North Tower",center:point([1960,95]),size:17},
+  {text:"Mischief managed",center:sheet([1200,1120]),size:18,start:2.1},
+  {text:"Tap the key to find a secret",center:sheet([1645,1120]),size:12},
 ]
 const route=(name:string,points:Point[],speed:number,offset:number):CharacterRoute=>({name,points:points.map(point),speed,offset})
 export const characters:CharacterRoute[]=[
@@ -38,7 +41,7 @@ export const characters:CharacterRoute[]=[
   route("Argus Filch",[[500,570],[1960,570],[1960,710],[1960,570],[1215,570],[1215,465],[1215,570]],19,430),
 ]
 export const hotspots:Hotspot[]=[
-  {id:"close",center:point([1200,1120]),radius:[140,24]},
+  {id:"close",center:sheet([1200,1120]),radius:[140,24]},
   {id:"passage",center:point([1645,1040]),radius:[32,32]},
 ]
 // Pixel-space map coordinates convert once to the compositing camera's y-up space.

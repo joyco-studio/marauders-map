@@ -12,7 +12,7 @@ import { layout } from "lettra"
 import { loadAssets } from "./assets"
 import { sdfCoverage } from "./sdf"
 import { createInk, type Ink } from "./ink"
-import { characters, elements, hotspots, labels, sheetPoint, routeAt, type Label, type RevealTiming } from "./data"
+import { mapPoint, mapSize, characters, elements, hotspots, labels, sheetPoint, routeAt, type Label, type RevealTiming } from "./data"
 import { advance, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
@@ -101,12 +101,12 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     for(const element of elements){const drawing=addDrawing(element.src,element.size,element.center,element.timing.seed);reveals.push({ink:drawing.ink,timing:element.timing})}
     for(const label of labels)addText(label)
-    const key=addDrawing("artwork/ornaments/antique_key.svg",[76,36],[1645*7/12,1040*7/12],24)
+    const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
-    const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",[1400,700],[700,350],31)
-    const secret=addText({text:"Dissendium",center:[1630*7/12,150*7/12],size:16,angle:-.12},mapScene,true)
+    const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
+    const secret=addText({text:"Dissendium",center:mapPoint([1630,150]),size:16,angle:-.12},mapScene,true)
     secret.ink.progress.value=0
-    const note=addText({text:"A passage to Honeydukes",center:[1640*7/12,175*7/12],size:11},mapScene,true)
+    const note=addText({text:"A passage to Honeydukes",center:mapPoint([1640,175]),size:11},mapScene,true)
     note.ink.progress.value=0
     // Reusable static snapshot quad: updated only when ink/static discovery changes.
     const cachedMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
@@ -200,7 +200,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const coverBorder=addDrawing("artwork/cover/enchanted_map_cover.svg",[280,700],[700,350],13,coverScene);coverBorder.ink.progress.value=1
 
     // Paper rig: center fixed; both side chains fold back into a stack.
-    const paper=new Group();scene.add(paper)
+    const paper=new Group();paper.scale.setScalar(1.18);scene.add(paper)
     paper.rotation.z=-.028
     const panels:Panel[]=[]
     const coverAmount=uniform(1)
@@ -276,7 +276,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     let zoom=1,panX=0,panY=0,baseDistance=15
     const updateCamera=(fold=0)=> {
       const tangent=Math.tan(35*Math.PI/360)
-      const foldedDistance=Math.max(4.4/tangent,1.6/(tangent*camera.aspect))+2
+      const foldedDistance=Math.max(5.2/tangent,1.9/(tangent*camera.aspect))+2
       camera.position.set(panX,panY-3.5*fold,(baseDistance/zoom)*(1-fold)+foldedDistance*fold)
       camera.lookAt(panX,panY,0)
       camera.updateMatrixWorld()
@@ -287,7 +287,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.5:2))
       renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()
       const vertical=Math.tan(35*Math.PI/360)
-      baseDistance=Math.max(4.4/vertical,7.9/(vertical*camera.aspect))
+      baseDistance=Math.max(5.65/vertical,10/(vertical*camera.aspect))
       updateCamera()
     }
     const observer=new ResizeObserver(fit);observer.observe(container);disposer.add(()=>observer.disconnect());fit()
