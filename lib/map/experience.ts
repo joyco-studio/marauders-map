@@ -18,6 +18,8 @@ import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } fr
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
+import { ActorPresentation } from "../activity/presentation"
+import { MAX_RENDERED_PEOPLE } from "../activity/roster"
 import { ActivityJourneys } from "../activity/journeys"
 import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
@@ -152,6 +154,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       })
       return {simulation,title,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight}
     })
+    const presentation=new ActorPresentation(journeys.actors.map(actor=>actor.point),MAX_RENDERED_PEOPLE)
     // Cover lives on the center panel and uses the same real MSDF lettering.
     const coverContent = {
       choices: [
@@ -402,7 +405,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(next===state)return
       cast()
       if(command==="open")reset()
-      if(command==="close"){for(const a of actors)for(const f of a.footprints){f.born=-100;f.ink.opacity.value=0}staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
+      if(command==="close"){staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
       clearHover();focused=null
       state=next;syncPhase(state);emit()
     }
@@ -429,7 +432,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
-      canvas.style.cursor=hover?"pointer":state.phase==="exploring"?"grab":"default"
+      canvas.style.cursor=hover||(!suspended&&!pointers.size&&latest&&actorAt(latest.x,latest.y))?"pointer":state.phase==="exploring"?"grab":"default"
     }
     const actorAt=(clientX:number,clientY:number)=> {
       if(state.phase!=="exploring"||state.greeting==="mockery")return
@@ -437,7 +440,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       // Match banner draw order, with passage/close hotspots always taking priority.
       return [...actors].reverse().find(actor=> {
         const sim=actor.simulation
-        return sim.eligible&&sim.rendered&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
+        return sim.eligible&&presentation.actors[actors.indexOf(actor)].phase==="shown"&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
       })?.simulation.person.id
     }
     const pointers=new Map<number,{x:number;y:number}>()
@@ -543,29 +546,32 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const activityActive=state.phase==="exploring"&&state.greeting!=="mockery"&&!tuning.manual
       if(!tuning.manual)journeys.tick(dt,activityActive)
       if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
-      const placed:{x:number;y:number;width:number;height:number}[]=[]
-      for(const actor of actors){
-        const simulation=actor.simulation,[x,y]=sheetPoint(simulation.point)
-        const visible=simulation.rendered&&(state.phase==="error"||state.greeting!=="mockery")
+      const showPeople=(state.phase==="revealing"||state.phase==="exploring")&&state.greeting!=="mockery"
+      const priorPhases=presentation.actors.map(actor=>actor.phase)
+      presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})))
+      for(const [index,actor] of actors.entries()){
+        const simulation=actor.simulation,appearance=presentation.actors[index]
+        const [x,y]=sheetPoint(appearance.point)
+        const visible=appearance.phase!=="hidden"
         actor.title.handle.mesh.visible=visible;actor.banner.visible=visible
-        // Separate banners sharing a home or corridor without moving the footprint route.
-        let labelX=x,labelY=y+.5
-        if(visible){
+        // Choose once per appearance; moving neighbours cannot snap this banner elsewhere.
+        if(appearance.phase==="entering"&&priorPhases[index]!=="entering"&&priorPhases[index]!=="shown"){
+          appearance.offset=[0,0]
           for(const [dx,dy] of bannerOffsets){
             const cx=x+dx,cy=y+.5+dy
             if(Math.abs(cx)+actor.bannerWidth/2>6.7||Math.abs(cy)+actor.bannerHeight/2>3.25)continue
-            if(placed.some(p=>Math.abs(p.x-cx)<(p.width+actor.bannerWidth)/2+.06&&Math.abs(p.y-cy)<(p.height+actor.bannerHeight)/2+.04))continue
-            labelX=cx;labelY=cy;break
+            if(actors.some((other,i)=>i!==index&&presentation.actors[i].phase!=="hidden"&&(priorPhases[i]!=="hidden"||i<index)&&Math.abs(other.banner.position.x-cx)<(other.bannerWidth+actor.bannerWidth)/2+.06&&Math.abs(other.banner.position.y-cy)<(other.bannerHeight+actor.bannerHeight)/2+.04))continue
+            appearance.offset=[dx,dy];break
           }
-          placed.push({x:labelX,y:labelY,width:actor.bannerWidth,height:actor.bannerHeight})
         }
+        const labelX=x+appearance.offset[0],labelY=y+.5+appearance.offset[1]
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX,labelY,.035)
-        actor.title.ink.progress.value=(state.phase==="exploring"?revealProgress(age,0,.6):revealProgress(reveal,2.3,.7))*erase
-        actor.title.ink.opacity.value=simulation.ink
-        actor.bannerInk.progress.value=actor.title.ink.progress.value
-        actor.bannerInk.opacity.value=simulation.ink
-        if(activityActive&&(simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
+        actor.title.ink.progress.value=appearance.progress
+        actor.title.ink.opacity.value=1
+        actor.bannerInk.progress.value=appearance.progress
+        actor.bannerInk.opacity.value=1
+        if(activityActive&&appearance.phase!=="exiting"&&visible&&(simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
           actor.lastStep+=dt
           if(actor.lastStep>=.42){
             const f=actor.footprints[actor.step%actor.footprints.length]
@@ -576,7 +582,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         }
         for(const f of actor.footprints){
           if(!visible)f.born=-100
-          const life=time-f.born;f.mesh.visible=visible&&life>=0&&life<8;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*erase
+          const life=time-f.born;f.mesh.visible=visible&&life>=0&&life<8;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*(appearance.phase==="exiting"?appearance.progress:1)
         }
       }
       if(state.phase==="exploring"&&!tuning.manual&&(!discovered||time-discoveredAt>1.6)&&staticDirty)snapshot()

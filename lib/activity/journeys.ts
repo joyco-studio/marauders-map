@@ -35,7 +35,7 @@ type Walk = {path:Waypoint[]; segment:number; distance:number}
 export type Journey = Walk & {event:ActivityEvent; phase:'outbound'|'arrival'|'return'; pause:number}
 export type ActorState = {person:Person; point:Point; angle:number; queue:ActivityEvent[]; journey?:Journey; wander?:Walk; rendered:boolean; eligible:boolean; visible:boolean; delay:number; ink:number; retired:boolean}
 export class ActivityJourneys {
-  actors:ActorState[]=roster.map(person=>({person,point:waypoints[person.home],angle:0,queue:[],eligible:person.group==='ecosystem',visible:person.group==='ecosystem',delay:0,ink:.65,retired:false,rendered:false}))
+  actors:ActorState[]=roster.map(person=>({person,point:waypoints[person.home],angle:0,queue:[],eligible:person.group==='ecosystem',visible:person.group==='ecosystem',delay:0,ink:1,retired:false,rendered:false}))
   private wandering=false
   private maxPeople:number
   constructor(maxPeople=MAX_RENDERED_PEOPLE, private random= Math.random) {
@@ -64,7 +64,7 @@ export class ActivityJourneys {
       if(!actor.eligible)continue
       if(first){actor.queue=unseen.slice(0,1);actor.delay=index*2}
       else actor.queue=[...actor.queue,...unseen].sort((a,b)=>Date.parse(a.occurredAt)-Date.parse(b.occurredAt)).slice(-3)
-      actor.ink=items.length && now-Date.parse(items[0].occurredAt)<86400000 ? 1 : .65
+      actor.ink=1
     }
     this.updateRendered()
   }

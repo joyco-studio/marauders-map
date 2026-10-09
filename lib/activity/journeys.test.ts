@@ -127,3 +127,9 @@ test('events that expire while waiting for a rendered slot never start a new jou
   sim.tick(.1,true,now+1)
   assert.equal(sim.actors[1].queue.length,0)
 })
+test('makers retain full ink strength regardless of activity age or missing activity',()=>{
+  const sim=new ActivityJourneys()
+  assert.ok(sim.actors.every(actor=>actor.ink===1))
+  sim.setActivity(snapshot([event('older','mrdoob',3*86400000)]),now)
+  assert.ok(sim.actors.every(actor=>actor.ink===1))
+})

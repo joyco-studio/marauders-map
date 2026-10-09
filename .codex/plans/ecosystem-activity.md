@@ -144,3 +144,7 @@ The implementation includes the normalized GitHub/Atom adapters, server-only col
 Thirty-seven offline activity and existing cinematic state tests pass. Typechecking, linting, the production build, and `git diff --check` pass. The reserved source strings and complete mockery were compared against the original source and match verbatim. Static composition excludes every pooled banner, label and footprint, and hidden/expired prints are excluded from rendering. Request aborts, polling timers, visibility listeners and arrival timers are disposed on unmount.
 
 Partial desktop WebGPU inspection covered the folded title, opening, empty sources, keyboard roster and unavailable-source card before browser work was stopped at the user's request. Full mobile WebGL2 and final browser inspection are deferred. No deployment or service provisioning was performed. The temporary local collection fixture was restored to the real server-only collector. The configured token is never copied to tracked files or client code.
+
+### Follow-up: actor presentation
+
+The user requested fixes for repeated entrances, age-faded makers, and teleporting banners. Actor appearance now has a complete entrance/exit lifecycle independent of map phase and roster selection. All makers use full ink strength; freshness remains visible in source cards. Exits reserve one of the eight slots until complete, banner offsets stay stable throughout an appearance, and unexpected relocations happen only after a full exit. See `actor-transitions.md` for the implementation and verification record.
