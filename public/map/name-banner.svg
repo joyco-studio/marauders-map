@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160" viewBox="0 0 320 160">
+<defs>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dbc08b"/><stop offset=".5" stop-color="#ead4a1"/><stop offset="1" stop-color="#bea06d"/></linearGradient>
+  <linearGradient id="curl"><stop stop-color="#72502e"/><stop offset=".45" stop-color="#c5a674"/><stop offset="1" stop-color="#8a6239"/></linearGradient>
+</defs>
+<g stroke="#64472c" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M49 43 C24 39 15 17 28 10 C47 0 76 13 67 31 L56 53 Z" fill="url(#curl)"/>
+  <path d="M28 10 C43 9 52 17 48 27 L37 39 M34 16 Q45 18 42 27" fill="none"/>
+  <path d="M269 119 C298 113 310 139 294 150 C270 164 244 150 254 133 L264 110 Z" fill="url(#curl)"/>
+  <path d="M294 150 Q275 153 271 140 M291 143 Q279 146 278 138" fill="none"/>
+  <path d="M29 40 C80 27 125 40 162 34 C208 26 252 35 290 27 L276 120 C231 132 184 119 148 126 C103 134 63 121 34 137 C42 109 27 72 29 40 Z" fill="url(#paper)"/>
+  <path d="M34 137 Q20 121 29 105 Q33 100 37 105 M290 27 Q301 47 286 60" fill="url(#curl)"/>
+  <path d="M42 48 C84 39 126 49 164 43 C206 36 245 43 276 38 M47 122 C86 111 115 124 150 117 C190 110 231 121 266 112" fill="none" stroke-width=".9" opacity=".55"/>
+</g>
+</svg>

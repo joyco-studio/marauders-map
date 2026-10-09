@@ -1,126 +1,31 @@
 @import "tailwindcss";
 
-/* ── Theme variables ── */
-:root,
-[data-theme="light"] {
-  --accent: oklch(0.9 0 0);
-  --foreground: oklch(0.145 0 0);
-}
+@font-face { font-family: "Tangerine"; src: url("/map/fonts/tangerine-bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Cinzel"; src: url("/map/fonts/cinzel.ttf") format("truetype"); font-weight: 400 900; font-display: swap; }
+:root { color-scheme: dark; font-family: "Tangerine", cursive; font-weight: 700; color: #ddc89c; background: #151714; }
+* { box-sizing: border-box; }
+body { margin: 0; overflow: hidden; }
+button { font: inherit; cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible { outline: 2px solid #593724; outline-offset: 5px; }
+.map-experience, .map-host { position: fixed; inset: 0; width: 100%; height: 100dvh; }
+.map-experience { background: radial-gradient(ellipse at 50% 42%, #36342a, #151714 75%); }
+.map-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.loading-parchment { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-1deg); padding: 52px 36px; width: 280px; color: #593724; text-align: center; background: #ddc89c url("/map/parchment.jpg") center/cover; box-shadow: 0 25px 80px #0009; border: 1px solid #ab8a52; pointer-events: none; }
+.loading-parchment::before { content: ""; position: absolute; inset: 12px; border: 1px solid #59372466; }
+.loading-ornament { font-size: 48px; }
+.loading-parchment p { font-size: 36px; margin: 12px 0 24px; }
+.loading-parchment small { display: block; margin-top: 14px; font-size: 24px; }
+.loading-rule { height: 1px; background: #59372433; }
+.loading-rule span { display: block; width: 100%; height: 1px; background: #593724; transform-origin: left; transition: transform .2s; }
+.accessible-controls { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.accessible-controls:focus-within { width: auto; height: auto; clip-path: none; bottom: 5vh; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; padding: 16px 24px; background: #ddc89c url("/map/parchment.jpg"); box-shadow: 0 6px 24px #0005; color: #593724; max-width: 90vw; }
+.accessible-controls button { background: transparent; border: 0; border-bottom: 1px solid #59372466; padding: 4px; white-space: nowrap; }
+.map-fallback { position: absolute; inset: 0; display: grid; place-content: center; padding: 24px; }
+.map-fallback img { width: min(92vw, 1400px); height: auto; box-shadow: 0 30px 100px #0008; }
+.fallback-message { padding: 16px 24px; max-width: 560px; margin: -1px auto 0; background: #ddc89c; color: #593724; text-align: center; }
+.fallback-message p { margin: 0 0 12px; }
+.fallback-message button { padding: 8px 16px; border: 1px solid #593724; background: transparent; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-[data-theme="dark"] {
-  --accent: oklch(0.2768 0 0);
-  --foreground: oklch(0.985 0 0);
-}
-
-[data-theme="radio"] {
-  --accent: oklch(0.895 0.035 250);
-  --foreground: oklch(0.145 0.025 250);
-}
-
-[data-theme="terminal"] {
-  --accent: oklch(0.2 0.03 140);
-  --foreground: oklch(0.85 0.18 145);
-}
-
-/* ── Scrollbar ── */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-}
-
-*::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  background-color: transparent;
-}
-
-*::-webkit-scrollbar-track {
-  -webkit-appearance: none;
-  background-color: transparent;
-  border-radius: 0;
-}
-
-*::-webkit-scrollbar-thumb {
-  -webkit-appearance: none;
-  background-color: var(--accent);
-  border-radius: 0;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in oklab, var(--accent) 80%, var(--foreground));
-}
-
-*::-webkit-scrollbar-corner {
-  background-color: transparent;
-}
-
-/* Smaller scrollbar for code blocks */
-pre::-webkit-scrollbar,
-code::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-  background: transparent;
-}
-
-pre::-webkit-scrollbar-track,
-code::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-pre::-webkit-scrollbar-thumb,
-code::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 0 !important;
-  border: none;
-}
-
-pre::-webkit-scrollbar-thumb:hover,
-code::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--accent) 80%, var(--foreground));
-}
-
-/* ── Scrollbar-none utility (Tailwind v4) ── */
-@utility scrollbar-none {
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
-  isolation: isolate;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  &::-webkit-scrollbar-track {
-    display: none;
-  }
-  &::-webkit-scrollbar-thumb {
-    display: none;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    display: none;
-  }
-  &::-webkit-scrollbar-corner {
-    display: none;
-  }
-}
-
-/* ── Base ── */
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1f2020;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  min-height: 100dvh;
-}
+.accessible-controls, .fallback-message { font-size: 28px; line-height: 1.15; }

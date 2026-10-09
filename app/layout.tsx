@@ -3,11 +3,11 @@ import { ThemeInit } from "@/components/theme-init"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Joyco 3D Lab Template",
-  description: "Joyco 3D Lab Template",
+  title: "The Marauder’s Map",
+  description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png" },
       { url: "/favicon.ico", sizes: "any" },
     ],
     apple: "/apple-touch-icon.png",
