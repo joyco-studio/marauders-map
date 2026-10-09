@@ -7,7 +7,7 @@ import {
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
   Vector2, Vector3, Plane, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
-import { color, mix, texture, uniform, uv, vec2, vec3, positionLocal, attribute, normalMap, smoothstep } from "three/tsl"
+import { color, mix, texture, uniform, uv, vec2, vec3, positionLocal, normalLocal, normalMap, smoothstep } from "three/tsl"
 import { msdfDistance, createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
 import { loadAssets } from "./assets"
@@ -17,7 +17,7 @@ import { mapPoint, mapSize, elements, hotspots, labels, sheetPoint, type Label, 
 import { advance, shouldAutoOpen, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
 import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } from "./triggers"
 import { coverBlend } from "./cover"
-import { foldPose } from "./folds"
+import { paperShape } from "./paper-shape"
 import { createWand } from "./wand"
 import { StatusQueue, type StatusMessage } from "./status-queue"
 import { createInscription, arrivalMargin, type Inscription } from "./inscription"
@@ -255,6 +255,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const paper=new Group();paper.scale.setScalar(1.18);scene.add(paper)
     paper.rotation.z=-.028
     const panels:Panel[]=[]
+    const bending:{geometry:BufferGeometry;rest:Float32Array;index:number}[]=[]
+    let previousFold=-1
     const coverAmount=uniform(1)
     const reliefAmount=uniform(0)
     const createPanel=(index:number,hinge:Group,offset:number,side:number,depth:number)=> {
@@ -279,9 +281,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       geo.setAttribute("cornerDelta",new Float32BufferAttribute(cornerDelta,3))
       geo.computeVertexNormals()
-      const mat=disposer.add(new MeshStandardNodeMaterial({roughness:.96,metalness:0}))
+      const mat=disposer.add(new MeshStandardNodeMaterial({roughness:.96,metalness:0,alphaTest:.5}))
       const mapUV=vec2(uv().x.div(5).add(index/5),uv().y)
-      const base=texture(getTexture("parchment.jpg"),mapUV).rgb
+      const paperSample=texture(getTexture("paper/aged_paper_color_rgba.png"),mapUV)
+      const base=paperSample.rgb
+      mat.opacityNode=paperSample.a
       const targetUV=vec2(mapUV.x,mapUV.y.oneMinus())
       const coverUV=vec2(uv().x,uv().y.oneMinus())
       const mapInk=texture(target.texture,targetUV)
@@ -289,14 +293,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const print=index===2?mix(mapInk,coverInk,coverAmount):mapInk
       const crease=smoothstep(0,.035,uv().x).oneMinus().add(smoothstep(.965,1,uv().x)).mul(.1)
       mat.colorNode=mix(base,print.rgb,print.a).mul(crease.oneMinus())
-      const displaced=(coordinates:Node<"vec2">)=>positionLocal.sub(attribute("cornerDelta","vec3").mul(reliefAmount.oneMinus())).add(vec3(0,0,texture(getTexture("relief/main_unfolded_displacement_web_8bit.png"),coordinates).r.sub(.5).mul(.14).mul(reliefAmount)))
-      mat.positionNode=displaced(mapUV)
+      const displaced=(coordinates:Node<"vec2">)=>positionLocal.add(vec3(0,0,texture(getTexture("relief/main_unfolded_displacement_web_8bit.png"),coordinates).r.sub(.5).mul(.14).mul(reliefAmount)))
+      mat.positionNode=displaced(mapUV).add(normalLocal.mul(.013))
       mat.normalNode=normalMap(texture(getTexture("relief/main_unfolded_normal_opengl.png"),mapUV).rgb,vec2(reliefAmount,reliefAmount))
-      const front=new Mesh(geo,mat);front.position.set(offset,0,.013);front.castShadow=true;front.receiveShadow=true;hinge.add(front)
-      const backMat=disposer.add(new MeshStandardNodeMaterial({roughness:1,side:BackSide}))
+      const front=new Mesh(geo,mat);front.position.set(offset,0,0);front.castShadow=true;front.receiveShadow=true;hinge.add(front)
+      const backMat=disposer.add(new MeshStandardNodeMaterial({roughness:1,side:BackSide,alphaTest:.5}))
       backMat.colorNode=base.mul(.93)
-      backMat.positionNode=displaced(mapUV)
-      const back=new Mesh(geo,backMat);back.position.set(offset,0,-.015);back.castShadow=true;back.receiveShadow=true;hinge.add(back)
+      backMat.positionNode=displaced(mapUV).sub(normalLocal.mul(.015))
+      backMat.opacityNode=paperSample.a
+      const back=new Mesh(geo,backMat);back.position.set(offset,0,0);back.castShadow=true;back.receiveShadow=true;hinge.add(back)
       const edgeMat=disposer.add(new MeshStandardNodeMaterial({color:"#a7804d",roughness:1}))
       // Only perimeter strips connect the curved faces. A solid box would poke
       // through curled paper and obscure the ink with large flat triangles.
@@ -324,8 +329,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       edgeGeometry.setAttribute("position",new Float32BufferAttribute(edgeVertices,3));
       edgeGeometry.setAttribute("cornerDelta",new Float32BufferAttribute(edgeDelta,3))
       edgeGeometry.setAttribute("uv",new Float32BufferAttribute(edgeUV,2))
-      edgeMat.positionNode=displaced(uv());edgeGeometry.computeVertexNormals()
+      edgeMat.positionNode=displaced(uv());edgeMat.opacityNode=texture(getTexture("paper/aged_paper_color_rgba.png"),uv()).a;edgeMat.alphaTest=.5;edgeGeometry.computeVertexNormals()
       const edgeMesh=new Mesh(edgeGeometry,edgeMat);edgeMesh.position.x=offset;hinge.add(edgeMesh)
+      bending.push({geometry:geo,rest:Float32Array.from(geo.attributes.position.array),index},{geometry:edgeGeometry,rest:Float32Array.from(edgeGeometry.attributes.position.array),index})
       const panel={index,hinge,mesh:front,side,depth};panels.push(panel);return panel
     }
     createPanel(2,paper,0,0,0)
@@ -366,11 +372,21 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     const observer=new ResizeObserver(fit);observer.observe(container);disposer.add(()=>observer.disconnect());fit()
     const foldPaper=(fold:number)=> {
-      for(const panel of panels){
-        if(!panel.side)continue
-        const pose=foldPose(fold,panel.side,panel.depth)
-        panel.hinge.rotation.y=pose.angle
-        panel.hinge.position.z=pose.z
+      if(Math.abs(previousFold-fold)>1e-6){
+        const shape=paperShape(fold),cornerStrength=1-smooth(clamp(fold/.2))
+        for(const {geometry,rest,index} of bending){
+          const positions=geometry.attributes.position,corner=geometry.attributes.cornerDelta
+          for(let i=0;i<positions.count;i++){
+            const j=i*3
+            const x=rest[j]-(corner?.getX(i)??0)*(1-cornerStrength)
+            const y=rest[j+1]-(corner?.getY(i)??0)*(1-cornerStrength)
+            const z=rest[j+2]-(corner?.getZ(i)??0)*(1-cornerStrength)
+            const bent=shape(x+(index-2)*2.8,y,z)
+            positions.setXYZ(i,bent[0]-(index-2)*2.8,bent[1],bent[2])
+          }
+          positions.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere()
+        }
+        previousFold=fold
       }
       coverAmount.value=smooth(clamp((fold-.2)/.6))
       reliefAmount.value=1-smooth(clamp(fold/.2))

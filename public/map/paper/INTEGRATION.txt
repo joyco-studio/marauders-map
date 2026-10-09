@@ -1,0 +1,42 @@
+AGED MAP PAPER — THREE.JS INTEGRATION
+
+This asset replaces the main unfolded paper color and perimeter cutout. Keep the existing normal map and its current strength. The color image is 1774 x 887 pixels (2:1), with blank paper, aging, and transparent damaged edges.
+
+1. COLOR AND CUTOUT
+
+Assign the RGBA paper PNG to material.map and set its texture.colorSpace to THREE.SRGBColorSpace. Start with material.color = white, alphaTest = 0.5, transparent = false, and opacity = 1. This uses the PNG's own alpha for an opaque paper cutout. Preserve the existing normal map as non-color data.
+
+Official material and alpha-test references:
+https://threejs.org/docs/pages/MeshStandardMaterial.html
+https://threejs.org/docs/pages/Material.html
+
+2. OPTIONAL SEPARATE OPACITY FILE
+
+The separate opacity PNG is an exact extraction of the color image's alpha. It is provided for pipelines that need a separate mask; the normal Three.js RGBA-map setup above does not require it.
+
+If using the separate file as alphaMap, set it to THREE.NoColorSpace. Three.js reads alphaMap's grayscale/RGB color (the green channel for RGB), not that file's alpha channel. Use an opaque RGB color input, or explicitly ignore its alpha in a custom shader, so paper coverage is applied once. Applying the same coverage through both map alpha and alphaMap compounds the partially transparent edge values.
+
+Official alphaMap reference:
+https://threejs.org/docs/pages/MeshStandardMaterial.html#alphaMap
+
+3. ONE CONTINUOUS SHEET WHILE FOLDING
+
+Keep UVs attached to the original unfolded material throughout the animation. The five panels occupy successive U ranges: 0–0.2, 0.2–0.4, 0.4–0.6, 0.6–0.8, and 0.8–1. Move the geometry while retaining those ranges; assigning the whole image to every panel would repeat and compress the paper wear. Match the texture orientation and UV convention already used by the normal map.
+
+Texture transform and UV-channel reference:
+https://threejs.org/docs/pages/Texture.html
+
+4. MATCH ALL PAPER-BOUND LAYERS
+
+Ink, borders, and text drawn on the sheet need the same paper-space cutout as the paper surface, alongside their own artwork coverage. Keep their UVs and fold deformation aligned. Otherwise artwork can remain visible across a missing corner.
+
+If the app uses custom depth/shadow passes, reproduce the cutout and folding deformation in those passes too. For WebGLRenderer vertex-shader deformation, Three.js documents customDepthMaterial for directional/spot-light shadows and customDistanceMaterial for point-light shadows.
+
+Official shadow-material reference:
+https://threejs.org/docs/pages/Object3D.html#customDepthMaterial
+
+5. SCOPE
+
+Alpha gives the sheet a torn silhouette. Actual thickness, a lifted fiber edge, and curled surfaces require geometry. Keep the existing curled corner in the model; this texture adds no painted curled flap or projected fold shadow.
+
+The aging and broken perimeter address the clean material appearance. Still images cannot establish the cause of unrealistic folding motion. Judge that separately in the app after applying the texture with stable UVs.

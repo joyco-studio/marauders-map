@@ -1,0 +1,61 @@
+{
+  "name": "Aged map paper with asymmetric worn corners",
+  "version": 2,
+  "canvas_px": [
+    1774,
+    887
+  ],
+  "aspect_ratio": "2:1",
+  "color": {
+    "file": "aged_paper_color_rgba.png",
+    "format": "RGBA PNG",
+    "color_space": "sRGB",
+    "alpha": "straight generated coverage, unchanged"
+  },
+  "opacity": {
+    "file": "aged_paper_opacity.png",
+    "format": "8-bit grayscale PNG",
+    "color_space": "none / linear numerical data",
+    "meaning": "white=paper, black=missing paper",
+    "source": "exact alpha channel of the RGBA color texture"
+  },
+  "recommended_alpha_test": 0.5,
+  "alpha_policy": "Use RGBA map coverage once. The separate opacity image is optional for pipelines that need an independent mask. Avoid multiplying it into the same RGBA alpha twice.",
+  "normal_map": "Keep the existing paper normal map and its current convention, strength, and UV transform.",
+  "uv_mapping": {
+    "origin": "usual material UV; image rows are top-to-bottom",
+    "range": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "repeat": [
+      1,
+      1
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "flip_y_for_Three_TextureLoader": true,
+    "fold_hinges_u": [
+      0.2,
+      0.4,
+      0.6,
+      0.8
+    ],
+    "fold_note": "Keep the material UV coordinates fixed while the 5 accordion panels move. Each panel samples its original fifth of the full unfolded sheet."
+  },
+  "material_color": "#ffffff: avoid applying the previous yellow tint over the new colored texture",
+  "cutout_scope": "Apply the same sheet mask to the paper-bound ink, ornaments, border and printed names, and to matching custom depth or shadow materials.",
+  "geometry_note": "Corner losses are alpha cutouts. Retain the existing modeled curled corner. Additional lifting, thickness and realistic fold motion require geometry; not supplied by opacity.",
+  "content": "Blank paper only: mottling, foxing, water tidemarks, fibers, asymmetric wear and corner nicks; no ink or typography.",
+  "checks": {
+    "exact_opacity_extraction": true,
+    "unfolded_aspect_preserved": true,
+    "discarded_surface_at_alpha_0_5_pct": 3.689,
+    "app_integration_tested": false
+  },
+  "resolution_note": "Native generated resolution; no upscaling was applied."
+}

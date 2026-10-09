@@ -5,7 +5,7 @@ import { sdfImages } from "./sdf"
 import type { Disposer } from "@joycostudio/xyz"
 
 export async function loadAssets(disposer: Disposer, progress: (n:number)=>void, retry: boolean) {
-  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "parchment.jpg", "desk/worn-oak.png", "relief/main_unfolded_displacement_web_8bit.png", "relief/main_unfolded_normal_opengl.png", ...Object.values(sdfImages).filter(entry=>!entry.texture.startsWith("sdf/banners/")).map(entry=>entry.texture), "artwork/living-banner/living_banner_color.png", "artwork/living-banner/motion_weights.png", "fonts/tangerine-700.png", "fonts/cinzel-400.png"]
+  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "paper/aged_paper_color_rgba.png", "desk/worn-oak.png", "relief/main_unfolded_displacement_web_8bit.png", "relief/main_unfolded_normal_opengl.png", ...Object.values(sdfImages).filter(entry=>!entry.texture.startsWith("sdf/banners/")).map(entry=>entry.texture), "artwork/living-banner/living_banner_color.png", "artwork/living-banner/motion_weights.png", "fonts/tangerine-700.png", "fonts/cinzel-400.png"]
   const jsons = ["fonts/tangerine-700.json", "fonts/cinzel-400.json"]
   const jsonArgs = (url:string) => ({ loadFn: ({done,error}: Parameters<GenericLoadFn>[0]) => {
     fetch(url).then(r=> { if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json() }).then(done,error)
@@ -29,7 +29,7 @@ export async function loadAssets(disposer: Disposer, progress: (n:number)=>void,
   for (const [path,image] of imageResults) {
     const map = new Texture(image)
     if (path.startsWith("fonts/") || path.startsWith("sdf/")) configureFontTexture(map)
-    else if (path==="parchment.jpg" || path==="desk/worn-oak.png" || path.endsWith("_color.png") || path==="wand/wand_basecolor.png") map.colorSpace=SRGBColorSpace
+    else if (path==="paper/aged_paper_color_rgba.png" || path==="desk/worn-oak.png" || path.endsWith("_color.png") || path==="wand/wand_basecolor.png") map.colorSpace=SRGBColorSpace
     if(path.startsWith("sdf/"))map.flipY=true
     if(path==="desk/worn-oak.png"){map.wrapS=map.wrapT=RepeatWrapping;map.anisotropy=4}
     map.needsUpdate=true
