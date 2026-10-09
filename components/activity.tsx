@@ -10,14 +10,14 @@ export function useActivity(controls:React.RefObject<MapControls|null>, ready:bo
   const [snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null)
   const [now,setNow]=useState(()=>Date.now())
   const [selected,setSelected]=useState<string|null>(null)
-  const [announcement,setAnnouncement]=useState<{personId:string;event:ActivityEvent}|null>(null)
+  const [announcements,setAnnouncements]=useState<{key:string;personId:string;event:ActivityEvent}[]>([])
+  const announcementId=useRef(0)
   const [unavailable,setUnavailable]=useState(false)
   const [refreshing,setRefreshing]=useState(false)
   const refreshRef=useRef<()=>void>(()=>{})
   const snapshotRef=useRef<ActivitySnapshot|null>(null)
   const trigger=useRef<HTMLElement|null>(null)
   const selectedRef=useRef<string|null>(null)
-  const noticeTimer=useRef<ReturnType<typeof setTimeout>|null>(null)
   const select=useCallback((id:string)=>{
     trigger.current=document.activeElement instanceof HTMLElement ? document.activeElement : null
     selectedRef.current=id
@@ -29,11 +29,13 @@ export function useActivity(controls:React.RefObject<MapControls|null>, ready:bo
     trigger.current=null
   },[])
   const arrive=useCallback((personId:string,event:ActivityEvent)=>{
-    if(noticeTimer.current)clearTimeout(noticeTimer.current)
-    setAnnouncement({personId,event})
-    noticeTimer.current=setTimeout(()=>setAnnouncement(null),6000)
+    const key=`arrival-${++announcementId.current}`
+    setAnnouncements(pending=>[...pending,{key,personId,event}])
   },[])
-  useEffect(()=>()=>{if(noticeTimer.current)clearTimeout(noticeTimer.current)},[])
+  const consumeAnnouncements=useCallback((keys:string[])=>{
+    const consumed=new Set(keys)
+    setAnnouncements(pending=>pending.filter(message=>!consumed.has(message.key)))
+  },[])
   useEffect(()=>{
     if(!ready)return
     if(snapshotRef.current)controls.current?.setActivity(snapshotRef.current)
@@ -78,7 +80,7 @@ export function useActivity(controls:React.RefObject<MapControls|null>, ready:bo
     document.addEventListener('visibilitychange',update)
     return ()=>{clearInterval(timer);document.removeEventListener('visibilitychange',update)}
   },[ready,dismiss])
-  return {snapshot,now,selected:exploring?selected:null,select,dismiss,arrive,announcement:exploring?announcement:null,unavailable,refreshing,refresh:()=>refreshRef.current()}
+  return {snapshot,now,selected:exploring?selected:null,select,dismiss,arrive,announcements:exploring?announcements:[],consumeAnnouncements,unavailable,refreshing,refresh:()=>refreshRef.current()}
 }
 export type ActivityState=ReturnType<typeof useActivity>
 const providerName=(source:string)=>source==='github'?'GitHub':'YouTube'
@@ -98,19 +100,32 @@ export function ActivityRoster({activity}:{activity:ActivityState}) {
   </>
 }
 export function ActivityNotice({activity,controls,ready}:{activity:ActivityState;controls:React.RefObject<MapControls|null>;ready:boolean}) {
-  const arrival=activity.announcement
-  const person=arrival&&roster.find(p=>p.id===arrival.personId)
+  const [displayed,setDisplayed]=useState<{title:string;detail:string}|null>(null)
+  const {announcements,consumeAnnouncements}=activity
   const stale=activity.unavailable||activity.snapshot?.sources.some(s=>s.status!=='ok')
   const wandering=activity.snapshot?.mode==='wandering'
-  const title=arrival&&person?arrivalInscription(person.shortName,arrival.event):wandering?'Footsteps of imagined journeys':stale?'Some public sources are resting':''
-  const detail=arrival?briefTitle(arrival.event.title):wandering?'Idle roaming is fictional. Public activity inspires journeys.':stale?'Last available activity is shown.':''
   useEffect(()=>{
-    if(!ready)return
     const map=controls.current
-    map?.setNotice(title?{title,lines:[detail],actions:[]}:null)
-    return ()=>map?.setNotice(null)
-  },[controls,ready,title,detail])
-  return title?<aside className="sr-only" role="status" aria-live="polite">{title} {detail}</aside>:null
+    if(!ready||!map||!announcements.length)return
+    for(const arrival of announcements){
+      const person=roster.find(person=>person.id===arrival.personId)
+      if(!person)continue
+      const title=arrivalInscription(person.shortName,arrival.event),detail=briefTitle(arrival.event.title)
+      map.setNotice({key:arrival.key,title,lines:[detail],actions:[],onShown:()=>setDisplayed({title,detail}),onRemoved:()=>setDisplayed(null)})
+    }
+    consumeAnnouncements(announcements.map(message=>message.key))
+  },[controls,ready,announcements,consumeAnnouncements])
+  useEffect(()=>{
+    const map=controls.current
+    if(!ready||!map)return
+    const statuses=[
+      ...(wandering?[{key:'source-wandering',title:'Footsteps of imagined journeys',detail:'Idle roaming is fictional. Public activity inspires journeys.'}]:[]),
+      ...(stale?[{key:'source-unavailable',title:'Some public sources are resting',detail:'Last available activity is shown.'}]:[]),
+    ]
+    for(const {key,title,detail} of statuses)
+      map.setNotice({key,title,lines:[detail],actions:[],onShown:()=>setDisplayed({title,detail}),onRemoved:()=>setDisplayed(null)})
+  },[controls,ready,wandering,stale])
+  return ready&&displayed?<aside className="sr-only" role="status" aria-live="polite">{displayed.title} {displayed.detail}</aside>:null
 }
 function briefTitle(title:string) { return title.length>110?`${title.slice(0,107).trimEnd()}…`:title }
 export function ActivityCard({activity,controls,ready}:{activity:ActivityState;controls:React.RefObject<MapControls|null>;ready:boolean}) {
@@ -133,8 +148,8 @@ export function ActivityCard({activity,controls,ready}:{activity:ActivityState;c
       ]:['An imagined journey through the creative web.','No recent public activity.'],
       actions:[{label:'Close inscription',run:dismiss},...links],
     })
-    return ()=>map?.setInscription(null)
   },[person,snapshot,now,dismiss,controls,ready])
+  useEffect(()=>()=>{controls.current?.setInscription(null)},[controls])
   useEffect(()=>{
     if(!person)return
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')dismiss()}

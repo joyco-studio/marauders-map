@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ActivityRoster, ActivityCard, ActivityNotice, useActivity } from "./activity"
 import Image from "next/image"
+import { SpellCaption } from "./spell-caption"
 import type { MapControls, Status } from "@/lib/map/experience"
 
 const initial:Status={phase:"loading",progress:0,discovered:false,backend:""}
@@ -48,6 +49,7 @@ export function Scene() {
     <main className={`map-experience${ready&&status.phase!=="error"?" wand-cursor":""}`} data-phase={status.phase} data-backend={status.backend} aria-labelledby="map-title">
       <h1 id="map-title" className="sr-only">The Makers’ Map</h1>
       <p id="map-description" className="sr-only">A living atlas of the creative web. Follow the footprints of those building it. The Commons, The Source Library, The Playground, The Render Pipeline, The Shader Atelier, and The Observatory are drawn in sepia ink. mrdoob, sunag, Don McCurdy, drcmda, Akella, Bruno Simon, Lewy Blue, and eligible JOYCO members follow journeys inspired by recent public GitHub activity and YouTube lessons. A key beside The Observatory reveals a passage to The Rabbit Hole.</p>
+      {status.phase==="folded"&&!status.greeting&&<div className="map-introduction" aria-hidden="true"><p>A living atlas of the creative web.</p><p>Follow the footprints of those building it.</p></div>}
       <div ref={container} className="map-host" aria-describedby="map-description" />
       {status.phase==="loading"&&(
         <div className="loading-parchment" role="status">
@@ -64,11 +66,11 @@ export function Scene() {
         </section>
       )}
       <p className="sr-only" role="status" aria-live="polite">{status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
-      {exploring&&<ActivityNotice activity={activity} controls={controls} ready={ready} />}
+      <ActivityNotice activity={activity} controls={controls} ready={ready&&exploring} />
       <ActivityCard activity={activity} controls={controls} ready={ready} />
       <nav className="map-spells" aria-label="Parchment spells">
-        {status.phase==="folded"&&!status.greeting&&status.hovered&&<p className="map-oath" aria-hidden="true">I solemnly swear that I am up to no good</p>}
-        {exploring&&<button onClick={()=>controls.current?.close()}>Enough experimenting. For now.</button>}
+        <SpellCaption visible={status.phase==="folded"&&!status.greeting&&!!status.hovered}>I solemnly swear that I am up to no good</SpellCaption>
+        <SpellCaption visible={exploring} onClick={()=>controls.current?.close()}>Enough experimenting. For now.</SpellCaption>
       </nav>
       <nav className="accessible-controls" aria-label="Map controls">
         <button onFocus={()=>controls.current?.setFocusedTrigger("passage")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring||status.discovered} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>

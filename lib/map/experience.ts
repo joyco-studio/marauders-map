@@ -18,6 +18,7 @@ import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } fr
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
+import { StatusQueue, type StatusMessage } from "./status-queue"
 import { createInscription, arrivalMargin, type Inscription } from "./inscription"
 import { ActorPresentation } from "../activity/presentation"
 import { MAX_RENDERED_PEOPLE } from "../activity/roster"
@@ -26,7 +27,8 @@ import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
 
 export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting; hovered?:boolean }
-export type MapControls = { setInscription:(value:Inscription|null)=>void; setNotice:(value:Inscription|null)=>void; close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
+export type Notice = Inscription & StatusMessage
+export type MapControls = { setInscription:(value:Inscription|null)=>void; setNotice:(value:Notice|null)=>void; close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
 type Panel = {index:number; hinge:Group; mesh:Mesh<PlaneGeometry,MeshStandardNodeMaterial>; side:number; depth:number}
@@ -120,12 +122,13 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     labels.forEach(label=>addText(label))
     const inscription=createInscription(disposer);mapScene.add(inscription.mesh)
     const notice=createInscription(disposer,arrivalMargin);mapScene.add(notice.mesh)
+    const statusQueue=new StatusQueue<Notice>({show:value=>notice.set(value),hide:()=>notice.set(null),isWritten:notice.isWritten,isHidden:notice.isHidden})
     const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
     const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
-    const secret=addText({text:"One more thing to try…",center:mapPoint([1635,105]),size:15},mapScene,true)
+    const secret=addText({text:"One more thing to try…",center:mapPoint([1635,35]),size:14},mapScene,true)
     secret.ink.progress.value=0
-    const note=addText({text:"A passage to The Rabbit Hole",center:mapPoint([1635,185]),size:11},mapScene,true)
+    const note=addText({text:"A passage to The Rabbit Hole",center:mapPoint([1635,105]),size:10},mapScene,true)
     note.ink.progress.value=0
     // Reusable static snapshot quad: updated only when ink/static discovery changes.
     const cachedMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
@@ -173,10 +176,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       choices: [
         {text:"The Makers’",center:[700,181],size:20,heading:true},
         {text:"Map",center:[700,222],size:35,heading:true},
-        {text:"A living atlas",center:[700,390],size:12},
-        {text:"of the creative web.",center:[700,410],size:12},
-        {text:"Follow the footprints",center:[700,447],size:11},
-        {text:"of those building it.",center:[700,467],size:11},
       ],
       welcome: [
         {text:"For those who turn",center:[700,180],size:14},
@@ -333,7 +332,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     // Preserve the source's 2:1 aspect and a broad-plank scale on the large desk.
     deskMaterial.colorNode=texture(getTexture("desk/worn-oak.png"),uv().mul(vec2(20,40))).rgb
     const floor=new Mesh(disposer.add(new PlaneGeometry(200,200)),deskMaterial)
-    floor.position.z=-3.8;floor.receiveShadow=true;scene.add(floor)
+    floor.position.z=-.9;floor.receiveShadow=true;scene.add(floor)
     let zoom=1,panX=0,panY=0,baseDistance=15
     const updateCamera=(fold=0)=> {
       const tangent=Math.tan(35*Math.PI/360)
@@ -361,6 +360,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         panel.hinge.rotation.y=pose.angle
         panel.hinge.position.z=pose.z
       }
+      // Keep the desk close at rest, with room for the leaves to swing underneath.
+      const foldClearance=Math.max(...panels.filter(panel=>panel.depth===1).map(panel=>Math.abs(Math.sin(panel.hinge.rotation.y))))
+      floor.position.z=-.9-3.4*foldClearance
       coverAmount.value=smooth(clamp((fold-.2)/.6))
       reliefAmount.value=1-smooth(clamp(fold/.2))
       updateCamera(fold)
@@ -429,6 +431,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     let latest:{x:number;y:number}|null=null,hover:Trigger|null=null,focused:FocusedTrigger|null=null,suspended=false
     const clearHover=()=>{coverOverlayDirty=true;hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
+      inscription.setHovered(!suspended&&!pointers.size?point:null)
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
       const hovered=state.phase==="folded"&&!state.greeting&&!suspended&&(!!point||focused==="welcome")
       if(hovered!==mapHovered){mapHovered=hovered;emit()}
@@ -499,7 +502,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={setInscription:value=>inscription.set(value),setNotice:value=>notice.set(value),setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
+    const controls:MapControls={setInscription:value=>inscription.set(value),setNotice:value=>{if(value)statusQueue.enqueue(value)},setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -543,6 +546,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         if(previousValue!==f.value&&f.mesh.parent===coverOverlay)coverOverlayDirty=true
         f.opacity.value=.65*f.value
       }
+      inscription.update(dt)
+      if(state.phase==="exploring"){notice.update(dt);statusQueue.update(dt)}
       updateCover()
       if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false;coverOverlayDirty=true}
       if(coverOverlayDirty){composite(coverTarget,coverOverlay,coverCamera);coverOverlayDirty=false}

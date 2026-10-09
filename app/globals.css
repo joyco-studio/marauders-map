@@ -30,9 +30,25 @@ button:disabled { opacity: .45; cursor: default; }
 .accessible-controls, .fallback-message { font-size: 28px; line-height: 1.15; }
 
 .wand-cursor, .wand-cursor * { cursor: none !important; }
-.map-spells { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 36px; width: min(960px, 94vw); z-index: 2; }
+.map-spells { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: grid; justify-items: center; width: min(960px, 94vw); z-index: 2; pointer-events: none; }
 .map-spells button { color: #ddc89c; background: transparent; border: 0; padding: 8px 12px; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; text-shadow: 0 2px 8px #000; transition: color .2s; }
 .map-spells button:hover { color: #fff0c9; }
 .wand-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
 
-.map-oath { margin: 0; padding: 8px 12px; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; text-shadow: 0 2px 8px #000; pointer-events: none; }
+.spell-caption { grid-area: 1 / 1; margin: 0; padding: 8px 12px; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; text-shadow: 0 2px 8px #000; clip-path: inset(0 100% 0 0); }
+.map-spells button:disabled { opacity: 1; }
+
+.map-introduction { position: absolute; top: max(24px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: 90vw; text-align: center; z-index: 2; pointer-events: none; font-size: 28px; line-height: 1.15; text-shadow: 0 2px 8px #000; }
+.map-introduction p { margin: 0 0 4px; }
+@media(max-height:600px) { .map-introduction { top: 8px; font-size: 22px; } }
+
+.spell-word { display: inline-block; white-space: nowrap; }
+.spell-glyph { display: inline-block; transform-origin: 50% 80%; }
+.spell-caption[data-floating="true"] .spell-glyph,
+.spell-caption:not(:disabled):hover .spell-glyph,
+.spell-caption:not(:disabled):focus-visible .spell-glyph { animation: glyph-float 1.8s ease-in-out infinite; animation-delay: calc(var(--glyph-index) * -45ms); }
+@keyframes glyph-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+@media(prefers-reduced-motion: reduce) { .spell-caption .spell-glyph { animation: none !important; } }
