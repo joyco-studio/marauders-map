@@ -14,13 +14,14 @@ import { sdfCoverage } from "./sdf"
 import { createInk, type Ink } from "./ink"
 import { mapPoint, mapSize, characters, elements, hotspots, labels, sheetPoint, routeAt, type Label, type RevealTiming } from "./data"
 import { advance, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
+import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } from "./triggers"
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
 import type { Tuning } from "./debug"
 
 export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting }
-export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; dispose:()=>void }
+export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
 type Panel = {index:number; hinge:Group; mesh:Mesh<PlaneGeometry,MeshStandardNodeMaterial>; side:number; depth:number}
@@ -100,7 +101,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       return {mesh,ink}
     }
     for(const element of elements){const drawing=addDrawing(element.src,element.size,element.center,element.timing.seed);reveals.push({ink:drawing.ink,timing:element.timing})}
-    for(const label of labels)addText(label)
+    const mapLabels=labels.map(label=>addText(label))
     const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
     const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
@@ -198,6 +199,47 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     updateCover()
     const coverBorder=addDrawing("artwork/cover/enchanted_map_cover.svg",[280,700],[700,350],13,coverScene);coverBorder.ink.progress.value=1
+
+    // Dynamic cover composition samples an independently cached base.
+    const coverBase=disposer.add(new RenderTarget(1024,2048,{depthBuffer:false}))
+    const coverOverlay=new Scene()
+    const baseMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
+    baseMaterial.colorNode=texture(coverBase.texture,cachedUV).rgb
+    baseMaterial.opacityNode=texture(coverBase.texture,cachedUV).a
+    coverOverlay.add(new Mesh(disposer.add(new PlaneGeometry(2.8,7)),baseMaterial))
+    const accents=new Group();mapScene.add(accents)
+    const feedback: {target:Trigger;mesh:Mesh;opacity:ReturnType<typeof createInk>["opacity"];value:number;ink?:Ink}[]=[]
+    const accent=(target:Trigger,points:number[],parent:Scene|Group,ink?:Ink)=> {
+      const geo=disposer.add(new BufferGeometry())
+      geo.setAttribute("position",new Float32BufferAttribute(points,3))
+      const opacity=uniform(0)
+      const material=disposer.add(new MeshBasicNodeMaterial({color:"#593724",transparent:true,depthWrite:false}))
+      material.opacityNode=ink?opacity.mul(ink.coverage).mul(ink.opacity):opacity
+      const mesh=new Mesh(geo,material);mesh.position.z=.08;mesh.renderOrder=100
+      mesh.raycast=()=>{};parent.add(mesh)
+      feedback.push({target,mesh,opacity,value:0,ink})
+    }
+    const stroke=(target:Trigger,path:number[][],parent:Scene|Group,width=.012,ink?:Ink)=> {
+      const vertices:number[]=[]
+      for(let i=1;i<path.length;i++){
+        const [x,y]=path[i-1],[a,b]=path[i],length=Math.hypot(a-x,b-y)
+        const dx=-(b-y)/length*width/2,dy=(a-x)/length*width/2
+        vertices.push(x+dx,y+dy,0,x-dx,y-dy,0,a+dx,b+dy,0,x-dx,y-dy,0,a-dx,b-dy,0,a+dx,b+dy,0)
+      }
+      accent(target,vertices,parent,ink)
+    }
+    const underline=(target:Trigger,item:typeof mapLabels[number],parent:Scene|Group,width=item.width)=> {
+      const {x,y}=item.handle.mesh.position
+      // Text geometry descends from its baseline by the measured line height.
+      stroke(target,Array.from({length:17},(_,i)=>[x-width/2+width*i/16,y-item.height-.04+Math.sin(i*1.7)*.003]),parent,.012,item.ink)
+    }
+    underline("mockery",coverGroups.choices[2],coverOverlay)
+    underline("welcome",coverGroups.choices[5],coverOverlay,Math.max(coverGroups.choices[4].width,coverGroups.choices[5].width))
+    underline("close",mapLabels[7],accents)
+    for(const side of [-1,1])stroke(side<0?"open-left":"open-right",Array.from({length:33},(_,i)=>[side*1.36+Math.sin(i*1.9)*.003,-3.42+i*6.84/32]),coverOverlay)
+    const passageSpot=hotspots.find(h=>h.id==="passage")!
+    const [keyX,keyY]=sheetPoint(passageSpot.center)
+    for(let arc=0;arc<3;arc++)stroke("passage",Array.from({length:25},(_,i)=>{const angle=arc*Math.PI*2/3+i/24*1.65;return [keyX+Math.cos(angle)*.27,keyY+Math.sin(angle)*.27]}),accents,.012,key.ink)
 
     // Paper rig: center fixed; both side chains fold back into a stack.
     const paper=new Group();paper.scale.setScalar(1.18);scene.add(paper)
@@ -311,17 +353,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       renderer.setRenderTarget(previous);renderer.setClearColor(clear,alpha)
     }
     // Both scenes get their own collector; cover uses the same text pipeline.
-    for(const [content,cam,destination] of [[mapScene,mapCamera,target],[coverScene,coverCamera,coverTarget],[scene,camera,null]] as const){
+    for(const [content,cam,destination] of [[mapScene,mapCamera,target],[coverScene,coverCamera,coverBase],[coverOverlay,coverCamera,coverTarget],[scene,camera,null]] as const){
       renderer.setRenderTarget(destination)
       const warmup=disposer.add(new Warmup({pause:()=>{},resume:()=>{},initTexture:t=>renderer.initTexture(t),compile:(s,c)=>renderer.compileAsync(s,c),render:()=>{renderer.render(content,cam)}}))
       await warmup.start(content,cam);check()
     }
     renderer.setRenderTarget(null)
-    composite(coverTarget,coverScene,coverCamera)
+    composite(coverBase,coverScene,coverCamera)
     progress=1
     state=transition(state,"ready",time);syncPhase(state)
     let staticCached=false,staticDirty=true,actorTime=0
-    const staticObjects=mapScene.children.filter(obj=>obj!==cached && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
+    const staticObjects=mapScene.children.filter(obj=>obj!==cached && obj!==accents && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
     const setStatic=(visible:boolean)=>staticObjects.forEach(obj=>{obj.visible=visible})
     const snapshot=()=> {
       for(const obj of staticObjects)staticScene.add(obj)
@@ -342,6 +384,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       cast()
       if(command==="open")reset()
       if(command==="close"){staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
+      clearHover();focused=null
       state=next;syncPhase(state);emit()
     }
     const discover=()=> {
@@ -361,30 +404,24 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const panel=panels.find(p=>p.mesh===intersection.object)!
       return {x:(panel.index+intersection.uv.x)*280,y:(1-intersection.uv.y)*700,point:intersection.point}
     }
-    const hotspotAt=(x:number,y:number)=> {
-      const p=hit(x,y);if(!p)return null
-      if(state.phase==="folded") {
-        if(state.greeting) return (p.x<587||p.x>813) ? "open" : null
-        if(Math.abs(p.x-700)<115&&Math.abs(p.y-288)<13)return "mockery"
-        if(Math.abs(p.x-700)<120&&p.y>315&&p.y<352)return "welcome"
-        return null
-      }
-      return hotspots.find(h=> {
-        if(h.id==="passage"&&state.phase!=="error"&&state.greeting==="mockery")return false
-        if(h.id==="open"&&state.phase!=="folded")return false
-        if(h.id!=="open"&&state.phase!=="exploring")return false
-        return Math.abs(p.x-h.center[0])<h.radius[0]&&Math.abs(p.y-h.center[1])<h.radius[1]
-      })?.id
+    let latest:{x:number;y:number}|null=null,hover:Trigger|null=null,focused:FocusedTrigger|null=null,suspended=false
+    const clearHover=()=>{hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
+    const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
+      if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
+      hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
+      canvas.style.cursor=hover?"pointer":state.phase==="exploring"?"grab":"default"
     }
     const pointers=new Map<number,{x:number;y:number}>()
     let dragDistance=0,startX=0,startY=0,pinch=0
     disposer.listen<PointerEvent>(canvas,"pointerdown",e=> {
       if(state.phase!=="exploring"&&state.phase!=="folded")return
+      clearHover();latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY);if(touch){wand.aim(touch.point);cast()}
       canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});startX=e.clientX;startY=e.clientY;dragDistance=0
       if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}
     })
     disposer.listen<PointerEvent>(canvas,"pointermove",e=> {
+      latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY)
       wandHover=!!touch&&e.pointerType!=="touch"
       if(touch)wand.aim(touch.point)
@@ -399,22 +436,32 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
           const units=2*(baseDistance/zoom)*Math.tan(35*Math.PI/360)/container.clientHeight
               panX=clamp(panX-dx*units,-3.5,3.5);panY=clamp(panY+dy*units,-1.8,1.8);updateCamera()
         }
-      }else canvas.style.cursor=hotspotAt(e.clientX,e.clientY)?"pointer":state.phase==="exploring"?"grab":"default"
+        clearHover()
+      }else refreshHover(touch)
     })
     disposer.listen<PointerEvent>(canvas,"pointerup",e=> {
       if(!pointers.has(e.pointerId))return
       pointers.delete(e.pointerId)
       if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)
-      if(dragDistance>6||pointers.size)return
-      const spot=hotspotAt(e.clientX,e.clientY)
-      if(spot==="passage")discover()
-      else if(spot==="close")change("close")
-      else if(spot==="open"||spot==="mockery"||spot==="welcome")change(spot)
+      const point=hit(e.clientX,e.clientY)
+      if(dragDistance<=6&&!pointers.size){
+        const spot=resolveTrigger(point,state,discovered)
+        if(spot==="passage")discover()
+        else if(spot==="open-left"||spot==="open-right")change("open")
+        else if(spot)change(spot)
+      }
+      const rect=canvas.getBoundingClientRect()
+      latest=e.pointerType!=="touch"&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom?{x:e.clientX,y:e.clientY}:null
+      refreshHover(point)
     })
-    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);wandHover=false})
-    disposer.listen(canvas,"pointerleave",()=>{wandHover=false})
+    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);latest=null;wandHover=false;clearHover()})
+    disposer.listen(canvas,"pointerleave",()=>{latest=null;wandHover=false;clearHover()})
+    const suspend=()=>{suspended=true;latest=null;pointers.clear();wandHover=false;clearHover()}
+    disposer.listen(window,"blur",suspend)
+    disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
+    disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,dispose:()=>disposer.dispose()}
+    const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -427,7 +474,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       lastRender=now
       const dt=Math.min((now-previous)/1000,.1);previous=now
       if(!tuning.manual)time+=dt
+      const oldPhase=state.phase
       state=advance(state,time);syncPhase(state)
+      if(oldPhase!==state.phase)clearHover()
       const age=time-state.enteredAt
       let fold=0,reveal=3
       switch(state.phase){
@@ -445,8 +494,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       paper.updateMatrixWorld(true)
       const wandPanels=panels.map(panel=>panel.mesh)
       wand.update(camera,dt,wandHover||pointers.size>0||time<castingUntil||casting,fold,wandPanels)
+      refreshHover()
+      const selected=hover??(!suspended&&!pointers.size?focused:null)
+      for(const f of feedback){
+        const active=eligibleTrigger(f.target,state,discovered)&&(selected===f.target||selected==="open"&&f.target.startsWith("open-"))
+        if(!eligibleTrigger(f.target,state,discovered))f.value=0
+        else f.value=clamp(f.value+dt*(active?1/.16:-1/.22))
+        f.opacity.value=.65*f.value
+      }
       updateCover()
-      if(coverDirty){composite(coverTarget,coverScene,coverCamera);coverDirty=false}
+      if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false}
+      composite(coverTarget,coverOverlay,coverCamera)
       if(!staticCached)for(const entry of reveals)entry.ink.progress.value=revealProgress(reveal,entry.timing.start,entry.timing.duration)
       const erase=state.phase==="erasing"?1-smooth(age):state.phase==="closing"||state.phase==="folded"?0:1
       if(discovered){const p=revealProgress(time-discoveredAt,0,1.6)*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}

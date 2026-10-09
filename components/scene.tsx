@@ -57,15 +57,15 @@ export function Scene() {
       )}
       <p className="sr-only" role="status" aria-live="polite">{status.phase==="exploring"&&status.greeting==="mockery"?"The map is open. The parchment is completely blank. Drag to pan, scroll or pinch to zoom.":status.phase==="folded"&&status.greeting==="mockery"?"The Marauders mock Professor Snape and ask him to keep his nose out of other people’s business. Pull an edge to unfold.":status.phase==="folded"&&status.greeting==="welcome"?"Messrs. Moony, Wormtail, Padfoot and Prongs are proud to present the Marauder’s Map. Pull an edge to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: Dissendium opens a passage to Honeydukes.":""}</p>
       <nav className="accessible-controls" aria-label="Map controls">
-        <button disabled={!exploring||status.greeting==="mockery"} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>
+        <button onFocus={()=>controls.current?.setFocusedTrigger("passage")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring||status.greeting==="mockery"||status.discovered} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(.25)}>Zoom in</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(-.25)}>Zoom out</button>
         <button disabled={!exploring} onClick={()=>controls.current?.resetView()}>Reset view</button>
         {status.phase==="folded"&&!status.greeting&&<>
-          <button onClick={()=>controls.current?.greet("mockery")}>Reveal your secrets</button>
-          <button onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>
+          <button onFocus={()=>controls.current?.setFocusedTrigger("mockery")} onBlur={()=>controls.current?.setFocusedTrigger(null)} onClick={()=>controls.current?.greet("mockery")}>Reveal your secrets</button>
+          <button onFocus={()=>controls.current?.setFocusedTrigger("welcome")} onBlur={()=>controls.current?.setFocusedTrigger(null)} onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>
         </>}
-        {status.phase==="folded"?<button disabled={!status.greeting} onClick={()=>controls.current?.open()}>Unfold the map</button>:<button disabled={!exploring} onClick={()=>controls.current?.close()}>Mischief managed</button>}
+        {status.phase==="folded"?<button onFocus={()=>controls.current?.setFocusedTrigger("open")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!status.greeting} onClick={()=>controls.current?.open()}>Unfold the map</button>:<button onFocus={()=>controls.current?.setFocusedTrigger("close")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring} onClick={()=>controls.current?.close()}>Mischief managed</button>}
       </nav>
     </main>
   )

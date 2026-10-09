@@ -5,6 +5,17 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "The Marauder’s Map",
   description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
+  openGraph: {
+    title: "The Marauder’s Map",
+    description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
+    images: [{ url: "/og-image.png", width: 1731, height: 909, alt: "The Marauder’s Map with a clean compass" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Marauder’s Map",
+    description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
+    images: ["/og-image.png"],
+  },
   icons: {
     icon: [
       { url: "/favicon.png", type: "image/png" },
