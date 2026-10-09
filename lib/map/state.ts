@@ -37,3 +37,8 @@ export function absorptionCoverage(progress: number, distance: number, noise = 0
   const front = progress * 1.18 - .08 - distance + noise
   return smooth((front + .045) / .09)
 }
+
+/** Only the welcomed, folded map has an automatic opening deadline. */
+export function shouldAutoOpen(state:MapState,now:number){
+  return state.phase==="folded"&&state.greeting==="welcome"&&now-state.enteredAt>=3
+}

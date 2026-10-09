@@ -12,7 +12,7 @@ export const roster: readonly Person[] = [
   { id:'brunosimon', name:'Bruno Simon', shortName:'Bruno Simon', github:'brunosimon', home:'courtyard', group:'ecosystem' },
   { id:'looeee', name:'Lewy Blue', shortName:'Lewy Blue', github:'looeee', home:'library', group:'ecosystem' },
   { id:'alejopequeno', name:'pek', shortName:'pek', github:'alejopequeno', home:'courtyard', group:'joyco' },
-  { id:'fabroos', name:'Fabrizio Signoretta', shortName:'Fabrizio', github:'fabroos', home:'great-hall', group:'joyco' },
+  { id:'fabroos', name:'fabroos', shortName:'fabroos', github:'fabroos', home:'great-hall', group:'joyco' },
   { id:'joyboy', name:'Joyboy', shortName:'Joyboy', github:'JOYBOY-0', home:'classrooms', group:'joyco' },
   { id:'justkahdri', name:'kahdri', shortName:'kahdri', github:'justkahdri', home:'stairs', group:'joyco' },
   { id:'matiasperz', name:'Matías Perez', shortName:'Matías', github:'matiasperz', home:'library', group:'joyco' },

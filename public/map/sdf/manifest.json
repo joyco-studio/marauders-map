@@ -591,6 +591,234 @@
         0.9746233148295004,
         0.9896907216494846
       ]
+    },
+    "artwork/banners/v01_classic_scroll_outlines.svg": {
+      "texture": "sdf/banners/v01_classic_scroll_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v01_classic_scroll_silhouette.svg": {
+      "texture": "sdf/banners/v01_classic_scroll_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v02_folded_ribbon_outlines.svg": {
+      "texture": "sdf/banners/v02_folded_ribbon_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v02_folded_ribbon_silhouette.svg": {
+      "texture": "sdf/banners/v02_folded_ribbon_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v03_corner_folds_outlines.svg": {
+      "texture": "sdf/banners/v03_corner_folds_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v03_corner_folds_silhouette.svg": {
+      "texture": "sdf/banners/v03_corner_folds_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v04_weathered_scroll_outlines.svg": {
+      "texture": "sdf/banners/v04_weathered_scroll_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v04_weathered_scroll_silhouette.svg": {
+      "texture": "sdf/banners/v04_weathered_scroll_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v05_botanical_scroll_outlines.svg": {
+      "texture": "sdf/banners/v05_botanical_scroll_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v05_botanical_scroll_silhouette.svg": {
+      "texture": "sdf/banners/v05_botanical_scroll_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v06_ceremonial_scroll_outlines.svg": {
+      "texture": "sdf/banners/v06_ceremonial_scroll_outlines.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
+    },
+    "artwork/banners/v06_ceremonial_scroll_silhouette.svg": {
+      "texture": "sdf/banners/v06_ceremonial_scroll_silhouette.png",
+      "size": [
+        1056,
+        459
+      ],
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "uv": [
+        0.015151515151515152,
+        0.034858387799564274,
+        0.9696969696969697,
+        0.9302832244008714
+      ]
     }
   }
 }

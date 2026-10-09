@@ -2,12 +2,15 @@ import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import sharp from 'sharp'
-const source='public/map/artwork', alphaRoot='.context/sdf-alpha', output='public/map/sdf'
-const manifest={version:1,kind:'sdf',range:8,images:{}}
+const incremental=process.argv.includes('--new-only')
+const source='public/map/artwork', alphaRoot=incremental?'.context/sdf-alpha-new':'.context/sdf-alpha', output='public/map/sdf'
+const manifest=incremental?JSON.parse(await readFile(path.join(output,'manifest.json'),'utf8')):{version:1,kind:'sdf',range:8,images:{}}
 for(const directory of ['architecture','ornaments','banners','cover']) {
   for(const file of await readdir(path.join(source,directory))) {
     if(!file.endsWith('.svg'))continue
-    const relative=path.join(directory,file), svg=await readFile(path.join(source,relative))
+    const relative=path.join(directory,file)
+    if(incremental&&manifest.images['artwork/'+relative])continue
+    const svg=await readFile(path.join(source,relative))
     const viewBox=svg.toString().match(/viewBox="([^"]+)"/)[1].split(/\s+/).map(Number)
     const [, , width,height]=viewBox
     const maximum=directory==='architecture'||file==='frame_2400x1200.svg'?4096:directory==='cover'?3072:1024

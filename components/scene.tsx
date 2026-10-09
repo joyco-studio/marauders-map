@@ -65,7 +65,7 @@ export function Scene() {
           <div className="fallback-message"><p>{status.error}</p><button onClick={retry}>Retry the enchanted map</button></div>
         </section>
       )}
-      <p className="sr-only" role="status" aria-live="polite">{status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
+      <p className="sr-only" role="status" aria-live="polite">{status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold, or wait three seconds.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
       <ActivityNotice activity={activity} controls={controls} ready={ready&&exploring} />
       <ActivityCard activity={activity} controls={controls} ready={ready} />
       <nav className="map-spells" aria-label="Parchment spells">

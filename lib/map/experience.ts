@@ -14,13 +14,14 @@ import { loadAssets } from "./assets"
 import { sdfCoverage } from "./sdf"
 import { createInk, type Ink } from "./ink"
 import { mapPoint, mapSize, elements, hotspots, labels, sheetPoint, type Label, type RevealTiming } from "./data"
-import { advance, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
+import { advance, shouldAutoOpen, clamp, smooth, transition, revealProgress, type MapState, type Phase, type Greeting, type Command } from "./state"
 import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } from "./triggers"
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
 import { StatusQueue, type StatusMessage } from "./status-queue"
 import { createInscription, arrivalMargin, type Inscription } from "./inscription"
+import { createLivingBanner, readMotionPixels, bannerMetadata } from "./living-banner"
 import { ActorPresentation } from "../activity/presentation"
 import { MAX_RENDERED_PEOPLE } from "../activity/roster"
 import { ActivityJourneys } from "../activity/journeys"
@@ -141,36 +142,36 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     cached.position.z=-.02;mapScene.add(cached);cached.visible=false
 
     const journeys=new ActivityJourneys()
+    const motionPixels=readMotionPixels(getTexture("artwork/living-banner/motion_weights.png"))
     const actors=journeys.actors.map((simulation,index)=> {
       const title=addText({text:simulation.person.shortName,center:simulation.point,size:12},mapScene,true)
       title.ink.progress.value=0
       // Draw each banner and its inscription together, so later banners occlude both.
       title.handle.mesh.renderOrder=3+index*2
-      const variant=simulation.person.shortName.length>14?"largo":simulation.person.shortName.length>=12?"mediano":"corto"
-      const legacyBannerWidth=variant==="mediano"?2:variant==="corto"?1.5:2.6
-      const viewWidth=variant==="mediano"?620:variant==="corto"?420:840
-      const bannerHeight=legacyBannerWidth*240/viewWidth
-      const textScale=Math.min(1,(bannerHeight*.25-.025)/title.height)
-      const bannerWidth=Math.max(.95,title.width*textScale+.42)
-      const fitText=Math.min(1,(bannerWidth*(viewWidth-198)/viewWidth-.08)/title.width,(bannerHeight*.25-.025)/title.height)
+      const safe=bannerMetadata.safe_text_box
+      const safeWidth=safe[2]-safe[0],safeHeight=safe[3]-safe[1]
+      // Preserve artwork proportions; fit the name inside its protected rectangle.
+      const fitText=.8
+      const bannerWidth=Math.max(1.25,(title.width*fitText+.10)/safeWidth,(title.height*fitText+.035)/(safeHeight*.75))
+      const bannerHeight=bannerWidth*.75
       title.handle.mesh.scale.setScalar(fitText)
+      const living=createLivingBanner(motionPixels,bannerWidth,index*1.71)
+      disposer.add(living.geometry)
       const bannerInk=createInk(bannerWidth,bannerHeight,index+90,noise)
       const bannerMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
-      const base=`artwork/banners/banner_${variant}`
-      const outline=assets.sdf[`${base}_contornos.svg`],silhouette=assets.sdf[`${base}_silueta.svg`]
-      const outlineCoverage=sdfCoverage(getTexture(outline.texture),outline)
-      const silhouetteCoverage=sdfCoverage(getTexture(silhouette.texture),silhouette)
-      bannerMaterial.colorNode=mix(texture(getTexture(`${base}_color.png`)).rgb,bannerInk.pigment,outlineCoverage)
-      bannerMaterial.opacityNode=silhouetteCoverage.mul(bannerInk.coverage).mul(bannerInk.opacity)
-      const banner=new Mesh(disposer.add(new PlaneGeometry(bannerWidth,bannerHeight)),bannerMaterial)
-      banner.position.z=.035;banner.renderOrder=2+index*2;mapScene.add(banner)
+      const artwork=texture(getTexture("artwork/living-banner/living_banner_color.png"))
+      bannerMaterial.colorNode=artwork.rgb
+      bannerMaterial.opacityNode=artwork.a.mul(bannerInk.coverage).mul(bannerInk.opacity)
+      const banner=new Mesh(living.geometry,bannerMaterial)
+      banner.renderOrder=2+index*2;mapScene.add(banner)
+      const textOffset=new Vector2(((safe[0]+safe[2])/2-.5)*bannerWidth,((safe[1]+safe[3])/2-.5)*bannerHeight)
       const footprints:Footprint[]=Array.from({length:20},(_,i)=> {
         const drawing=addDrawing(`artwork/ornaments/footprint_${i%2?"right":"left"}.svg`,[9,17.2],[700,350],index*20+i)
         drawing.mesh.position.z=.025
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
       })
-      return {simulation,title,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight}
+      return {simulation,title,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight,textOffset,updateBanner:living.update}
     })
     const presentation=new ActorPresentation(journeys.actors.map(actor=>actor.point),MAX_RENDERED_PEOPLE)
     // Cover lives on the center panel and uses the same real MSDF lettering.
@@ -403,9 +404,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const next=transition(state,command,time)
       if(next===state)return
       cast()
-      if(command==="welcome")wand.enchant("ritual")
+      if(command==="welcome"){audio.say("oath");wand.enchant("ritual")}
       if(command==="open"){wand.enchant("swipe");reset()}
-      if(command==="close"){staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
+      if(command==="close"){audio.say("closure");staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
       clearHover();focused=null
       state=next;syncPhase(state);emit()
     }
@@ -516,6 +517,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!tuning.manual)time+=dt
       const oldPhase=state.phase
       state=advance(state,time);syncPhase(state)
+      if(!tuning.manual&&shouldAutoOpen(state,time))change("open")
       if(oldPhase!==state.phase)clearHover()
       const age=time-state.enteredAt
       let fold=0,reveal=3
@@ -570,7 +572,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         // Tags and footsteps share the same presented actor position, including exits.
         const labelX=x,labelY=y+.5
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
-        actor.banner.position.set(labelX,labelY,.035)
+        actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
+        if(visible)actor.updateBanner(time,appearance.progress)
         actor.title.ink.progress.value=appearance.progress
         actor.title.ink.opacity.value=1
         actor.bannerInk.progress.value=appearance.progress

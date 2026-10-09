@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { absorptionCoverage, advance, transition, revealProgress, type MapState } from "./state"
+import { absorptionCoverage, advance, shouldAutoOpen, transition, revealProgress, type MapState } from "./state"
 
 test("opening and closing honor the cinematic sequence and replay",()=>{
   let state:MapState={phase:"loading",enteredAt:0}
@@ -95,4 +95,15 @@ test("cover reset erases the previous inscription before revealing choices",asyn
   assert.equal(coverBlend(.45).outgoing,0)
   assert.ok(coverBlend(.8).incoming>0&&coverBlend(.8).incoming<1)
   assert.deepEqual(coverBlend(1.25),{outgoing:0,incoming:1,complete:true})
+})
+
+test("welcome auto-opens after three seconds, while an early click cancels the deadline",()=>{
+  const welcomed:MapState={phase:"folded",enteredAt:1.9,greeting:"welcome"}
+  assert.equal(shouldAutoOpen(welcomed,4.899),false)
+  assert.equal(shouldAutoOpen(welcomed,4.9),true)
+  assert.equal(shouldAutoOpen({phase:"folded",enteredAt:0},100),false)
+  assert.equal(shouldAutoOpen({phase:"enchanting",enteredAt:0,greeting:"welcome"},100),false)
+  assert.equal(shouldAutoOpen(transition(welcomed,"open",2),5),false)
+  const closed=advance(transition({phase:"exploring",enteredAt:0,greeting:"welcome"},"close",10),14)
+  assert.equal(shouldAutoOpen(closed,100),false)
 })
