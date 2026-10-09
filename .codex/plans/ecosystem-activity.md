@@ -1,12 +1,55 @@
-# Ecosystem activity inside the Marauder’s Map
+# The Makers’ Map: ecosystem activity and creative-tech copy
 
 ## Summary and boundaries
 
 Turn real public activity from a curated group of Three.js ecosystem people and active JOYCO team members into journeys through the existing castle. GitHub events send characters to workshops and meeting places; Akella’s YouTube uploads send him to a classroom. Selecting a character reveals the actual event, publication time, and original link.
 
+Present the experiment as **The Makers’ Map**, an enchanted gathering place for the creative web, with the reserved original phrases preserved below.
+
 Use only data sources with no API usage fee: GitHub’s public REST API and YouTube’s public Atom feed. Do not provision paid services, a database, cron infrastructure, realtime hosting, or a YouTube API project. Existing app hosting and bandwidth are separate from source API costs. This document authorizes planning only; implementation happens later.
 
 V1 excludes multiplayer, X, Bluesky, AI classification, notifications, embedded video playback, live-stream detection, and a time-travel UI. Keep the existing parchment artwork, fold/reveal/erase experience, wand, secret passage, rendering backends, and motion policy.
+
+## Copy and creative-tech atmosphere
+
+Keep the aged parchment, castle drawings, ink, footprints, wand, and cinematic interactions. Reframe the text around creative developers, discoveries, and experiments. The tone is curious, mischievous, and handmade; technical names belong mainly to destinations. This section supersedes the earlier plan’s preservation of architectural labels, but does not require new buildings or artwork geometry.
+
+### Reserved copy: preserve verbatim
+
+The following existing copy is explicitly reserved by the user. Do not replace it, paraphrase it, or alter its corresponding accessible announcement. Existing line breaks may remain as they are.
+
+- “Awakening the map”
+- “The castle never sleeps”
+- “Gathering ink & secrets”
+- “Reveal your secrets”
+- “I solemnly swear that I am up to no good”
+- The entire existing mockery response, including the Marauders’ names and Professor Snape reference: “Moony, Wormtail, Padfoot & Prongs send their compliments to Professor Snape ...and request he keep his abnormally large nose out of other people's business.” Preserve the current source strings and blank-map behavior rather than rewriting the response from this transcription.
+
+The reserved spells and mockery are intentional surviving references within the new identity. Their existing actions and transition timing stay the same.
+
+### Approved replacement copy
+
+| Surface / current text | Exact replacement |
+| --- | --- |
+| Experiment title / The Marauder’s Map | The Makers’ Map |
+| Hogwarts School of Witchcraft & Wizardry | A living atlas of the creative web. |
+| New supporting introduction | Follow the footprints of those building it. |
+| Welcome inscription after the solemn swear choice | For those who turn strange ideas into pixels. |
+| Messrs. Moony, Wormtail & Padfoot & Prongs attribution outside the reserved mockery / existing Marauders map credit | For those who turn strange ideas into pixels. |
+| Purveyors of Aids to Magical Mischief-Makers | Real public activity, imagined as journeys. |
+| Mischief managed / close action | Enough experimenting. For now. |
+| The parchment remembers. | Every experiment leaves a trace. |
+| Tap the key to find a secret | Every good experiment has a rabbit hole. |
+| Dissendium / discovered passage inscription | One more thing to try… |
+| A passage to Honeydukes | A passage to The Rabbit Hole |
+
+Avoid duplicating the welcome and map credit in the same view. Split the new title and welcome across readable lines that fit the current folded cover. Keep Cinzel headings on the cover and Tangerine on the unfolded map. Preserve “Pull an edge to unfold” and other clear navigation instructions.
+
+Rename destinations consistently in visible map labels, activity routes/cards, accessible descriptions, and static fallback text: Great Hall → **The Commons**; Library → **The Source Library**; Courtyard → **The Playground**; Moving Staircases → **The Render Pipeline**; Classrooms → **The Shader Atelier**; North Tower → **The Observatory**; Honeydukes passage destination → **The Rabbit Hole**. Preserve stable internal waypoint/hotspot IDs and the existing discovery interaction. The Rabbit Hole remains a hidden passage in v1; adding a playable experiment behind it is deferred.
+
+Use truthful event-driven arrival inscriptions: a video becomes “{name} published a new lesson.”, a pull request “{name} opened a proposal.” (use “reopened” for a reopened PR), code “{name} left fresh code in the library.”, a conversation “{name} joined the conversation.”, and a release “A new release reached the Commons.” Show exact normalized event titles and provider details in the card underneath; the playful inscription must not imply additional activity. Use “Real public activity, imagined as journeys.” as the shared explanatory line.
+
+Apply the identity to cover/title, non-reserved welcome, loading text, map labels, activity card copy, document metadata, manifest names, static fallback descriptions, accessibility text, and README. Metadata description: “An enchanted atlas of the creative web. Follow real GitHub activity and YouTube discoveries as footprints through a living castle.” Preserve historical plan documents, repository/branch names, asset filenames, and internal identifiers. In accessible announcements, preserve the reserved phrases while replacing surrounding non-reserved references to Hogwarts and fictional roaming characters with the creative-tech destinations and actual cast. Do not change fonts, favicon artwork, rendering, or the motion policy for this copy pass.
 
 ## Proposed cast
 
@@ -14,13 +57,13 @@ Use these seven people as the always-visible ecosystem cast, plus the activity-g
 
 | Person | Public sources | Castle role / home destination |
 | --- | --- | --- |
-| mrdoob | [GitHub](https://github.com/mrdoob) | Castle architect; Great Hall |
-| sunag | [GitHub](https://github.com/sunag) | Shader specialist; Classrooms |
-| Don McCurdy | [GitHub](https://github.com/donmccurdy) | Asset and geometry keeper; Library |
-| drcmda | [GitHub](https://github.com/drcmda) | React workshop visitor; Moving Staircases |
-| Yuri Artiukh / Akella | [GitHub](https://github.com/akella), [YouTube @akella_](https://www.youtube.com/@akella_) | Teacher; Classrooms |
-| Bruno Simon | [GitHub](https://github.com/brunosimon) | Experiment maker; Courtyard |
-| Lewy Blue | [GitHub](https://github.com/looeee) | Guide and author; Library |
+| mrdoob | [GitHub](https://github.com/mrdoob) | Castle architect; The Commons |
+| sunag | [GitHub](https://github.com/sunag) | Shader specialist; The Shader Atelier |
+| Don McCurdy | [GitHub](https://github.com/donmccurdy) | Asset and geometry keeper; The Source Library |
+| drcmda | [GitHub](https://github.com/drcmda) | React workshop visitor; The Render Pipeline |
+| Yuri Artiukh / Akella | [GitHub](https://github.com/akella), [YouTube @akella_](https://www.youtube.com/@akella_) | Teacher; The Shader Atelier |
+| Bruno Simon | [GitHub](https://github.com/brunosimon) | Experiment maker; The Playground |
+| Lewy Blue | [GitHub](https://github.com/looeee) | Guide and author; The Source Library |
 
 ### JOYCO team additions
 
@@ -28,13 +71,13 @@ Add these seven JOYCO team members to the configured roster. Public GitHub activ
 
 | Person | GitHub | Recent public activity observed | Home destination |
 | --- | --- | --- | --- |
-| Alejo Pequeño | [alejopequeno](https://github.com/alejopequeno) | October 9: pull request in `joyco-studio/lab` | Courtyard |
-| Fabrizio Signoretta | [fabroos](https://github.com/fabroos) | September 29–30: pushes in `joyco-studio/hub` | Great Hall |
-| Joyboy | [JOYBOY-0](https://github.com/JOYBOY-0) | October 7: pushes in `joyco-studio/lettra` | Classrooms |
-| Joaquín R. Montes | [justkahdri](https://github.com/justkahdri) | October 5–6: pushes in `joyco-studio/trazo` | Moving Staircases |
-| Matías Perez | [matiasperz](https://github.com/matiasperz) | October 7–8: pushes in `joyco-studio/gltf` | Library |
-| Santiago Rivas | [dmowl-ops](https://github.com/dmowl-ops) | September 28: pushes in `dmowl-ops/NYCPT` | Courtyard |
-| Joaquín Morolla | [jocodesing-arch](https://github.com/jocodesing-arch) | No qualifying public activity in the inspected feed; keep hidden until eligible | Great Hall |
+| Alejo Pequeño | [alejopequeno](https://github.com/alejopequeno) | October 9: pull request in `joyco-studio/lab` | The Playground |
+| Fabrizio Signoretta | [fabroos](https://github.com/fabroos) | September 29–30: pushes in `joyco-studio/hub` | The Commons |
+| Joyboy | [JOYBOY-0](https://github.com/JOYBOY-0) | October 7: pushes in `joyco-studio/lettra` | The Shader Atelier |
+| Joaquín R. Montes | [justkahdri](https://github.com/justkahdri) | October 5–6: pushes in `joyco-studio/trazo` | The Render Pipeline |
+| Matías Perez | [matiasperz](https://github.com/matiasperz) | October 7–8: pushes in `joyco-studio/gltf` | The Source Library |
+| Santiago Rivas | [dmowl-ops](https://github.com/dmowl-ops) | September 28: pushes in `dmowl-ops/NYCPT` | The Playground |
+| Joaquín Morolla | [jocodesing-arch](https://github.com/jocodesing-arch) | No qualifying public activity in the inspected feed; keep hidden until eligible | The Commons |
 
 Only show a JOYCO character and roster entry when at least one normalized supported public GitHub event falls within the last 14 days. Fetch each configured person's public activity across repositories, as for the ecosystem cast. Retain the last known eligibility during a temporary upstream failure until its qualifying event ages out; then hide the character. If an event expires during a journey, finish that journey, erase the banner and footprints, and disable selection. Re-entry after fresh activity reveals the actor and stages its newest unseen event normally. Dismiss an open card if its actor becomes ineligible.
 
@@ -56,7 +99,7 @@ Akella’s verified channel ID is `UCDo7RTzizoOdPjY8A-xDR7g`. Its feed is `https
 ## Castle behavior and rendering
 
 1. Replace the four fictional roaming actors with fourteen preallocated community actors (seven ecosystem and seven JOYCO) in the normal revealed map. Reuse existing Lettra banners, footprint sprites, TSL ink, static composition cache, XYZ disposal, and warmup. Keep the mockery opening’s blank map behavior. Allocate a fixed pool of 20 prints per actor (280 prints total); keep ineligible JOYCO slots hidden and non-interactive; create no meshes or materials during a network refresh or animation frame.
-2. Define a shared corridor waypoint graph from the current `lib/map/data.ts` route coordinates. Map code to Library, pull requests to Great Hall, conversations to Courtyard, releases to Great Hall, and videos to Classrooms. The detail card identifies the fictional destination as a workshop, meeting, announcement, or lesson without rewriting the castle’s architectural labels. Route along graph edges using a deterministic shortest path; a person starts at their configured home waypoint, and loops or retraces the destination corridor briefly if already there.
+2. Define a shared corridor waypoint graph from the current `lib/map/data.ts` route coordinates. Map code to The Source Library, pull requests to The Commons, conversations to The Playground, releases to The Commons, and videos to The Shader Atelier. The detail card identifies the fictional destination as a workshop, meeting, announcement, or lesson using the renamed architectural labels specified below. Route along graph edges using a deterministic shortest path; a person starts at their configured home waypoint, and loops or retraces the destination corridor briefly if already there.
 3. For the first successful fetch in a mounted experience, select each person’s newest event within the 14-day window and stage one journey per active person, staggered by two seconds in roster order. More recent events trigger stronger ink on the banner; events older than a day use lighter ink. Ecosystem people without events remain at their home waypoint with subdued banners and “No recent activity available” in their card. Never manufacture events or claim someone is online.
 4. Each journey walks at the existing map’s normal scale and speed, leaves alternating fading prints, pauses six seconds at its destination, then returns home. A subtle parchment announcement displays the event title on arrival. Keep one journey active per person and up to three unseen events queued per person, in publication order; if more arrive, keep the newest three. Track IDs seen during this mounted session so polling cannot repeatedly animate the same event. On later fetches, enqueue only newly observed IDs. Reloading may replay recent activity intentionally.
 5. Advance activity only while the revealed map is exploring and the tab is visible. Closing clears transient footprints and pauses journeys; reopening resumes them after the ink reveal without teleporting or enqueueing the same events again. Network updates received while folded can update cards and queue future movement. Preserve manual debug controls and avoid updating actor simulation while manual mode owns it.
@@ -66,13 +109,13 @@ Akella’s verified channel ID is `UCDo7RTzizoOdPjY8A-xDR7g`. Its feed is `https
 
 ## Implementation order and acceptance
 
-Implement the roster, adapters, normalized contract, and cached route first; then the deterministic corridor routing and actor journey state; then scene integration and the accessible detail card. Finish by documenting the required user-supplied token, supported sources, quota limitations, and lack of realtime guarantees in the README. Avoid deploying or provisioning services as part of implementation.
+Implement the roster, adapters, normalized contract, and cached route first; then the deterministic corridor routing and actor journey state; then scene integration and the accessible detail card; then the approved copy and destination renames across visible, fallback, metadata, and accessible surfaces. Finish by documenting the required user-supplied token, supported sources, quota limitations, and lack of realtime guarantees in the README. Avoid deploying or provisioning services as part of implementation.
 
 Focused automated tests are justified for network normalization and queued movement, since malformed external payloads, deduplication, and interrupted animation can cause regressions. Use the existing `tsx --test` runner with fixtures; automated tests must not call live APIs. Cover GitHub event mapping and payload fallbacks, Atom namespaces and metadata edits, duplicate IDs, 14-day filtering, partial-source failures/rate limiting, missing or invalid GitHub credentials without unauthenticated fallback, repeated polls, bounded queues, pause/resume across close/reopen, and JOYCO eligibility at the 14-day boundary, stale-source expiry, disappearance during a journey, and re-entry without duplicate events. Do not add tests for cosmetic banner details.
 
-Run typechecking, linting, the focused tests plus existing state tests, and a production build. Manually inspect desktop WebGPU and mobile-sized WebGL2: all seven ecosystem names plus eligible JOYCO names, inactive JOYCO slots hidden, corridor-constrained footprints, data arriving after reveal, banner selection without breaking pan/passage controls, keyboard card access, repeated close/reopen, hidden-tab resume, empty/error sources, and teardown. Confirm static caching still excludes dynamic actor meshes and that no polling timers or GPU resources survive disposal.
+Run typechecking, linting, the focused tests plus existing state tests, and a production build. Manually inspect desktop WebGPU and mobile-sized WebGL2: all seven ecosystem names plus eligible JOYCO names, inactive JOYCO slots hidden, corridor-constrained footprints, data arriving after reveal, banner selection without breaking pan/passage controls, keyboard card access, repeated close/reopen, hidden-tab resume, empty/error sources, and teardown. Inspect the folded title/welcome and long close label for overflow on desktop and mobile. Check every reserved string and the complete mockery against the original source, and confirm renamed rooms match the activity destinations, fallback, metadata, and accessible descriptions. Copy changes require focused inspection rather than new automated tests. Confirm static caching still excludes dynamic actor meshes and that no polling timers or GPU resources survive disposal.
 
-Acceptance means Akella’s latest public upload can produce a classroom journey and a working watch link; a supported GitHub event produces the matching journey and source card; duplicate refreshes do not replay it; unavailable providers never prevent map exploration; eligible JOYCO members appear and inactive members disappear according to the 14-day gate; no paid integration is introduced; and GitHub requests use the required user-supplied server-only token without exposing it to visitors.
+Acceptance means Akella’s latest public upload can produce a classroom journey and a working watch link; a supported GitHub event produces the matching journey and source card; duplicate refreshes do not replay it; unavailable providers never prevent map exploration; eligible JOYCO members appear and inactive members disappear according to the 14-day gate; no paid integration is introduced; the Makers’ Map identity and renamed destinations appear consistently while all reserved phrases and mockery remain verbatim; and GitHub requests use the required user-supplied server-only token without exposing it to visitors.
 
 ## Sources and implementation guidance
 
