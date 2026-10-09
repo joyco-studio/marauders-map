@@ -97,54 +97,57 @@ export function ActivityRoster({activity}:{activity:ActivityState}) {
     <button disabled={activity.refreshing} onClick={activity.refresh}>{activity.refreshing?'Gathering activity…':'Refresh public activity'}</button>
   </>
 }
-export function ActivityNotice({activity}:{activity:ActivityState}) {
+export function ActivityNotice({activity,controls,ready}:{activity:ActivityState;controls:React.RefObject<MapControls|null>;ready:boolean}) {
   const arrival=activity.announcement
   const person=arrival&&roster.find(p=>p.id===arrival.personId)
   const stale=activity.unavailable||activity.snapshot?.sources.some(s=>s.status!=='ok')
   const wandering=activity.snapshot?.mode==='wandering'
-  if(!arrival&&!stale&&!wandering)return null
-  return <aside className="activity-notice" role="status" aria-live="polite">
-    {arrival&&person&&<><p>{arrivalInscription(person.shortName,arrival.event)}</p><small>{arrival.event.title}</small></>}
-    {wandering&&<small>Wandering without a GitHub token. These roaming footsteps are fictional; published YouTube lessons still create real activity journeys.</small>}
-    {stale&&<small>Some public sources are unavailable. {activity.snapshot?.events.length?'Last available activity is shown.':'No recent activity available from those sources.'}</small>}
-  </aside>
+  const title=arrival&&person?arrivalInscription(person.shortName,arrival.event):wandering?'Footsteps of imagined journeys':stale?'Some public sources are resting':''
+  const detail=arrival?briefTitle(arrival.event.title):wandering?'Idle roaming is fictional. Public activity inspires journeys.':stale?'Last available activity is shown.':''
+  useEffect(()=>{
+    if(!ready)return
+    const map=controls.current
+    map?.setNotice(title?{title,lines:[detail],actions:[]}:null)
+    return ()=>map?.setNotice(null)
+  },[controls,ready,title,detail])
+  return title?<aside className="sr-only" role="status" aria-live="polite">{title} {detail}</aside>:null
 }
-export function ActivityCard({activity}:{activity:ActivityState}) {
-  const dialog=useRef<HTMLDialogElement>(null)
+function briefTitle(title:string) { return title.length>110?`${title.slice(0,107).trimEnd()}…`:title }
+export function ActivityCard({activity,controls,ready}:{activity:ActivityState;controls:React.RefObject<MapControls|null>;ready:boolean}) {
   const person=roster.find(p=>p.id===activity.selected)
   const dismiss=activity.dismiss
+  const {snapshot,now}=activity
+  useEffect(()=>{
+    if(!ready)return
+    if(!person){controls.current?.setInscription(null);return}
+    const event=recentEvents(snapshot?.events??[],now).find(e=>e.personId===person.id)
+    const url=event&&safeActivityUrl(event.url,event.source)
+    const links=url?[{label:`View on ${providerName(event!.source)}`,run:()=>{window.open(url,'_blank','noopener,noreferrer')}}]:[]
+    const map=controls.current
+    map?.setInscription({
+      title:person.name,
+      lines:event?[
+        briefTitle(event.title),
+        `${destinations[eventDestination[event.kind]]} · ${kinds[event.kind]}`,
+        age(event.occurredAt,now),
+      ]:['An imagined journey through the creative web.','No recent public activity.'],
+      actions:[{label:'Close inscription',run:dismiss},...links],
+    })
+    return ()=>map?.setInscription(null)
+  },[person,snapshot,now,dismiss,controls,ready])
   useEffect(()=>{
     if(!person)return
-    const node=dialog.current
-    node?.showModal()
-    return ()=>{node?.close()}
-  },[person])
+    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')dismiss()}
+    window.addEventListener('keydown',escape)
+    return ()=>window.removeEventListener('keydown',escape)
+  },[person,dismiss])
   if(!person)return null
-  const events=recentEvents(activity.snapshot?.events??[],activity.now).filter(e=>e.personId===person.id).slice(0,5)
-  const sources=activity.snapshot?.sources.filter(s=>s.personId===person.id)??[]
-  return <dialog ref={dialog} className="activity-card" aria-labelledby="activity-heading" onCancel={e=>{e.preventDefault();dismiss()}} onClick={e=>{if(e.target===e.currentTarget)dismiss()}}>
-    <div className="activity-card-content">
-      <button className="activity-dismiss" onClick={dismiss} aria-label="Close activity card" autoFocus>Close</button>
-      <h2 id="activity-heading">{person.name}</h2>
-      <p className="activity-explanation">Public activity inspires journeys; idle roaming is fictional.</p>
-      <p className="activity-source">Idle makers wander at random between activity journeys. This movement is fictional and does not represent public activity or online presence. Source events below remain real.</p>
-      {!events.length&&<p className="activity-empty">No recent activity available</p>}
-      <ol>{events.map(event=>{
-        const url=safeActivityUrl(event.url,event.source)
-        const destination=destinations[eventDestination[event.kind]]
-        const role=event.kind==='video'?'lesson':event.kind==='release'?'announcement':event.kind==='conversation'||event.kind==='pull-request'?'meeting':'workshop'
-        return <li key={event.id}>
-          <small>{providerName(event.source)} · {kinds[event.kind]} · {destination} {role}</small>
-          <h3>{event.title}</h3>
-          {event.repository&&<p className="activity-repository">{event.repository}</p>}
-          <time dateTime={event.occurredAt}>{new Date(event.occurredAt).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'long'})} · {age(event.occurredAt,activity.now)}</time>
-          {url&&<a href={url} target="_blank" rel="noopener noreferrer">View on {providerName(event.source)}</a>}
-        </li>
-      })}</ol>
-      {sources.map(source=><p className="activity-source" key={source.source}>{providerName(source.source)}: {source.status==='ok'?'available':source.status}. {source.lastSuccessfulAt?<>Last fetched <time dateTime={source.lastSuccessfulAt}>{new Date(source.lastSuccessfulAt).toLocaleString()}</time>.</>:'No successful fetch yet.'}</p>)}
-      {activity.unavailable&&<p className="activity-source">Refresh unavailable. Last available activity is shown.</p>}
-      <p className="activity-source">These bounded public feeds may be delayed and do not indicate online presence or private activity.</p>
-      <button disabled={activity.refreshing} onClick={activity.refresh}>Refresh public activity</button>
-    </div>
-  </dialog>
+  const event=recentEvents(snapshot?.events??[],now).find(e=>e.personId===person.id)
+  const url=event&&safeActivityUrl(event.url,event.source)
+  return <section className="activity-accessible sr-only" aria-labelledby="activity-heading">
+    <h2 id="activity-heading">{person.name}</h2>
+    <p>{event?event.title:'An imagined journey through the creative web. No recent public activity.'}</p>
+    <button onClick={dismiss}>Close inscription</button>
+    {url&&<a href={url} target="_blank" rel="noopener noreferrer">View on {providerName(event!.source)}</a>}
+  </section>
 }

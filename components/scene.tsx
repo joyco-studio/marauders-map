@@ -7,7 +7,7 @@ import type { MapControls, Status } from "@/lib/map/experience"
 
 const initial:Status={phase:"loading",progress:0,discovered:false,backend:""}
 const descriptions:Record<Status["phase"],string>={
-  loading:"Preparing the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Choose Reveal your secrets or I solemnly swear that I am up to no good, then pull an edge to unfold.",error:"The interactive map could not open",
+  loading:"Preparing the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Choose Reveal your secrets or I solemnly swear that I am up to no good, then press anywhere on the parchment to unfold.",error:"The interactive map could not open",
 }
 export function Scene() {
   const container=useRef<HTMLDivElement>(null)
@@ -45,10 +45,9 @@ export function Scene() {
   },[attempt,select,arrive,onMapStatus])
   const retry=()=>{setReady(false);setStatus(initial);setAttempt(n=>n+1)}
   return (
-    <main className="map-experience" data-phase={status.phase} data-backend={status.backend} aria-labelledby="map-title">
+    <main className={`map-experience${ready&&status.phase!=="error"?" wand-cursor":""}`} data-phase={status.phase} data-backend={status.backend} aria-labelledby="map-title">
       <h1 id="map-title" className="sr-only">The Makers’ Map</h1>
       <p id="map-description" className="sr-only">A living atlas of the creative web. Follow the footprints of those building it. The Commons, The Source Library, The Playground, The Render Pipeline, The Shader Atelier, and The Observatory are drawn in sepia ink. mrdoob, sunag, Don McCurdy, drcmda, Akella, Bruno Simon, Lewy Blue, and eligible JOYCO members follow journeys inspired by recent public GitHub activity and YouTube lessons. A key beside The Observatory reveals a passage to The Rabbit Hole.</p>
-      {status.phase==="folded"&&!status.greeting&&<div className="map-introduction" aria-hidden="true"><p>A living atlas of the creative web.</p><p>Follow the footprints of those building it.</p></div>}
       <div ref={container} className="map-host" aria-describedby="map-description" />
       {status.phase==="loading"&&(
         <div className="loading-parchment" role="status">
@@ -64,19 +63,22 @@ export function Scene() {
           <div className="fallback-message"><p>{status.error}</p><button onClick={retry}>Retry the enchanted map</button></div>
         </section>
       )}
-      <p className="sr-only" role="status" aria-live="polite">{status.phase==="exploring"&&status.greeting==="mockery"?"The map is open. The parchment is completely blank. Drag to pan, scroll or pinch to zoom.":status.phase==="folded"&&status.greeting==="mockery"?"The Marauders mock Professor Snape and ask him to keep his nose out of other people’s business. Pull an edge to unfold.":status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Pull an edge to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
-      {exploring&&status.greeting!=="mockery"&&<ActivityNotice activity={activity} />}
-      <ActivityCard activity={activity} />
+      <p className="sr-only" role="status" aria-live="polite">{status.phase==="exploring"&&status.greeting==="mockery"?"The map is open. The parchment is completely blank. Drag to pan, scroll or pinch to zoom.":status.phase==="folded"&&status.greeting==="mockery"?"The Marauders mock Professor Snape and ask him to keep his nose out of other people’s business. Press anywhere on the parchment to unfold.":status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
+      {exploring&&status.greeting!=="mockery"&&<ActivityNotice activity={activity} controls={controls} ready={ready} />}
+      <ActivityCard activity={activity} controls={controls} ready={ready} />
+      <nav className="map-spells" aria-label="Parchment spells">
+        {status.phase==="folded"&&!status.greeting&&<>
+          <button onClick={()=>controls.current?.greet("mockery")}>Reveal your secrets</button>
+          <button onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>
+        </>}
+        {exploring&&<button onClick={()=>controls.current?.close()}>Enough experimenting. For now.</button>}
+      </nav>
       <nav className="accessible-controls" aria-label="Map controls">
         <button onFocus={()=>controls.current?.setFocusedTrigger("passage")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring||status.greeting==="mockery"||status.discovered} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(.25)}>Zoom in</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(-.25)}>Zoom out</button>
         <button disabled={!exploring} onClick={()=>controls.current?.resetView()}>Reset view</button>
-        {status.phase==="folded"&&!status.greeting&&<>
-          <button onFocus={()=>controls.current?.setFocusedTrigger("mockery")} onBlur={()=>controls.current?.setFocusedTrigger(null)} onClick={()=>controls.current?.greet("mockery")}>Reveal your secrets</button>
-          <button onFocus={()=>controls.current?.setFocusedTrigger("welcome")} onBlur={()=>controls.current?.setFocusedTrigger(null)} onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>
-        </>}
-        {status.phase==="folded"?<button onFocus={()=>controls.current?.setFocusedTrigger("open")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!status.greeting} onClick={()=>controls.current?.open()}>Unfold the map</button>:<button onFocus={()=>controls.current?.setFocusedTrigger("close")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring} onClick={()=>controls.current?.close()}>Enough experimenting. For now.</button>}
+        {status.phase==="folded"?<button onFocus={()=>controls.current?.setFocusedTrigger("open")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!status.greeting} onClick={()=>controls.current?.open()}>Unfold the map</button>:null}
         {exploring&&status.greeting!=="mockery"&&<ActivityRoster activity={activity} />}
       </nav>
     </main>

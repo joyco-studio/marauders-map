@@ -4,7 +4,7 @@ import {
   AmbientLight, BackSide, BufferGeometry, Float32BufferAttribute, Color, DirectionalLight, Group, Mesh,
   MeshBasicNodeMaterial, MeshStandardNodeMaterial, OrthographicCamera,
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
-  Vector2, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
+  Vector2, Vector3, Plane, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
 import { mix, texture, uniform, uv, vec2, vec3, positionLocal, attribute, normalMap, smoothstep } from "three/tsl"
 import { createText, type TextHandle, type TextEffect } from "lettra/three"
@@ -18,6 +18,7 @@ import { eligibleTrigger, resolveTrigger, type Trigger, type FocusedTrigger } fr
 import { coverBlend } from "./cover"
 import { foldPose } from "./folds"
 import { createWand } from "./wand"
+import { createInscription, arrivalMargin, type Inscription } from "./inscription"
 import { ActorPresentation } from "../activity/presentation"
 import { MAX_RENDERED_PEOPLE } from "../activity/roster"
 import { ActivityJourneys } from "../activity/journeys"
@@ -25,7 +26,7 @@ import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
 
 export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting }
-export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
+export type MapControls = { setInscription:(value:Inscription|null)=>void; setNotice:(value:Inscription|null)=>void; close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
 type Panel = {index:number; hinge:Group; mesh:Mesh<PlaneGeometry,MeshStandardNodeMaterial>; side:number; depth:number}
@@ -43,6 +44,16 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
   try {
     const renderer=new WebGPURenderer({antialias:true,alpha:true,forceWebGL:new URLSearchParams(location.search).get("renderer")==="webgl"})
     disposer.add(()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove()})
+    // A transparent foreground canvas puts the wand above HTML labels as well as map ink.
+    const wandRenderer=new WebGPURenderer({antialias:true,alpha:true,forceWebGL:new URLSearchParams(location.search).get("renderer")==="webgl"})
+    wandRenderer.domElement.className="wand-canvas"
+    wandRenderer.domElement.setAttribute("aria-hidden","true")
+    ;(container.parentElement??container).appendChild(wandRenderer.domElement)
+    disposer.add(()=>{wandRenderer.dispose();wandRenderer.domElement.remove()})
+    await wandRenderer.init();check()
+    wandRenderer.outputColorSpace=SRGBColorSpace
+    wandRenderer.setClearColor(0,0)
+    const wandCamera=new PerspectiveCamera()
     renderer.outputColorSpace=SRGBColorSpace
     renderer.shadowMap.enabled=true
     renderer.shadowMap.type=PCFShadowMap
@@ -105,13 +116,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       return {mesh,ink}
     }
     for(const element of elements){const drawing=addDrawing(element.src,element.size,element.center,element.timing.seed);reveals.push({ink:drawing.ink,timing:element.timing})}
-    const mapLabels=labels.map(label=>addText(label))
+    labels.forEach(label=>addText(label))
+    const inscription=createInscription(disposer);mapScene.add(inscription.mesh)
+    const notice=createInscription(disposer,arrivalMargin);mapScene.add(notice.mesh)
     const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
     const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
-    const secret=addText({text:"One more thing to try…",center:mapPoint([1630,150]),size:16,angle:-.12},mapScene,true)
+    const secret=addText({text:"One more thing to try…",center:mapPoint([1635,105]),size:15},mapScene,true)
     secret.ink.progress.value=0
-    const note=addText({text:"A passage to The Rabbit Hole",center:mapPoint([1640,175]),size:11},mapScene,true)
+    const note=addText({text:"A passage to The Rabbit Hole",center:mapPoint([1635,185]),size:11},mapScene,true)
     note.ink.progress.value=0
     // Reusable static snapshot quad: updated only when ink/static discovery changes.
     const cachedMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
@@ -159,10 +172,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       choices: [
         {text:"The Makers’",center:[700,181],size:20,heading:true},
         {text:"Map",center:[700,222],size:35,heading:true},
-        {text:"Reveal your secrets",center:[700,288],size:18},
-        {text:"or",center:[700,308],size:11},
-        {text:"I solemnly swear",center:[700,326],size:15},
-        {text:"that I am up to no good",center:[700,342],size:13},
+        {text:"A living atlas",center:[700,390],size:12},
+        {text:"of the creative web.",center:[700,410],size:12},
+        {text:"Follow the footprints",center:[700,447],size:11},
+        {text:"of those building it.",center:[700,467],size:11},
       ],
       welcome: [
         {text:"For those who turn",center:[700,180],size:14},
@@ -182,7 +195,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       ],
     } satisfies Record<string, Label[]>
     const coverGroups = Object.fromEntries(Object.entries(coverContent).map(([name,content])=>[name,content.map(label=>addText(label,coverScene,true))]))
-    const edgeHint = addText({text:"Pull an edge to unfold",center:[700,655],size:10},coverScene,true)
+    const edgeHint = addText({text:"Press anywhere to unfold",center:[700,655],size:10},coverScene,true)
     let coverKey="", previousCover:string|null=null, coverChangedAt=0, coverDirty=true
     const updateCover=()=> {
       const key=state.phase==="folded"?state.greeting??"choices":coverKey||"choices"
@@ -231,15 +244,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       accent(target,vertices,parent,ink)
     }
-    const underline=(target:Trigger,item:typeof mapLabels[number],parent:Scene|Group,width=item.width)=> {
-      const {x,y}=item.handle.mesh.position
-      item.handle.mesh.geometry.computeBoundingBox()
-      const bottom=item.handle.mesh.geometry.boundingBox!.min.y
-      stroke(target,Array.from({length:17},(_,i)=>[x-width/2+width*i/16,y+bottom-.04+Math.sin(i*1.7)*.003]),parent,.012,item.ink)
-    }
-    underline("mockery",coverGroups.choices[2],coverOverlay)
-    underline("welcome",coverGroups.choices[5],coverOverlay,Math.max(coverGroups.choices[4].width,coverGroups.choices[5].width))
-    underline("close",mapLabels[7],accents)
     for(const side of [-1,1])stroke(side<0?"open-left":"open-right",Array.from({length:33},(_,i)=>[side*1.36+Math.sin(i*1.9)*.003,-3.42+i*6.84/32]),coverOverlay)
     const passageSpot=hotspots.find(h=>h.id==="passage")!
     const [keyX,keyY]=sheetPoint(passageSpot.center)
@@ -329,8 +333,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const outer=new Group();outer.position.set(side*2.8,0,0);inner.add(outer)
       createPanel(side<0?0:4,outer,side*1.4,side,2)
     }
-    scene.add(new AmbientLight("#f2dec4",1.7))
+    const ambient=new AmbientLight("#f2dec4",1.7);ambient.layers.enable(1);scene.add(ambient)
     const light=new DirectionalLight("#ffedce",tuning.light);light.position.set(-4,6,9);light.castShadow=true
+    light.layers.enable(1)
     light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-9;light.shadow.camera.right=9;light.shadow.camera.top=6;light.shadow.camera.bottom=-6;light.shadow.normalBias=.04;scene.add(light)
     const deskMaterial=disposer.add(new MeshStandardNodeMaterial({roughness:.85,metalness:0}))
     // Preserve the source's 2:1 aspect and a broad-plank scale on the large desk.
@@ -349,7 +354,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const {clientWidth:w,clientHeight:h}=container
       if(!w||!h)return
       renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.5:2))
-      renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()
+      renderer.setSize(w,h,false)
+      wandRenderer.setPixelRatio(renderer.getPixelRatio());wandRenderer.setSize(w,h,false)
+      camera.aspect=w/h;camera.updateProjectionMatrix()
       const vertical=Math.tan(35*Math.PI/360)
       baseDistance=Math.max(5.65/vertical,10/(vertical*camera.aspect))
       updateCamera()
@@ -385,7 +392,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     progress=1
     state=transition(state,"ready",time);syncPhase(state)
     let staticCached=false,staticDirty=true
-    const staticObjects=mapScene.children.filter(obj=>obj!==cached && obj!==accents && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
+    const staticObjects=mapScene.children.filter(obj=>obj!==cached && obj!==accents && obj!==inscription.mesh && obj!==notice.mesh && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
     const setStatic=(visible:boolean)=>staticObjects.forEach(obj=>{obj.visible=visible})
     const snapshot=()=> {
       for(const obj of staticObjects)staticScene.add(obj)
@@ -431,7 +438,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
-      canvas.style.cursor=hover||(!suspended&&!pointers.size&&latest&&actorAt(latest.x,latest.y))?"pointer":state.phase==="exploring"?"grab":"default"
+
     }
     const actorAt=(clientX:number,clientY:number)=> {
       if(state.phase!=="exploring"||state.greeting==="mockery")return
@@ -448,14 +455,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(state.phase!=="exploring"&&state.phase!=="folded")return
       clearHover();latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY);if(touch){wand.aim(touch.point);cast()}
+      if(touch&&state.phase==="folded"&&state.greeting){change("open");return}
       canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});startX=e.clientX;startY=e.clientY;dragDistance=0
       if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}
     })
-    disposer.listen<PointerEvent>(canvas,"pointermove",e=> {
+    disposer.listen<PointerEvent>(window,"pointermove",e=> {
       latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY)
-      wandHover=!!touch&&e.pointerType!=="touch"
-      if(touch)wand.aim(touch.point)
+      wandHover=e.pointerType!=="touch"
+      const aim=new Vector3()
+      ray.ray.intersectPlane(new Plane(new Vector3(0,0,1),0),aim)
+      wand.aim(touch?.point??aim)
       const p=pointers.get(e.pointerId)
       if(p){
         const dx=e.clientX-p.x,dy=e.clientY-p.y;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY})
@@ -476,6 +486,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)
       const point=hit(e.clientX,e.clientY)
       if(dragDistance<=6&&!pointers.size){
+        if(inscription.hit(point,true)){refreshHover(point);return}
         const spot=resolveTrigger(point,state,discovered)
         if(spot==="passage")discover()
         else if(spot==="open-left"||spot==="open-right")change("open")
@@ -487,13 +498,13 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       refreshHover(point)
     })
     disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);latest=null;wandHover=false;clearHover()})
-    disposer.listen(canvas,"pointerleave",()=>{latest=null;wandHover=false;clearHover()})
+    disposer.listen<PointerEvent>(document,"pointerout",e=>{if(!e.relatedTarget){latest=null;wandHover=false;clearHover()}})
     const suspend=()=>{suspended=true;focused=null;latest=null;pointers.clear();wandHover=false;clearHover()}
     disposer.listen(window,"blur",suspend)
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
+    const controls:MapControls={setInscription:value=>inscription.set(value),setNotice:value=>notice.set(value),setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -579,6 +590,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       mapScene.visible=state.phase==="error"||state.greeting!=="mockery"
       composite(target,mapScene,mapCamera)
       renderer.setRenderTarget(null);renderer.setClearColor("#151714",1);renderer.render(scene,camera)
+      wandCamera.copy(camera);wandCamera.layers.set(1)
+      wandRenderer.render(scene,wandCamera)
       frameCount++
       if(now-metricStart>2000){container.dataset.fps=(frameCount*1000/(now-metricStart)).toFixed(1);metricStart=now;frameCount=0}
     }

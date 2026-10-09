@@ -5,7 +5,6 @@ import {
 } from "three/webgpu"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import type { Assets } from "./assets"
-import { boundWandTarget } from "./wand-target"
 
 /** The handle is the pivot; the exported wand's length runs along local +Y. */
 export async function createWand(assets:Assets,disposer:Disposer) {
@@ -37,8 +36,9 @@ export async function createWand(assets:Assets,disposer:Disposer) {
   const tip=new Mesh(disposer.add(new SphereGeometry(.045,12,8)),tipMaterial)
   tip.position.y=4.72;root.add(tip)
   const light=new PointLight("#ffcc7f",0,3,2);light.position.y=4.7;root.add(light)
+  root.traverse(object=>object.layers.enable(1))
   const target=new Vector3(0,.5,0),rest=new Vector3(),raised=new Vector3(),direction=new Vector3()
-  const tracked=new Vector3(),bounded=new Vector3(),candidate=new Vector3(),restTip=new Vector3(),endpoint=new Vector3(),offset=new Vector3()
+  const tracked=new Vector3(),bounded=new Vector3(),restTip=new Vector3(),endpoint=new Vector3(),offset=new Vector3()
   const yAxis=new Vector3(0,1,0),pose=new Quaternion(),restPose=new Quaternion().setFromAxisAngle(new Vector3(0,0,1),.12)
   let lift=0,initialized=false
   return {
@@ -58,9 +58,8 @@ export async function createWand(assets:Assets,disposer:Disposer) {
       if(Math.abs(lift-desired)<.001)lift=desired
       raised.copy(rest);raised.y+=.65;raised.z+=3.8
       if(!initialized){root.position.copy(rest);root.quaternion.copy(restPose);tracked.copy(target);initialized=true}
-      // Clamp the commanded endpoint to real panel geometry, including hinges.
-      const aimPanels=fold>.98?panels.slice(0,1):panels
-      boundWandTarget(target,aimPanels,bounded,candidate)
+      // The pointer can aim anywhere in the viewport, beyond the paper.
+      bounded.copy(target)
       tracked.lerp(bounded,1-Math.exp(-dt*16))
       bounded.copy(tracked)
       // Lift along the camera ray: the glowing tip stays over the same ink point

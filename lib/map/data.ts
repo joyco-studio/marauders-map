@@ -30,11 +30,9 @@ export const labels:Label[]=[
   {text:"The Shader Atelier",center:point([500,1090]),size:18},
   {text:"The Render Pipeline",center:point([1990,1110]),size:18},
   {text:"The Observatory",center:point([1960,95]),size:17},
-  {text:"Enough experimenting. For now.",center:sheet([1200,1120]),size:18,start:2.1},
   {text:"Every good experiment has a rabbit hole.",center:sheet([1645,1120]),size:12},
 ]
 export const hotspots:Hotspot[]=[
-  {id:"close",center:sheet([1200,1120]),radius:[140,24]},
   {id:"passage",center:point([1645,1040]),radius:[32,32]},
 ]
 // Pixel-space map coordinates convert once to the compositing camera's y-up space.
