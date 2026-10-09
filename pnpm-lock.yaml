@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@joycostudio/suno':
+        specifier: ^0.4.4
+        version: 0.4.4(react@19.2.3)
       '@joycostudio/susano':
         specifier: ^1.1.0
         version: 1.1.0(react@19.2.3)
@@ -632,6 +635,11 @@ packages:
   '@jimp/utils@1.6.1':
     resolution: {integrity: sha512-veFPRd93FCnS7AgmCkPgARVGoDRrJ9cm1ujuNyA+UfQ5VKbED2002sm5XfFLFwTsKC8j04heTrwe+tU1dluXOw==}
     engines: {node: '>=18'}
+
+  '@joycostudio/suno@0.4.4':
+    resolution: {integrity: sha512-/TzmQa4HTTACft0cjIaver9YeS6YId3p77A0c1o0m/fcWibJA5+RNk51crgb058SjX2RgPAnb4BM8ZTYE9S4Tg==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   '@joycostudio/susano@1.1.0':
     resolution: {integrity: sha512-wM9sOXqcOjvbI/5usV/4ITmIHdHTFyMA4JvUFPOcBv+ArswSNuKhwXQ5fY1OeAwDBMzlJCyGOhu8HsdmP7Ktyw==}
@@ -3324,6 +3332,11 @@ snapshots:
     dependencies:
       '@jimp/types': 1.6.1
       tinycolor2: 1.6.0
+
+  '@joycostudio/suno@0.4.4(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      tiny-emitter: 2.1.0
 
   '@joycostudio/susano@1.1.0(react@19.2.3)':
     dependencies:

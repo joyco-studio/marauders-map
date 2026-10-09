@@ -14,6 +14,7 @@
     "test:sdf": ".context/sdf-venv/bin/python scripts/test-sdf.py"
   },
   "dependencies": {
+    "@joycostudio/suno": "^0.4.4",
     "@joycostudio/susano": "^1.1.0",
     "@joycostudio/xyz": "^1.3.0",
     "@tweakpane/core": "^2.0.5",

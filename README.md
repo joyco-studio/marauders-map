@@ -11,7 +11,7 @@ npm run dev
 
 Open http://localhost:3000. Choose a spell on the folded cover, read its response, then click a paper edge to unfold. Drag to pan, scroll or pinch to zoom (1–2×), tap the key near the The Observatory to discover a passage, and tap **Enough experimenting. For now.** to erase and close it. Choose a spell and pull an edge to reopen. Tab reveals equivalent keyboard controls; Enter activates them.
 
-The scene is silent. The complete animation plays regardless of system motion preferences. Rendering pauses in hidden tabs.
+Paper folding and right-margin handwriting use the supplied sound effects through JOYCO Suno. Audio unlocks on pointer/keyboard interaction, stops with its animation, and stops in hidden or blurred tabs. The complete animation plays regardless of system motion preferences. Rendering pauses in hidden tabs.
 
 ## Inspection and verification
 

@@ -85,6 +85,7 @@ export function createInscription(disposer:Disposer,margin:Margin=activityMargin
   return {
     mesh,
     isWritten:()=>phase==='visible',
+    isWriting:()=>phase==='writing',
     isHidden:()=>phase==='hidden',
     set(value:Inscription|null){
       if(phase==='erasing'){

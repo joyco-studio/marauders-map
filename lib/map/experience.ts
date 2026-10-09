@@ -1,3 +1,4 @@
+import { createMapAudio } from "./audio"
 import { Disposer, edge } from "@joycostudio/xyz"
 import { Warmup } from "@joycostudio/xyz/three"
 import {
@@ -36,6 +37,7 @@ const abort = () => new DOMException("Scene disposed","AbortError")
 
 export async function startMap(container:HTMLElement,onStatus:(status:Status)=>void,signal:AbortSignal,retry=false,onSelect?:(personId:string)=>void,onArrival?:(personId:string,event:ActivityEvent)=>void):Promise<MapControls> {
   const disposer=new Disposer()
+  const audio=createMapAudio(disposer)
   const check=()=>{if(signal.aborted) throw abort()}
   let state:MapState={phase:"loading",enteredAt:0}
   let mapHovered=false
@@ -548,6 +550,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       inscription.update(dt)
       if(state.phase==="exploring"){notice.update(dt);statusQueue.update(dt)}
+      audio.update(state.phase==="opening"||state.phase==="closing",state.phase==="exploring"&&(inscription.isWriting()||notice.isWriting()))
       updateCover()
       if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false;coverOverlayDirty=true}
       if(coverOverlayDirty){composite(coverTarget,coverOverlay,coverCamera);coverOverlayDirty=false}
