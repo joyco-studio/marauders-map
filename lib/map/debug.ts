@@ -2,7 +2,7 @@ import { DebugManager, property, slider, bool, button } from "@joycostudio/xyz/d
 import { Pane } from "tweakpane"
 export type Tuning = { manual: boolean; fold: number; reveal: number; noise: number; light: number }
 export function mountDebug(tuning: Tuning, reset:()=>void) {
-  const debug = new DebugManager({createPane:()=>new Pane({title:"Marauder’s Map"})})
+  const debug = new DebugManager({createPane:()=>new Pane({title:"Makers’ Map"})})
   debug.bind({title:"Paper & ink",schema:()=>({
     manual:bool(property(tuning,"manual")),
     fold:slider(property(tuning,"fold"),{min:0,max:1,step:.001}),

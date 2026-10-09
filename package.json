@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/map/*.test.ts",
-    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset ascii --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset ascii --size 64 --pxrange 8 --out public/map/fonts/cinzel",
+    "test": "tsx --test lib/map/*.test.ts lib/activity/*.test.ts",
+    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/cinzel",
     "bake:art": "node scripts/bake-art.mjs && tsx scripts/prepare-fallback.mts",
     "test:sdf": ".context/sdf-venv/bin/python scripts/test-sdf.py"
   },
@@ -17,10 +17,12 @@
     "@joycostudio/susano": "^1.1.0",
     "@joycostudio/xyz": "^1.3.0",
     "@tweakpane/core": "^2.0.5",
+    "fast-xml-parser": "^5.11.2",
     "lettra": "^0.3.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "server-only": "^0.0.1",
     "three": "^0.186.1",
     "tweakpane": "^4.0.5"
   },
@@ -33,9 +35,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "msdf-bmfont-xml": "^2.8.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5",
-    "sharp": "^0.34.5"
+    "typescript": "^5"
   }
 }

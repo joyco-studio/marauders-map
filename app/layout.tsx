@@ -3,17 +3,17 @@ import { ThemeInit } from "@/components/theme-init"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "The Marauder’s Map",
-  description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
+  title: "The Makers’ Map",
+  description: "An enchanted atlas of the creative web. Follow real GitHub activity and YouTube discoveries as footprints through a living castle.",
   openGraph: {
-    title: "The Marauder’s Map",
-    description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
-    images: [{ url: "/og-image.png", width: 1731, height: 909, alt: "The Marauder’s Map with a clean compass" }],
+    title: "The Makers’ Map",
+    description: "An enchanted atlas of the creative web. Follow real GitHub activity and YouTube discoveries as footprints through a living castle.",
+    images: [{ url: "/og-image.png", width: 1731, height: 909, alt: "The Makers’ Map with a clean compass" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Marauder’s Map",
-    description: "An enchanted parchment of Hogwarts. Watch the map unfold, follow wandering footprints, and uncover a secret passage.",
+    title: "The Makers’ Map",
+    description: "An enchanted atlas of the creative web. Follow real GitHub activity and YouTube discoveries as footprints through a living castle.",
     images: ["/og-image.png"],
   },
   icons: {
