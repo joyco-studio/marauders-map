@@ -332,7 +332,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-9;light.shadow.camera.right=9;light.shadow.camera.top=6;light.shadow.camera.bottom=-6;light.shadow.normalBias=.04;scene.add(light)
     const deskMaterial=disposer.add(new MeshStandardNodeMaterial({roughness:.85,metalness:0}))
     // Preserve the source's 2:1 aspect and a broad-plank scale on the large desk.
-    deskMaterial.colorNode=texture(getTexture("desk/worn-oak.png"),uv().mul(vec2(5,10))).rgb
+    deskMaterial.colorNode=texture(getTexture("desk/worn-oak.png"),uv().mul(vec2(20,40))).rgb
     const floor=new Mesh(disposer.add(new PlaneGeometry(200,200)),deskMaterial)
     floor.position.z=-3.8;floor.receiveShadow=true;scene.add(floor)
     let zoom=1,panX=0,panY=0,baseDistance=15

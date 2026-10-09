@@ -1,5 +1,5 @@
 import { susano, type GenericLoadFn } from "@joycostudio/susano"
-import { Texture, SRGBColorSpace, MirroredRepeatWrapping } from "three/webgpu"
+import { Texture, SRGBColorSpace, RepeatWrapping } from "three/webgpu"
 import { configureFontTexture, parseFont } from "lettra/three"
 import { sdfImages } from "./sdf"
 import type { Disposer } from "@joycostudio/xyz"
@@ -31,7 +31,7 @@ export async function loadAssets(disposer: Disposer, progress: (n:number)=>void,
     if (path.startsWith("fonts/") || path.startsWith("sdf/")) configureFontTexture(map)
     else if (path==="parchment.jpg" || path==="desk/worn-oak.png" || path.endsWith("_color.png") || path==="wand/wand_basecolor.png") map.colorSpace=SRGBColorSpace
     if(path.startsWith("sdf/"))map.flipY=true
-    if(path==="desk/worn-oak.png"){map.wrapS=map.wrapT=MirroredRepeatWrapping;map.anisotropy=4}
+    if(path==="desk/worn-oak.png"){map.wrapS=map.wrapT=RepeatWrapping;map.anisotropy=4}
     map.needsUpdate=true
     textures.set(path,map)
     disposer.add(map)
