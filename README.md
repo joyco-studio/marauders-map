@@ -11,13 +11,12 @@ npm run dev
 
 Open http://localhost:3000. Choose a spell on the folded cover, read its response, then click a paper edge to unfold. Drag to pan, scroll or pinch to zoom (1–2×), tap the key near the North Tower to discover a passage, and tap **Mischief managed** to erase and close it. Choose a spell and pull an edge to reopen. Tab reveals equivalent keyboard controls; Enter activates them.
 
-The scene is silent. System reduced-motion settings skip cinematic animation and roaming characters. Rendering pauses in hidden tabs. Reduced motion uses demand-driven GPU rendering.
+The scene is silent. The complete animation plays regardless of system motion preferences. Rendering pauses in hidden tabs.
 
 ## Inspection and verification
 
 - `?debug=true`: lazy-loaded XYZ/Tweakpane controls for manual fold/reveal, absorption noise, lighting, and replay.
 - `?renderer=webgl`: exercise Three.js’s WebGL2 backend with the same scene.
-- `?motion=reduced`: exercise the reduced-motion experience without changing OS settings.
 - `.map-host[data-fps]`: approximate submitted-frame rate over the last two seconds; not a GPU timing benchmark.
 
 ```sh
@@ -27,7 +26,7 @@ npm test
 npm run build
 ```
 
-The nine tests protect cinematic transitions, rapid command guards, replay, reduced motion, and exact ink-reveal endpoints. Assets and GPU resources belong to the scene; disposal also covers a setup aborted during loading or shader compilation. Asset errors present a static SVG map and a retry action.
+The eight tests protect cinematic transitions, rapid command guards, replay, cover transitions, and exact ink-reveal endpoints. Assets and GPU resources belong to the scene; disposal also covers a setup aborted during loading or shader compilation. Asset errors present a static SVG map and a retry action.
 
 ## Artwork and Atlas handoff
 
@@ -69,4 +68,4 @@ Checked in Chrome on an Apple M4 Pro MacBook Pro (24 GB RAM): desktop WebGPU, 39
 
 Typography follows the cover concept: uppercase Cinzel titles on the folded cover and Tangerine Bold for every inscription on the unfolded map and supporting text. Tangerine’s local file comes from the [Google Fonts repository](https://github.com/google/fonts/tree/main/ofl/tangerine), with its OFL license retained.
 
-Character names sit on original curled parchment banners and follow the same ink reveal/erase as their lettering. On closing, the current cover inscription remains throughout folding, then erases before the initial spell choices bloom back in. Reduced motion replaces the inscription immediately.
+Character names sit on original curled parchment banners and follow the same ink reveal/erase as their lettering. On closing, the current cover inscription remains throughout folding, then erases before the initial spell choices bloom back in.

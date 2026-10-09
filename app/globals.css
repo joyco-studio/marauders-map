@@ -26,6 +26,5 @@ button:focus-visible { outline: 2px solid #593724; outline-offset: 5px; }
 .fallback-message { padding: 16px 24px; max-width: 560px; margin: -1px auto 0; background: #ddc89c; color: #593724; text-align: center; }
 .fallback-message p { margin: 0 0 12px; }
 .fallback-message button { padding: 8px 16px; border: 1px solid #593724; background: transparent; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 .accessible-controls, .fallback-message { font-size: 28px; line-height: 1.15; }

@@ -43,7 +43,7 @@ export async function createWand(assets:Assets,disposer:Disposer) {
   return {
     root,
     aim(point:Vector3){target.copy(point)},
-    update(camera:PerspectiveCamera,dt:number,active:boolean,reduced:boolean,fold=0,panels:readonly Mesh[] = []) {
+    update(camera:PerspectiveCamera,dt:number,active:boolean,fold=0,panels:readonly Mesh[] = []) {
       // Project the resting handle from the viewport so pan/zoom cannot lose it.
       rest.set(.82,-.70,.5).unproject(camera)
       direction.copy(rest).sub(camera.position)
@@ -52,8 +52,8 @@ export async function createWand(assets:Assets,disposer:Disposer) {
       const viewHeight=2*camera.position.z*Math.tan(camera.fov*Math.PI/360)
       const scale=viewHeight*(camera.aspect<1?.26:.43)/4.72
       root.scale.setScalar(scale)
-      const desired=active&&!reduced?1:0
-      lift=reduced?0:lift+(desired-lift)*(1-Math.exp(-dt*6))
+      const desired=active?1:0
+      lift=lift+(desired-lift)*(1-Math.exp(-dt*6))
       if(Math.abs(lift-desired)<.001)lift=desired
       raised.copy(rest);raised.y+=.65;raised.z+=3.8
       if(!initialized){root.position.copy(rest);root.quaternion.copy(restPose);initialized=true}
@@ -77,7 +77,7 @@ export async function createWand(assets:Assets,disposer:Disposer) {
       direction.copy(bounded).sub(raised).normalize()
       pose.setFromUnitVectors(yAxis,direction)
       pose.slerp(restPose,1-lift)
-      root.quaternion.slerp(pose,reduced?1:1-Math.exp(-dt*10))
+      root.quaternion.slerp(pose,1-Math.exp(-dt*10))
       restTip.copy(yAxis).applyQuaternion(restPose).multiplyScalar(4.72*scale).add(rest)
       endpoint.lerpVectors(restTip,bounded,lift)
       // Solve the handle from the tip after rotation smoothing, rather than

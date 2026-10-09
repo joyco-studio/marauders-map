@@ -51,8 +51,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const scene=new Scene()
     const camera=new PerspectiveCamera(35,1,.1,100)
     const wand=await createWand(assets,disposer);check();scene.add(wand.root)
-    let wandHover=false,castingUntil=0,wandSettling=false
-    const cast=()=>{castingUntil=time+1.5;needsFrame=true}
+    let wandHover=false,castingUntil=0
+    const cast=()=>{castingUntil=time+1.5}
     const mapScene=new Scene(),coverScene=new Scene(),staticScene=new Scene()
     const mapCamera=new OrthographicCamera(-7,7,3.5,-3.5,.1,10);mapCamera.position.z=5
     const coverCamera=new OrthographicCamera(-1.4,1.4,3.5,-3.5,.1,10);coverCamera.position.z=5
@@ -178,10 +178,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const coverGroups = Object.fromEntries(Object.entries(coverContent).map(([name,content])=>[name,content.map(label=>addText(label,coverScene,true))]))
     const edgeHint = addText({text:"Pull an edge to unfold",center:[700,598],size:14},coverScene,true)
     let coverKey="", previousCover:string|null=null, coverChangedAt=0, coverDirty=true
-    const updateCover=(instant=false)=> {
+    const updateCover=()=> {
       const key=state.phase==="folded"?state.greeting??"choices":coverKey||"choices"
       if(key!==coverKey){previousCover=coverKey||null;coverKey=key;coverChangedAt=time;coverDirty=true}
-      const blend=previousCover?coverBlend(time-coverChangedAt,instant):{outgoing:0,incoming:1,complete:true}
+      const blend=previousCover?coverBlend(time-coverChangedAt):{outgoing:0,incoming:1,complete:true}
       for(const [name,items] of Object.entries(coverGroups))for(const item of items){
         item.handle.mesh.visible=name===key||name===previousCover
         item.ink.progress.value=name===key?blend.incoming:1
@@ -193,7 +193,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!blend.complete)coverDirty=true
       else previousCover=null
     }
-    updateCover(true)
+    updateCover()
     const coverBorder=addDrawing("cover.svg",[280,700],[700,350],13,coverScene);coverBorder.ink.progress.value=1
     const coverOrnament=addDrawing("sprites/atlas.png",[70,70],[700,90],7,coverScene,spriteRect("compass"),spriteCenter("compass"));coverOrnament.ink.progress.value=1
     // Paper rig: center fixed; both side chains fold back into a stack.
@@ -261,10 +261,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-9;light.shadow.camera.right=9;light.shadow.camera.top=6;light.shadow.camera.bottom=-6;light.shadow.normalBias=.04;scene.add(light)
     const floor=new Mesh(disposer.add(new PlaneGeometry(200,200)),disposer.add(new MeshStandardNodeMaterial({color:"#151714",roughness:1})))
     floor.position.z=-3.8;floor.receiveShadow=true;scene.add(floor)
-    const media=matchMedia("(prefers-reduced-motion: reduce)")
-    const forceReduced=new URLSearchParams(location.search).get("motion")==="reduced"
-    let reduced=media.matches||forceReduced
-    let zoom=1,panX=0,panY=0,baseDistance=15,needsFrame=true
+    let zoom=1,panX=0,panY=0,baseDistance=15
     const updateCamera=(fold=0)=> {
       const tangent=Math.tan(35*Math.PI/360)
       const foldedDistance=Math.max(4.4/tangent,1.6/(tangent*camera.aspect))+2
@@ -276,7 +273,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const {clientWidth:w,clientHeight:h}=container
       if(!w||!h)return
       renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.5:2))
-      needsFrame=true
       renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()
       const vertical=Math.tan(35*Math.PI/360)
       baseDistance=Math.max(4.4/vertical,7.9/(vertical*camera.aspect))
@@ -293,8 +289,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       coverAmount.value=smooth(clamp((fold-.2)/.6))
       updateCamera(fold)
     }
-    foldPaper(reduced?0:1)
-    wand.update(camera,0,false,reduced,reduced?0:1,panels.map(panel=>panel.mesh))
+    foldPaper(1)
+    wand.update(camera,0,false,1,panels.map(panel=>panel.mesh))
     const composite=(destination:RenderTarget,content:Scene,cam:OrthographicCamera)=> {
       const previous=renderer.getRenderTarget()
       const clear=renderer.getClearColor(new Color()),alpha=renderer.getClearAlpha()
@@ -310,7 +306,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     renderer.setRenderTarget(null)
     composite(coverTarget,coverScene,coverCamera)
     progress=1
-    state=transition(state,"ready",time,reduced);syncPhase(state)
+    state=transition(state,"ready",time);syncPhase(state)
     let staticCached=false,staticDirty=true,actorTime=0
     const staticObjects=mapScene.children.filter(obj=>obj!==cached && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
     const setStatic=(visible:boolean)=>staticObjects.forEach(obj=>{obj.visible=visible})
@@ -328,8 +324,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       for(const a of actors){a.step=0;a.lastStep=-1;a.title.ink.progress.value=0;a.bannerInk.progress.value=0;for(const f of a.footprints){f.born=-100;f.ink.opacity.value=0}}
     }
     const change=(command:Command)=> {
-      needsFrame=true
-      const next=transition(state,command,time,reduced)
+      const next=transition(state,command,time)
       if(next===state)return
       cast()
       if(command==="open")reset()
@@ -338,17 +333,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     const discover=()=> {
       if(state.phase!=="exploring"||state.greeting==="mockery"||discovered)return
-      needsFrame=true
       cast()
       discovered=true;discoveredAt=time;staticCached=false;cached.visible=false;setStatic(true);staticDirty=true;emit()
     }
-    const zoomBy=(delta:number)=> {if(state.phase!=="exploring")return;cast();needsFrame=true;zoom=clamp(zoom+delta,1,2);if(zoom===1)panX=panY=0;updateCamera()}
-    const resetView=()=>{cast();needsFrame=true;zoom=1;panX=panY=0;updateCamera()}
-    disposer.listen(media,"change",()=>{
-      needsFrame=true
-      reduced=media.matches||forceReduced
-      if(reduced&&!["loading","folded","error"].includes(state.phase)){state={phase:"exploring",enteredAt:time,greeting:state.phase!=="error"?state.greeting:undefined};reset();syncPhase(state)}
-    })
+    const zoomBy=(delta:number)=> {if(state.phase!=="exploring")return;cast();zoom=clamp(zoom+delta,1,2);if(zoom===1)panX=panY=0;updateCamera()}
+    const resetView=()=>{cast();zoom=1;panX=panY=0;updateCamera()}
     const canvas=renderer.domElement
     const ray=new Raycaster(),pointer=new Vector2()
     const hit=(x:number,y:number)=> {
@@ -386,7 +375,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const touch=hit(e.clientX,e.clientY)
       wandHover=!!touch&&e.pointerType!=="touch"
       if(touch)wand.aim(touch.point)
-      needsFrame=true
       const p=pointers.get(e.pointerId)
       if(p){
         const dx=e.clientX-p.x,dy=e.clientY-p.y;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY})
@@ -396,8 +384,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
           zoomBy((distance-pinch)*.008);pinch=distance
         }else if(state.phase==="exploring"){
           const units=2*(baseDistance/zoom)*Math.tan(35*Math.PI/360)/container.clientHeight
-          needsFrame=true
-          panX=clamp(panX-dx*units,-3.5,3.5);panY=clamp(panY+dy*units,-1.8,1.8);updateCamera()
+              panX=clamp(panX-dx*units,-3.5,3.5);panY=clamp(panY+dy*units,-1.8,1.8);updateCamera()
         }
       }else canvas.style.cursor=hotspotAt(e.clientX,e.clientY)?"pointer":state.phase==="exploring"?"grab":"default"
     })
@@ -411,19 +398,18 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       else if(spot==="close")change("close")
       else if(spot==="open"||spot==="mockery"||spot==="welcome")change(spot)
     })
-    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);wandHover=false;needsFrame=true})
-    disposer.listen(canvas,"pointerleave",()=>{wandHover=false;needsFrame=true})
+    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);wandHover=false})
+    disposer.listen(canvas,"pointerleave",()=>{wandHover=false})
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
     const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
-      disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:reduced?"exploring":"opening",enteredAt:time};syncPhase(state)}))
+      disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
     }
     let previous=performance.now(),lastRender=0,metricStart=previous,frameCount=0
     const frame=(now:number)=> {
       if(signal.aborted){renderer.setAnimationLoop(null);return}
       if(document.hidden){previous=now;return}
-      if(reduced&&state.phase==="exploring"&&staticCached&&!needsFrame&&!wandSettling&&!tuning.manual){previous=now;return}
       if(mobile&&now-lastRender<30)return
       lastRender=now
       const dt=Math.min((now-previous)/1000,.1);previous=now
@@ -440,26 +426,25 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       if(tuning.manual){fold=tuning.fold;reveal=tuning.reveal*3;staticCached=false;cached.visible=false;setStatic(true)}
       else{tuning.fold=fold;tuning.reveal=clamp(reveal/3)}
-      if(reduced)fold=state.phase==="folded"?1:0
       noise.value=tuning.noise;light.intensity=tuning.light
       foldPaper(fold)
       const casting=["opening","revealing","erasing","closing"].includes(state.phase)
       paper.updateMatrixWorld(true)
       const wandPanels=panels.map(panel=>panel.mesh)
-      wandSettling=wand.update(camera,dt,wandHover||pointers.size>0||time<castingUntil||casting,reduced,fold,wandPanels)
-      updateCover(reduced)
+      wand.update(camera,dt,wandHover||pointers.size>0||time<castingUntil||casting,fold,wandPanels)
+      updateCover()
       if(coverDirty){composite(coverTarget,coverScene,coverCamera);coverDirty=false}
       if(!staticCached)for(const entry of reveals)entry.ink.progress.value=revealProgress(reveal,entry.timing.start,entry.timing.duration)
       const erase=state.phase==="erasing"?1-smooth(age):state.phase==="closing"||state.phase==="folded"?0:1
-      if(discovered){const p=(reduced?1:revealProgress(time-discoveredAt,0,1.6))*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}
+      if(discovered){const p=revealProgress(time-discoveredAt,0,1.6)*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}
       if(state.phase==="exploring")actorTime=age
       for(const actor of actors){
-        const p=routeAt(actor.route,reduced?0:actorTime),[x,y]=sheetPoint(p.point)
+        const p=routeAt(actor.route,actorTime),[x,y]=sheetPoint(p.point)
         actor.title.handle.mesh.position.set(x,y+.5,.04)
         actor.banner.position.set(x,y+.5,.035)
-        actor.title.ink.progress.value=(reduced?1:state.phase==="exploring"?revealProgress(age,0,.6):revealProgress(reveal,2.3,.7))*erase
+        actor.title.ink.progress.value=(state.phase==="exploring"?revealProgress(age,0,.6):revealProgress(reveal,2.3,.7))*erase
         actor.bannerInk.progress.value=actor.title.ink.progress.value
-        if(state.phase==="exploring"&&!reduced&&!tuning.manual){
+        if(state.phase==="exploring"&&!tuning.manual){
           const currentStep=Math.floor(actorTime/.42)
           if(currentStep!==actor.lastStep){
             const f=actor.footprints[actor.step%actor.footprints.length]
@@ -468,14 +453,13 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
             f.mesh.rotation.z=p.angle;f.born=time;actor.step++;actor.lastStep=currentStep
           }
         }
-        for(const f of actor.footprints){const life=time-f.born;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*erase*(reduced?0:1)}
+        for(const f of actor.footprints){const life=time-f.born;f.ink.progress.value=revealProgress(life,0,.25);f.ink.opacity.value=clamp(1-life/8)*erase}
       }
-      if(state.phase==="exploring"&&!tuning.manual&&(reduced||!discovered||time-discoveredAt>1.6)&&staticDirty)snapshot()
+      if(state.phase==="exploring"&&!tuning.manual&&(!discovered||time-discoveredAt>1.6)&&staticDirty)snapshot()
       // During exploration only pooled dynamic prints/names are redrawn over the cached map.
       mapScene.visible=state.phase==="error"||state.greeting!=="mockery"
       composite(target,mapScene,mapCamera)
       renderer.setRenderTarget(null);renderer.setClearColor("#151714",1);renderer.render(scene,camera)
-      needsFrame=false
       frameCount++
       if(now-metricStart>2000){container.dataset.fps=(frameCount*1000/(now-metricStart)).toFixed(1);metricStart=now;frameCount=0}
     }

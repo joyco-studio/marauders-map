@@ -22,9 +22,9 @@ Load images and metrics through Susano, explicitly track required failures, and 
 Represent loading, opening, revealing, exploring, erasing, closing, folded, and error as explicit phases. One clock drives animation; phase gates exploration and duplicate commands. Internal types cover panels, elements, reveal schedules, routes, and hotspots. No backend/public API.
 
 ## Resilience and validation
-Reduced motion immediately shows the completed map without camera travel, folding, or roaming. Provide textual description, keyboard actions, required-asset retry, and static fallback on renderer failure. Pause hidden tabs, cap pixel ratio, pool footprints, and dispose render targets and shared atlases.
+All motion preferences receive the same complete folding, camera, ink, and roaming animations. Provide textual description, keyboard actions, required-asset retry, and static fallback on renderer failure. Pause hidden tabs, cap pixel ratio, pool footprints, and dispose render targets and shared atlases.
 
-Run typechecking, linting, production build, and browser inspection on desktop/mobile and both renderer backends. Inspect seams, ink attachment, radial reveals, passage discovery, repeated close/reopen, resize, reduced motion, and teardown. Focused tests protect phase transitions and reveal endpoints. Target 60 fps desktop/30 fps mobile and document the measured device.
+Run typechecking, linting, production build, and browser inspection on desktop/mobile and both renderer backends. Inspect seams, ink attachment, radial reveals, passage discovery, repeated close/reopen, resize, motion-preference independence, and teardown. Focused tests protect phase transitions and reveal endpoints. Target 60 fps desktop/30 fps mobile and document the measured device.
 
 ## Defaults
 Silent, one original map. No multiple floors, voice activation, or fluid simulation. Retain branch name. Libraries: https://hub.joyco.studio/toolbox/xyz, https://hub.joyco.studio/toolbox/susano, https://hub.joyco.studio/toolbox/atlas. Design palette: charcoal #151714, parchment #ddc89c, sepia #593724, faded ink #987650, edge brown #9c713d. Typography: uppercase Cinzel titles, Tangerine script. Composition: centered map with quiet backdrop, all visible actions on paper.
@@ -32,7 +32,7 @@ Silent, one original map. No multiple floors, voice activation, or fluid simulat
 ## Implementation notes
 The user owns the Atlas cropper step. The runtime ships a local original sprite atlas plus pixel-space manifest so their export can replace it. The authoring UI’s upload permission was unavailable; no browser extension settings were changed.
 
-The composition textures explicitly normalize render-target Y orientation on both WebGPU and WebGL2. XYZ warmup runs with each scene’s actual destination bound. Curved faces are joined only by perimeter strips to avoid thickness geometry intersecting the paper. Static map drawings are cached; characters and footprints stay live. Reduced motion uses demand-driven GPU submissions. Verification routes: `?renderer=webgl`, `?motion=reduced`, and `?debug=true`.
+The composition textures explicitly normalize render-target Y orientation on both WebGPU and WebGL2. XYZ warmup runs with each scene’s actual destination bound. Curved faces are joined only by perimeter strips to avoid thickness geometry intersecting the paper. Static map drawings are cached; characters and footprints stay live. Verification routes: `?renderer=webgl` and `?debug=true`. The former `?motion=reduced` flag has no effect.
 
 Fold correction: outer leaves fold above inner leaves first; each inner pair then folds under the center cover in its own turn. Four distinct stack depths and exact half-turn hinges prevent closed panels sharing a plane. Blank-space clicks never open the map. Both spell choices and the edge opening have keyboard equivalents.
 
@@ -45,3 +45,10 @@ Use uppercase Cinzel for titles and Tangerine Bold for all remaining text, follo
 
 ## Character and cover refinement
 Add original curled parchment banners behind the moving names, sized to two-line Tangerine labels and sharing their reveal/erase schedule. Keep banners out of static snapshots and attach them through sheet composition. Reserve uppercase Cinzel for the closed cover; every open-map inscription uses Tangerine, including the static fallback. Preserve the welcome or mockery while folding closed, then erase it and bloom the initial choices through a timed cover transition. Verify transition endpoints with a focused test and inspect the scene in the browser.
+
+The banner composition and all-Tangerine open map were inspected in Chrome. The close/reopen cycle completes and the cover blend has focused erase/reveal endpoint tests. Typechecking, linting, nine tests, and the production build pass.
+
+## Motion policy revision
+The user explicitly requests the same complete experience for every motion preference. Remove system/query reduced-motion branches, instantaneous phase and cover transitions, disabled roaming and wand animation, and the CSS override. Keep the normal cinematic timings and hidden-tab pause. Update existing transition tests and documentation, then verify typechecking, linting, production build, and the formerly reduced query in the browser. This supersedes earlier reduced-motion requirements and verification notes.
+
+Verified that `?motion=reduced` starts folded and proceeds through the ordinary opening phase. Typechecking, linting, eight tests, and the production build pass.

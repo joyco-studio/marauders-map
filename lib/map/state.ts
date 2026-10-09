@@ -6,15 +6,15 @@ export const clamp = (v: number, min = 0, max = 1) => Math.max(min, Math.min(max
 export const smooth = (v: number) => { const t = clamp(v); return t * t * (3 - 2 * t) }
 export const durations = { opening: 4, revealing: 3, erasing: 1, closing: 3 } as const
 
-export function transition(state: MapState, command: Command, now: number, reduced = false): MapState {
+export function transition(state: MapState, command: Command, now: number): MapState {
   if (command === "ready" && state.phase === "loading")
-    return { phase: reduced ? "exploring" : "folded", enteredAt: now }
+    return { phase: "folded", enteredAt: now }
   if ((command === "mockery" || command === "welcome") && state.phase === "folded" && !state.greeting)
     return { phase: "folded", enteredAt: now, greeting: command }
   if (command === "open" && state.phase === "folded" && state.greeting)
-    return { phase: reduced ? "exploring" : "opening", enteredAt: now, greeting: state.greeting }
+    return { phase: "opening", enteredAt: now, greeting: state.greeting }
   if (command === "close" && state.phase === "exploring")
-    return { phase: reduced ? "folded" : "erasing", enteredAt: now, ...(reduced ? {} : { greeting: state.greeting }) }
+    return { phase: "erasing", enteredAt: now, greeting: state.greeting }
   return state
 }
 export function advance(state: MapState, now: number): MapState {

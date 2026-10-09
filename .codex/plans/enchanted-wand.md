@@ -17,3 +17,9 @@ The Blender-authored geometry and supplied maps are integrated. The wand uses a 
 Pointing now solves the handle position from the tip endpoint after orientation smoothing. The endpoint is clamped to the current panel transforms with an inset margin. The tip lifts toward the camera along the same viewing ray, keeping its screen projection over the bounded ink point. This prevents a fixed-length wand from overshooting nearby targets in either folded or unfolded layouts. The resting-to-casting transition remains intact.
 
 Validation: typecheck and lint pass; 36 focused numerical boundary checks in `.context/check-wand-bounds.ts` cover both layouts, corners, out-of-bounds targets, and camera distances. Browser inspection confirms edge targeting on folded and unfolded parchment. No permanent test files were added.
+
+## Physical clearance and raised casting pose
+
+The previous endpoint correction did not check the entire wand's depth. The full model bounding box is now transformed with the current orientation and scale every frame. If its lowest point would approach the highest paper panel, the complete wand moves toward the camera along its tip's viewing ray. All panels participate in the clearance calculation, including folded leaves; only the central cover receives folded-map targeting.
+
+Per the user's height adjustment, the casting tip is lifted 2.2 scene units toward the camera, the intended handle lift is 3.8 units, and the full wand retains at least 0.9 units above the paper. Numerical checks now verify physical clearance throughout lifting, turning, and returning to rest, in addition to projected endpoint bounds. Typechecking and linting pass.

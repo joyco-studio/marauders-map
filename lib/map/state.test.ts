@@ -34,13 +34,6 @@ test("rapid or out-of-phase commands cannot restart animations",()=>{
   assert.equal(transition(closing,"close",9),closing)
   assert.equal(transition(closing,"open",9),closing)
 })
-test("reduced motion bypasses cinematic phases on open and close",()=>{
-  const ready=transition({phase:"loading",enteredAt:0},"ready",1,true)
-  assert.equal(ready.phase,"exploring")
-  const closed=transition(ready,"close",2,true)
-  assert.equal(closed.phase,"folded")
-  assert.equal(transition(transition(closed,"welcome",3,true),"open",3,true).phase,"exploring")
-})
 test("large clock increments finish phases without losing elapsed time",()=>{
   assert.deepEqual(advance({phase:"opening",enteredAt:10},20),{phase:"exploring",enteredAt:17})
 })
@@ -81,17 +74,15 @@ test("closed accordion leaves occupy separate layers below the cover",async()=>{
 
 
 test("mockery unfolds blank and resets the spell choice after closing",()=>{
-  for(const reduced of [false,true]){
-    const response=transition({phase:"folded",enteredAt:0},"mockery",1,reduced)
-    const opened=advance(transition(response,"open",2,reduced),6)
-    assert.equal(opened.phase,"exploring")
-    assert.equal(opened.greeting,"mockery")
-    const closed=advance(transition(opened,"close",7,reduced),11)
-    assert.deepEqual(closed,{phase:"folded",enteredAt:reduced?7:11})
-    const welcomed=transition(transition(closed,"welcome",12,reduced),"open",13,reduced)
-    assert.equal(welcomed.phase!=="error"&&welcomed.greeting,"welcome")
-    assert.equal(advance(welcomed,17).phase,reduced?"exploring":"revealing")
-  }
+  const response=transition({phase:"folded",enteredAt:0},"mockery",1)
+  const opened=advance(transition(response,"open",2),6)
+  assert.equal(opened.phase,"exploring")
+  assert.equal(opened.greeting,"mockery")
+  const closed=advance(transition(opened,"close",7),11)
+  assert.deepEqual(closed,{phase:"folded",enteredAt:11})
+  const welcomed=transition(transition(closed,"welcome",12),"open",13)
+  assert.equal(welcomed.phase!=="error"&&welcomed.greeting,"welcome")
+  assert.equal(advance(welcomed,17).phase,"revealing")
 })
 
 test("cover reset erases the previous inscription before revealing choices",async()=>{
@@ -101,5 +92,4 @@ test("cover reset erases the previous inscription before revealing choices",asyn
   assert.equal(coverBlend(.45).outgoing,0)
   assert.ok(coverBlend(.8).incoming>0&&coverBlend(.8).incoming<1)
   assert.deepEqual(coverBlend(1.25),{outgoing:0,incoming:1,complete:true})
-  assert.deepEqual(coverBlend(0,true),{outgoing:0,incoming:1,complete:true})
 })
