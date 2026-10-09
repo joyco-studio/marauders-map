@@ -2,14 +2,14 @@ import type { Point } from '../map/data'
 
 export const ENTRANCE_SECONDS=.7
 export const EXIT_SECONDS=.7
-export type Appearance={phase:'hidden'|'entering'|'shown'|'exiting';elapsed:number;progress:number;point:Point;offset:Point}
+export type Appearance={phase:'hidden'|'entering'|'shown'|'exiting';elapsed:number;progress:number;point:Point}
 export type PresentationTarget={visible:boolean;point:Point}
 
 /** Exit slots remain occupied until their last frame. Reversals never cut a bloom short. */
 export class ActorPresentation {
   actors:Appearance[]
   constructor(points:readonly Point[],private maximum:number) {
-    this.actors=points.map(point=>({phase:'hidden',elapsed:0,progress:0,point,offset:[0,0]}))
+    this.actors=points.map(point=>({phase:'hidden',elapsed:0,progress:0,point}))
   }
   update(dt:number,targets:readonly PresentationTarget[]) {
     for(const [index,actor] of this.actors.entries()) {

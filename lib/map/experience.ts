@@ -29,7 +29,6 @@ export type MapControls = { close:()=>void; open:()=>void; greet:(greeting:Greet
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
 type Panel = {index:number; hinge:Group; mesh:Mesh<PlaneGeometry,MeshStandardNodeMaterial>; side:number; depth:number}
-const bannerOffsets:readonly (readonly [number,number])[]=[[0,0],[0,.9],[0,-.9],[1.4,0],[-1.4,0],[1.4,.9],[-1.4,.9],[0,1.8],[0,-1.8],[1.4,-.9],[-1.4,-.9]]
 const abort = () => new DOMException("Scene disposed","AbortError")
 
 export async function startMap(container:HTMLElement,onStatus:(status:Status)=>void,signal:AbortSignal,retry=false,onSelect?:(personId:string)=>void,onArrival?:(personId:string,event:ActivityEvent)=>void):Promise<MapControls> {
@@ -547,24 +546,14 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!tuning.manual)journeys.tick(dt,activityActive)
       if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
       const showPeople=(state.phase==="revealing"||state.phase==="exploring")&&state.greeting!=="mockery"
-      const priorPhases=presentation.actors.map(actor=>actor.phase)
       presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})))
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index]
         const [x,y]=sheetPoint(appearance.point)
         const visible=appearance.phase!=="hidden"
         actor.title.handle.mesh.visible=visible;actor.banner.visible=visible
-        // Choose once per appearance; moving neighbours cannot snap this banner elsewhere.
-        if(appearance.phase==="entering"&&priorPhases[index]!=="entering"&&priorPhases[index]!=="shown"){
-          appearance.offset=[0,0]
-          for(const [dx,dy] of bannerOffsets){
-            const cx=x+dx,cy=y+.5+dy
-            if(Math.abs(cx)+actor.bannerWidth/2>6.7||Math.abs(cy)+actor.bannerHeight/2>3.25)continue
-            if(actors.some((other,i)=>i!==index&&presentation.actors[i].phase!=="hidden"&&(priorPhases[i]!=="hidden"||i<index)&&Math.abs(other.banner.position.x-cx)<(other.bannerWidth+actor.bannerWidth)/2+.06&&Math.abs(other.banner.position.y-cy)<(other.bannerHeight+actor.bannerHeight)/2+.04))continue
-            appearance.offset=[dx,dy];break
-          }
-        }
-        const labelX=x+appearance.offset[0],labelY=y+.5+appearance.offset[1]
+        // Tags and footsteps share the same presented actor position, including exits.
+        const labelX=x,labelY=y+.5
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX,labelY,.035)
         actor.title.ink.progress.value=appearance.progress

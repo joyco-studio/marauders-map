@@ -126,8 +126,8 @@ export function ActivityCard({activity}:{activity:ActivityState}) {
     <div className="activity-card-content">
       <button className="activity-dismiss" onClick={dismiss} aria-label="Close activity card" autoFocus>Close</button>
       <h2 id="activity-heading">{person.name}</h2>
-      <p className="activity-explanation">Real public activity, imagined as journeys.</p>
-      {activity.snapshot?.mode==='wandering'&&<p className="activity-source">Without a GitHub token, idle ecosystem makers wander at random. This movement is fictional and does not represent public activity or online presence. Source events below remain real.</p>}
+      <p className="activity-explanation">Public activity inspires journeys; idle roaming is fictional.</p>
+      <p className="activity-source">Idle makers wander at random between activity journeys. This movement is fictional and does not represent public activity or online presence. Source events below remain real.</p>
       {!events.length&&<p className="activity-empty">No recent activity available</p>}
       <ol>{events.map(event=>{
         const url=safeActivityUrl(event.url,event.source)

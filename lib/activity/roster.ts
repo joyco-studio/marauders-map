@@ -1,7 +1,8 @@
 // Maximum simultaneous canvas actors; every actor's GPU resources remain pooled.
 export const MAX_RENDERED_PEOPLE = 8
 export type Waypoint = 'great-hall' | 'library' | 'courtyard' | 'stairs' | 'classrooms' | 'tower' | 'west' | 'center' | 'east'
-export type Person = { id: string; name: string; shortName: string; github: string; youtube?: string; home: Waypoint; group: 'ecosystem' | 'joyco' }
+export type Room = Exclude<Waypoint, 'west' | 'center' | 'east'>
+export type Person = { id: string; name: string; shortName: string; github: string; youtube?: string; home: Room; group: 'ecosystem' | 'joyco' }
 export const roster: readonly Person[] = [
   { id:'mrdoob', name:'mrdoob', shortName:'mrdoob', github:'mrdoob', home:'great-hall', group:'ecosystem' },
   { id:'sunag', name:'sunag', shortName:'sunag', github:'sunag', home:'classrooms', group:'ecosystem' },

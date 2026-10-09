@@ -13,3 +13,7 @@ Browser verification remains deferred at the user's request.
 The map no longer resets actor reveal progress when exploration starts. Every appearance uses a 0.7-second entrance and exit; interrupted entrances finish before exiting, and exit requests cannot reverse until fully hidden. Exiting actors retain their render slots, keeping the visible pool at eight or fewer. Each appearance retains its banner offset, and unexpected movement beyond corridor walking speed exits at the old position before entering at the current position. Activity age no longer reduces ink opacity. Closing fades existing footsteps along with their actor rather than immediately removing them.
 
 The branch was rebased onto `origin/main` with geometry, desk, corner-fold, interaction feedback, and expanded map tests preserved. Offline lifecycle regression tests, existing tests, typechecking, linting, and a production build pass. Browser verification remains deferred.
+
+## Subsequent movement corrections
+
+The room movement follow-up removes independent banner offsets so tags follow the actor position above the animated footprint trail. Full appearance lifecycles remain unchanged. Distinct interior objectives replace shared doorway endpoints, and eligible idle actors resume continuous roaming after playback. See `room-movement.md` for the current movement behavior and verification.
