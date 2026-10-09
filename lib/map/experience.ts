@@ -6,7 +6,7 @@ import {
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
   Vector2, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
-import { mix, texture, uniform, uv, vec2, vec3, positionLocal, normalMap, smoothstep } from "three/tsl"
+import { mix, texture, uniform, uv, vec2, vec3, positionLocal, attribute, normalMap, smoothstep } from "three/tsl"
 import { createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
 import { loadAssets } from "./assets"
@@ -208,6 +208,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     baseMaterial.opacityNode=texture(coverBase.texture,cachedUV).a
     coverOverlay.add(new Mesh(disposer.add(new PlaneGeometry(2.8,7)),baseMaterial))
     const accents=new Group();mapScene.add(accents)
+    let coverOverlayDirty=true
     const feedback: {target:Trigger;mesh:Mesh;opacity:ReturnType<typeof createInk>["opacity"];value:number;ink?:Ink}[]=[]
     const accent=(target:Trigger,points:number[],parent:Scene|Group,ink?:Ink)=> {
       const geo=disposer.add(new BufferGeometry())
@@ -230,8 +231,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     }
     const underline=(target:Trigger,item:typeof mapLabels[number],parent:Scene|Group,width=item.width)=> {
       const {x,y}=item.handle.mesh.position
-      // Text geometry descends from its baseline by the measured line height.
-      stroke(target,Array.from({length:17},(_,i)=>[x-width/2+width*i/16,y-item.height-.04+Math.sin(i*1.7)*.003]),parent,.012,item.ink)
+      item.handle.mesh.geometry.computeBoundingBox()
+      const bottom=item.handle.mesh.geometry.boundingBox!.min.y
+      stroke(target,Array.from({length:17},(_,i)=>[x-width/2+width*i/16,y+bottom-.04+Math.sin(i*1.7)*.003]),parent,.012,item.ink)
     }
     underline("mockery",coverGroups.choices[2],coverOverlay)
     underline("welcome",coverGroups.choices[5],coverOverlay,Math.max(coverGroups.choices[4].width,coverGroups.choices[5].width))
@@ -250,11 +252,24 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const createPanel=(index:number,hinge:Group,offset:number,side:number,depth:number)=> {
       const geo=disposer.add(new PlaneGeometry(2.8,7,64,128))
       const positions=geo.attributes.position
+      const cornerDelta=new Float32Array(positions.count*3)
       for(let i=0;i<positions.count;i++){
         const x=positions.getX(i),y=positions.getY(i)
         const curl=.025*Math.sin(y*.85+(x+(index-2)*2.8)*1.3)+.035*Math.pow(Math.abs(y)/3.5,8)
         positions.setZ(i,curl)
+        if(index===4){
+          // A cylindrical bend about x+y=3.7: the corner turns inward and
+          // exposes its underside without cutting or duplicating the sheet.
+          const distance=Math.max(0,(x+y-3.7)/Math.SQRT2)
+          const radius=.14,angle=Math.min(2.8,distance/radius)
+          const tail=Math.max(0,distance-radius*2.8)
+          const inward=(radius*Math.sin(angle)+tail*Math.cos(angle)-distance)/Math.SQRT2
+          const lift=radius*(1-Math.cos(angle))+tail*Math.sin(angle)
+          cornerDelta.set([inward,inward,lift],i*3)
+          positions.setXYZ(i,x+inward,y+inward,curl+lift)
+        }
       }
+      geo.setAttribute("cornerDelta",new Float32BufferAttribute(cornerDelta,3))
       geo.computeVertexNormals()
       const mat=disposer.add(new MeshStandardNodeMaterial({roughness:.96,metalness:0}))
       const mapUV=vec2(uv().x.div(5).add(index/5),uv().y)
@@ -266,7 +281,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const print=index===2?mix(mapInk,coverInk,coverAmount):mapInk
       const crease=smoothstep(0,.035,uv().x).oneMinus().add(smoothstep(.965,1,uv().x)).mul(.1)
       mat.colorNode=mix(base,print.rgb,print.a).mul(crease.oneMinus())
-      const displaced=(coordinates:Node<"vec2">)=>positionLocal.add(vec3(0,0,texture(getTexture("relief/main_unfolded_displacement_web_8bit.png"),coordinates).r.sub(.5).mul(.14).mul(reliefAmount)))
+      const displaced=(coordinates:Node<"vec2">)=>positionLocal.sub(attribute("cornerDelta","vec3").mul(reliefAmount.oneMinus())).add(vec3(0,0,texture(getTexture("relief/main_unfolded_displacement_web_8bit.png"),coordinates).r.sub(.5).mul(.14).mul(reliefAmount)))
       mat.positionNode=displaced(mapUV)
       mat.normalNode=normalMap(texture(getTexture("relief/main_unfolded_normal_opengl.png"),mapUV).rgb,vec2(reliefAmount,reliefAmount))
       const front=new Mesh(geo,mat);front.position.set(offset,0,.013);front.castShadow=true;front.receiveShadow=true;hinge.add(front)
@@ -283,7 +298,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       for(let y=1;y<129;y++)perimeter.push(y*grid+64)
       for(let x=63;x>=0;x--)perimeter.push(128*grid+x)
       for(let y=127;y>0;y--)perimeter.push(y*grid)
-      const edgeVertices:number[]=[]
+      const edgeVertices:number[]=[],edgeUV:number[]=[],edgeDelta:number[]=[]
       for(let i=0;i<perimeter.length;i++){
         const a=perimeter[i],b=perimeter[(i+1)%perimeter.length]
         const av=[positions.getX(a),positions.getY(a),positions.getZ(a)]
@@ -291,11 +306,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         const af=[av[0],av[1],av[2]+.013],ab=[av[0],av[1],av[2]-.015]
         const bf=[bv[0],bv[1],bv[2]+.013],bb=[bv[0],bv[1],bv[2]-.015]
         edgeVertices.push(...af,...ab,...bf,...ab,...bb,...bf)
+        for(const vertex of [a,a,b,a,b,b]){
+          const originalUV=geo.attributes.uv
+          edgeUV.push(originalUV.getX(vertex)/5+index/5,originalUV.getY(vertex))
+          edgeDelta.push(cornerDelta[vertex*3],cornerDelta[vertex*3+1],cornerDelta[vertex*3+2])
+        }
       }
       const edgeGeometry=disposer.add(new BufferGeometry())
       edgeGeometry.setAttribute("position",new Float32BufferAttribute(edgeVertices,3));
-      const edgeUV:number[]=[]
-      for(let i=0;i<edgeVertices.length;i+=3)edgeUV.push((edgeVertices[i]+1.4)/14+index/5,(edgeVertices[i+1]+3.5)/7)
+      edgeGeometry.setAttribute("cornerDelta",new Float32BufferAttribute(edgeDelta,3))
       edgeGeometry.setAttribute("uv",new Float32BufferAttribute(edgeUV,2))
       edgeMat.positionNode=displaced(uv());edgeGeometry.computeVertexNormals()
       const edgeMesh=new Mesh(edgeGeometry,edgeMat);edgeMesh.position.x=offset;hinge.add(edgeMesh)
@@ -403,7 +422,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       return {x:(panel.index+intersection.uv.x)*280,y:(1-intersection.uv.y)*700,point:intersection.point}
     }
     let latest:{x:number;y:number}|null=null,hover:Trigger|null=null,focused:FocusedTrigger|null=null,suspended=false
-    const clearHover=()=>{hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
+    const clearHover=()=>{coverOverlayDirty=true;hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
@@ -454,12 +473,12 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     })
     disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);latest=null;wandHover=false;clearHover()})
     disposer.listen(canvas,"pointerleave",()=>{latest=null;wandHover=false;clearHover()})
-    const suspend=()=>{suspended=true;latest=null;pointers.clear();wandHover=false;clearHover()}
+    const suspend=()=>{suspended=true;focused=null;latest=null;pointers.clear();wandHover=false;clearHover()}
     disposer.listen(window,"blur",suspend)
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{focused=target;refreshHover()},dispose:()=>disposer.dispose()}
+    const controls:MapControls={close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -496,13 +515,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const selected=hover??(!suspended&&!pointers.size?focused:null)
       for(const f of feedback){
         const active=eligibleTrigger(f.target,state,discovered)&&(selected===f.target||selected==="open"&&f.target.startsWith("open-"))
+        const previousValue=f.value
         if(!eligibleTrigger(f.target,state,discovered))f.value=0
         else f.value=clamp(f.value+dt*(active?1/.16:-1/.22))
+        if(previousValue!==f.value&&f.mesh.parent===coverOverlay)coverOverlayDirty=true
         f.opacity.value=.65*f.value
       }
       updateCover()
-      if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false}
-      composite(coverTarget,coverOverlay,coverCamera)
+      if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false;coverOverlayDirty=true}
+      if(coverOverlayDirty){composite(coverTarget,coverOverlay,coverCamera);coverOverlayDirty=false}
       if(!staticCached)for(const entry of reveals)entry.ink.progress.value=revealProgress(reveal,entry.timing.start,entry.timing.duration)
       const erase=state.phase==="erasing"?1-smooth(age):state.phase==="closing"||state.phase==="folded"?0:1
       if(discovered){const p=revealProgress(time-discoveredAt,0,1.6)*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}

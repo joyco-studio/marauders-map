@@ -40,3 +40,11 @@ Acceptance means every eligible existing trigger has restrained visible feedback
 ## Guidance
 
 The JOYCO Logs and Toolbox indexes were already reviewed in this session. Use the existing [XYZ disposal and warmup](https://hub.joyco.studio/toolbox/xyz) approach rather than adding an animation or interaction library. The current experience already owns raycasting, clocks, ink materials, cached composition, and accessible controls; extend those boundaries.
+
+## Implementation status
+
+Implemented the shared stable-ID resolver, scene-owned pointer/focus state, preallocated ink accents, dynamic map accents excluded from snapshots, and an independently cached cover base with a dirty dynamic overlay. Accessible trigger controls share the same feedback; discovery disables the passage control and removes its pointer eligibility.
+
+Validation completed: focused TypeScript and ESLint checks, three trigger boundary regression tests, and a production build. Desktop preview checks covered both spell underlines, keyboard highlighting of both unfolding edges, opening, passage feedback and discovery. A 390 × 844 WebGL2 preview confirmed the underline and mockery greeting/opening. Screenshot evidence is saved in `.context/trigger-focus.png`.
+
+Remaining manual coverage: actual touch/pen devices, full drag/pinch and stationary-pointer resize/zoom matrix, hidden-tab return, close/reopen, and debug manual poses. No claim of complete device-matrix verification is made.

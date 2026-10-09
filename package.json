@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/map/state.test.ts lib/map/wand-target.test.ts",
+    "test": "tsx --test lib/map/*.test.ts",
     "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset ascii --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset ascii --size 64 --pxrange 8 --out public/map/fonts/cinzel",
     "bake:art": "node scripts/bake-art.mjs && tsx scripts/prepare-fallback.mts",
     "test:sdf": ".context/sdf-venv/bin/python scripts/test-sdf.py"
