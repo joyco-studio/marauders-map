@@ -1,0 +1,51 @@
+{
+  "name": "Living parchment name banner",
+  "version": 1,
+  "canvas_px": [
+    1448,
+    1086
+  ],
+  "artwork": "living_banner_color.png",
+  "motion_weights": "motion_weights.png",
+  "safe_text_box": [
+    0.20718232044198895,
+    0.4106813996316758,
+    0.7044198895027625,
+    0.6040515653775322
+  ],
+  "safe_text_box_units": "normalized bottom-left UV: u_min, v_min, u_max, v_max",
+  "safe_text_box_px": [
+    300,
+    430,
+    1020,
+    640
+  ],
+  "safe_text_box_px_units": "top-left image pixels: x_min, y_min, x_max, y_max; max exclusive",
+  "text_layout": {
+    "lines": 2,
+    "horizontal_align": "center",
+    "suggested_baselines_px": [
+      512,
+      596
+    ],
+    "color": "#442817"
+  },
+  "motion_channels": {
+    "R": "left free tail weight, 0..1",
+    "G": "right free tail and gentler upper curl weight, 0..1",
+    "B": "unused, zero"
+  },
+  "motion_format": "opaque RGB 8-bit linear numerical values; do not apply sRGB decoding",
+  "artwork_color_space": "sRGB",
+  "artwork_alpha": "straight RGBA from image generation, preserved unchanged; alphaTest 0.5 recommended by bundled helper",
+  "mask_note": "Fields extend into transparent surroundings; never multiply these weights by artwork opacity.",
+  "recommended_motion": {
+    "flutter_fraction_of_full_canvas_width": 0.008,
+    "lift_fraction_of_full_canvas_width": 0.002,
+    "speed": 1,
+    "segments_x": 48,
+    "segments_y": 36
+  },
+  "geometry_note": "Deforming 2.5D illustrated plane, with unchanged UVs and a pinned central text rectangle. Not a real unfolding paper simulation.",
+  "source": "Original reference-directed raster artwork. This package contains no SVG or separated reverse-face geometry."
+}

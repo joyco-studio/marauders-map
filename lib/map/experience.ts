@@ -7,8 +7,8 @@ import {
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
   Vector2, Vector3, Plane, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
-import { mix, texture, uniform, uv, vec2, vec3, positionLocal, attribute, normalMap, smoothstep } from "three/tsl"
-import { createText, type TextHandle, type TextEffect } from "lettra/three"
+import { color, mix, texture, uniform, uv, vec2, vec3, positionLocal, attribute, normalMap, smoothstep } from "three/tsl"
+import { msdfDistance, createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
 import { loadAssets } from "./assets"
 import { sdfCoverage } from "./sdf"
@@ -88,7 +88,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const reveals:Reveal[]=[]
     const geometry=disposer.add(new PlaneGeometry(1,1))
     const textHandles:TextHandle<TextEffect>[]=[]
-    const addText=(spec:Label,parent:Scene=mapScene,always=false) => {
+    const addText=(spec:Label,parent:Scene=mapScene,always=false,magical=false) => {
       const heading=parent===coverScene&&spec.heading
       const font=heading?assets.font.cinzel:assets.font.tangerine
       const atlas=getTexture(heading?"fonts/cinzel-400.png":"fonts/tangerine-700.png")
@@ -97,6 +97,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const scale=spec.size*(heading?1:1.65)/font.size/100
       const metrics=layout(font,text,{align:"center"})
       const measured=createInk(metrics.width*scale,metrics.height*scale,spec.center[0]*.07,noise)
+      const glow=uniform(0)
+      if(magical)measured.effect.stages!.color=()=>mix(measured.pigment,color("#38200b"),glow)
       const handle=createText({font,map:atlas,text,layout:{align:"center"},geometry:{scale},material:{fill:"#593724",effect:measured.effect}})
       const [x,y]=sheetPoint(spec.center)
       handle.mesh.position.set(x,y,.04)
@@ -105,7 +107,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       disposer.add(()=>handle.dispose({map:false}))
       measured.progress.value=always?1:0
       if(!always)reveals.push({ink:measured,timing:{start:spec.start??1.3,duration:.85,seed:spec.center[0]}})
-      return {handle,ink:measured,width:metrics.width*scale,height:metrics.height*scale}
+      return {handle,glow,ink:measured,width:metrics.width*scale,height:metrics.height*scale}
     }
     const addDrawing=(src:string,size:readonly[number,number],center:readonly[number,number],seed:number,parent:Scene=mapScene,revealCenter?:readonly[number,number])=> {
       const w=size[0]/100,h=size[1]/100
@@ -144,10 +146,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const journeys=new ActivityJourneys()
     const motionPixels=readMotionPixels(getTexture("artwork/living-banner/motion_weights.png"))
     const actors=journeys.actors.map((simulation,index)=> {
-      const title=addText({text:simulation.person.shortName,center:simulation.point,size:12},mapScene,true)
+      const title=addText({text:simulation.person.shortName,center:simulation.point,size:12},mapScene,true,true)
       title.ink.progress.value=0
       // Draw each banner and its inscription together, so later banners occlude both.
       title.handle.mesh.renderOrder=3+index*2
+      // Soft MSDF halo follows the letters, rather than illuminating the whole tag.
+      const haloMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
+      const glyphDistance=msdfDistance({msdf:texture(getTexture("fonts/tangerine-700.png"))})
+      haloMaterial.colorNode=color("#efa820")
+      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(.4).mul(title.ink.progress)
+      const halo=new Mesh(title.handle.mesh.geometry,haloMaterial)
+      halo.renderOrder=2.5+index*2;mapScene.add(halo)
       const safe=bannerMetadata.safe_text_box
       const safeWidth=safe[2]-safe[0],safeHeight=safe[3]-safe[1]
       // Preserve artwork proportions; fit the name inside its protected rectangle.
@@ -171,7 +180,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
       })
-      return {simulation,title,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight,textOffset,updateBanner:living.update}
+      return {simulation,title,halo,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight,textOffset,updateBanner:living.update}
     })
     const presentation=new ActorPresentation(journeys.actors.map(actor=>actor.point),MAX_RENDERED_PEOPLE)
     // Cover lives on the center panel and uses the same real MSDF lettering.
@@ -564,6 +573,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
       const showPeople=(state.phase==="revealing"||state.phase==="exploring")
       presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})))
+      const hoveredPerson=!suspended&&!pointers.size&&latest?actorAt(latest.x,latest.y):undefined
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index]
         const [x,y]=sheetPoint(appearance.point)
@@ -574,6 +584,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
         if(visible)actor.updateBanner(time,appearance.progress)
+        const glowTarget=visible&&hoveredPerson===simulation.person.id ? .92+.08*Math.sin(time*3+index):0
+        actor.title.glow.value+=(glowTarget-actor.title.glow.value)*(1-Math.exp(-dt*9))
+        actor.halo.visible=visible&&actor.title.glow.value>.001
+        actor.halo.position.copy(actor.title.handle.mesh.position)
+        actor.halo.scale.copy(actor.title.handle.mesh.scale)
         actor.title.ink.progress.value=appearance.progress
         actor.title.ink.opacity.value=1
         actor.bannerInk.progress.value=appearance.progress
