@@ -7,7 +7,7 @@ test("opening and closing honor the cinematic sequence and replay",()=>{
   state=transition(state,"ready",10)
   assert.equal(state.phase,"folded")
   assert.equal(transition(state,"open",10),state)
-  state=transition(state,"welcome",10)
+  state=advance(transition(state,"welcome",9),10)
   assert.equal(advance(state,100).phase,"folded")
   state=transition(state,"open",10)
   assert.equal(state.phase,"opening")
@@ -22,9 +22,9 @@ test("opening and closing honor the cinematic sequence and replay",()=>{
   assert.equal(state.phase,"closing")
   state=advance(state,24)
   assert.equal(state.phase,"folded")
-  state=transition(state,"mockery",24)
+  state=advance(transition(state,"welcome",24),25)
   state=transition(state,"open",25)
-  assert.deepEqual(state,{phase:"opening",enteredAt:25,greeting:"mockery"})
+  assert.deepEqual(state,{phase:"opening",enteredAt:25,greeting:"welcome"})
 })
 test("rapid or out-of-phase commands cannot restart animations",()=>{
   const opening:MapState={phase:"opening",enteredAt:3}
@@ -47,15 +47,18 @@ test("all reveal fragments are exactly hidden or revealed at endpoints",()=>{
   assert.ok(absorptionCoverage(.3,0)>absorptionCoverage(.3,.8))
 })
 
-test("spell responses stay readable until a separate opening command",()=>{
+test("the enchantment must complete before a separate press opens the map",()=>{
   const folded:MapState={phase:"folded",enteredAt:0}
-  for(const greeting of ["mockery","welcome"] as const){
-    const response=transition(folded,greeting,1)
-    assert.deepEqual(advance(response,1000),response)
-    assert.equal(transition(response,greeting,2),response)
-    assert.equal(transition(response,"ready",2),response)
-    assert.equal(transition(response,"open",1000).phase,"opening")
-  }
+  const casting=transition(folded,"welcome",1)
+  assert.equal(casting.phase,"enchanting")
+  assert.equal(transition(casting,"open",1.1),casting)
+  assert.equal(transition(casting,"welcome",1.2),casting)
+  assert.equal(advance(casting,1.89).phase,"enchanting")
+  const response=advance(casting,1.91)
+  assert.deepEqual(response,{phase:"folded",enteredAt:1.9,greeting:"welcome"})
+  assert.deepEqual(advance(response,1000),response)
+  assert.equal(transition(response,"welcome",2),response)
+  assert.equal(transition(response,"open",1000).phase,"opening")
 })
 
 test("closed accordion leaves occupy separate layers below the cover",async()=>{
@@ -73,16 +76,16 @@ test("closed accordion leaves occupy separate layers below the cover",async()=>{
 })
 
 
-test("mockery unfolds blank and resets the spell choice after closing",()=>{
-  const response=transition({phase:"folded",enteredAt:0},"mockery",1)
-  const opened=advance(transition(response,"open",2),6)
+test("closing resets the ritual and the next opening reveals the map again",()=>{
+  const response=advance(transition({phase:"folded",enteredAt:0},"welcome",1),2)
+  const opened=advance(transition(response,"open",2),9)
   assert.equal(opened.phase,"exploring")
-  assert.equal(opened.greeting,"mockery")
-  const closed=advance(transition(opened,"close",7),11)
-  assert.deepEqual(closed,{phase:"folded",enteredAt:11})
-  const welcomed=transition(transition(closed,"welcome",12),"open",13)
-  assert.equal(welcomed.phase!=="error"&&welcomed.greeting,"welcome")
-  assert.equal(advance(welcomed,17).phase,"revealing")
+  const closed=advance(transition(opened,"close",10),14)
+  assert.deepEqual(closed,{phase:"folded",enteredAt:14})
+  assert.equal(transition(closed,"open",15),closed)
+  const welcomed=advance(transition(closed,"welcome",15),16)
+  const reopening=transition(welcomed,"open",16)
+  assert.equal(advance(reopening,20).phase,"revealing")
 })
 
 test("cover reset erases the previous inscription before revealing choices",async()=>{

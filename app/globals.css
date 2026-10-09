@@ -34,3 +34,5 @@ button:disabled { opacity: .45; cursor: default; }
 .map-spells button { color: #ddc89c; background: transparent; border: 0; padding: 8px 12px; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; text-shadow: 0 2px 8px #000; transition: color .2s; }
 .map-spells button:hover { color: #fff0c9; }
 .wand-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+.map-oath { margin: 0; padding: 8px 12px; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; text-shadow: 0 2px 8px #000; pointer-events: none; }

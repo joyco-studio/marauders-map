@@ -7,7 +7,7 @@ import type { MapControls, Status } from "@/lib/map/experience"
 
 const initial:Status={phase:"loading",progress:0,discovered:false,backend:""}
 const descriptions:Record<Status["phase"],string>={
-  loading:"Preparing the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Choose Reveal your secrets or I solemnly swear that I am up to no good, then press anywhere on the parchment to unfold.",error:"The interactive map could not open",
+  loading:"Preparing the parchment",enchanting:"The wand is enchanting the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Click the parchment to cast the oath, then press it again to unfold.",error:"The interactive map could not open",
 }
 export function Scene() {
   const container=useRef<HTMLDivElement>(null)
@@ -16,11 +16,11 @@ export function Scene() {
   const [attempt,setAttempt]=useState(0)
   const [ready,setReady]=useState(false)
   const exploring=status.phase==="exploring"
-  const activity=useActivity(controls,ready,exploring&&status.greeting!=="mockery")
+  const activity=useActivity(controls,ready,exploring)
   const {select,arrive,dismiss}=activity
   const onMapStatus=useCallback((next:Status)=>{
     setStatus(next)
-    if(next.phase!=="exploring"||next.greeting==="mockery")dismiss()
+    if(next.phase!=="exploring")dismiss()
   },[dismiss])
   useEffect(()=>{
     if(!container.current)return
@@ -63,23 +63,21 @@ export function Scene() {
           <div className="fallback-message"><p>{status.error}</p><button onClick={retry}>Retry the enchanted map</button></div>
         </section>
       )}
-      <p className="sr-only" role="status" aria-live="polite">{status.phase==="exploring"&&status.greeting==="mockery"?"The map is open. The parchment is completely blank. Drag to pan, scroll or pinch to zoom.":status.phase==="folded"&&status.greeting==="mockery"?"The Marauders mock Professor Snape and ask him to keep his nose out of other people’s business. Press anywhere on the parchment to unfold.":status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
-      {exploring&&status.greeting!=="mockery"&&<ActivityNotice activity={activity} controls={controls} ready={ready} />}
+      <p className="sr-only" role="status" aria-live="polite">{status.phase==="folded"&&status.greeting==="welcome"?"For those who turn strange ideas into pixels. The Makers’ Map. Press anywhere on the parchment to unfold.":descriptions[status.phase]} {status.discovered?"Secret passage discovered: One more thing to try… A passage to The Rabbit Hole.":""}</p>
+      {exploring&&<ActivityNotice activity={activity} controls={controls} ready={ready} />}
       <ActivityCard activity={activity} controls={controls} ready={ready} />
       <nav className="map-spells" aria-label="Parchment spells">
-        {status.phase==="folded"&&!status.greeting&&<>
-          <button onClick={()=>controls.current?.greet("mockery")}>Reveal your secrets</button>
-          <button onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>
-        </>}
+        {status.phase==="folded"&&!status.greeting&&status.hovered&&<p className="map-oath" aria-hidden="true">I solemnly swear that I am up to no good</p>}
         {exploring&&<button onClick={()=>controls.current?.close()}>Enough experimenting. For now.</button>}
       </nav>
       <nav className="accessible-controls" aria-label="Map controls">
-        <button onFocus={()=>controls.current?.setFocusedTrigger("passage")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring||status.greeting==="mockery"||status.discovered} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>
+        <button onFocus={()=>controls.current?.setFocusedTrigger("passage")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!exploring||status.discovered} onClick={()=>controls.current?.discover()}>Reveal the secret passage</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(.25)}>Zoom in</button>
         <button disabled={!exploring} onClick={()=>controls.current?.zoom(-.25)}>Zoom out</button>
         <button disabled={!exploring} onClick={()=>controls.current?.resetView()}>Reset view</button>
+        {status.phase==="folded"&&!status.greeting&&<button onFocus={()=>controls.current?.setFocusedTrigger("welcome")} onBlur={()=>controls.current?.setFocusedTrigger(null)} onClick={()=>controls.current?.greet("welcome")}>I solemnly swear that I am up to no good</button>}
         {status.phase==="folded"?<button onFocus={()=>controls.current?.setFocusedTrigger("open")} onBlur={()=>controls.current?.setFocusedTrigger(null)} disabled={!status.greeting} onClick={()=>controls.current?.open()}>Unfold the map</button>:null}
-        {exploring&&status.greeting!=="mockery"&&<ActivityRoster activity={activity} />}
+        {exploring&&<ActivityRoster activity={activity} />}
       </nav>
     </main>
   )

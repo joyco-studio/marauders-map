@@ -36,14 +36,17 @@ export async function createWand(assets:Assets,disposer:Disposer) {
   const tip=new Mesh(disposer.add(new SphereGeometry(.045,12,8)),tipMaterial)
   tip.position.y=4.72;root.add(tip)
   const light=new PointLight("#ffcc7f",0,3,2);light.position.y=4.7;root.add(light)
-  root.traverse(object=>object.layers.enable(1))
+  root.traverse(object=>{if(object instanceof Mesh)object.layers.set(1);else object.layers.enable(1)})
   const target=new Vector3(0,.5,0),rest=new Vector3(),raised=new Vector3(),direction=new Vector3()
   const tracked=new Vector3(),bounded=new Vector3(),restTip=new Vector3(),endpoint=new Vector3(),offset=new Vector3()
   const yAxis=new Vector3(0,1,0),pose=new Quaternion(),restPose=new Quaternion().setFromAxisAngle(new Vector3(0,0,1),.12)
+  const spellTarget=new Vector3(),spellOffset=new Vector3()
+  let spellAge=Infinity,spellDuration=.9,spellStyle:"ritual"|"swipe"="ritual"
   let lift=0,initialized=false
   return {
     root,
     aim(point:Vector3){target.copy(point)},
+    enchant(style:"ritual"|"swipe"){spellStyle=style;spellAge=0;spellDuration=style==="ritual"?.9:.45;spellTarget.copy(target)},
     update(camera:PerspectiveCamera,dt:number,active:boolean,fold=0,panels:readonly Mesh[] = []) {
       // Project the resting handle from the viewport so pan/zoom cannot lose it.
       rest.set(.82,-.70,.5).unproject(camera)
@@ -53,13 +56,22 @@ export async function createWand(assets:Assets,disposer:Disposer) {
       const viewHeight=2*camera.position.z*Math.tan(camera.fov*Math.PI/360)
       const scale=viewHeight*(camera.aspect<1?.26:.43)/4.72
       root.scale.setScalar(scale)
-      const desired=active?1:0
-      lift=lift+(desired-lift)*(1-Math.exp(-dt*6))
+      spellAge+=dt
+      const spelling=spellAge<spellDuration
+      const desired=active||spelling?1:0
+      lift=lift+(desired-lift)*(1-Math.exp(-dt*(spelling?18:6)))
       if(Math.abs(lift-desired)<.001)lift=desired
       raised.copy(rest);raised.y+=.65;raised.z+=3.8
       if(!initialized){root.position.copy(rest);root.quaternion.copy(restPose);tracked.copy(target);initialized=true}
       // The pointer can aim anywhere in the viewport, beyond the paper.
       bounded.copy(target)
+      if(spelling){
+        const progress=spellAge/spellDuration,envelope=Math.sin(progress*Math.PI)
+        const x=spellStyle==="ritual"?Math.sin(progress*Math.PI*2)*envelope:(progress*2-1)*envelope
+        const y=spellStyle==="ritual"?Math.cos(progress*Math.PI*2)*envelope:.25*envelope
+        spellOffset.set(x,y,0).applyQuaternion(camera.quaternion).multiplyScalar(viewHeight*.075)
+        bounded.copy(spellTarget).add(spellOffset)
+      }
       tracked.lerp(bounded,1-Math.exp(-dt*16))
       bounded.copy(tracked)
       // Lift along the camera ray: the glowing tip stays over the same ink point

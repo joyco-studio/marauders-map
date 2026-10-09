@@ -25,7 +25,7 @@ import { ActivityJourneys } from "../activity/journeys"
 import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
 
-export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting }
+export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting; hovered?:boolean }
 export type MapControls = { setInscription:(value:Inscription|null)=>void; setNotice:(value:Inscription|null)=>void; close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
 type Footprint = {mesh:Mesh<PlaneGeometry,MeshBasicNodeMaterial>; ink:Ink; born:number}
@@ -36,8 +36,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
   const disposer=new Disposer()
   const check=()=>{if(signal.aborted) throw abort()}
   let state:MapState={phase:"loading",enteredAt:0}
+  let mapHovered=false
   let time=0, discovered=false, discoveredAt=0, progress=0
-  const emit=()=>{if(!signal.aborted) onStatus({phase:state.phase,progress,discovered,backend,greeting:state.phase!=="error"?state.greeting:undefined,error:state.phase==="error"?state.message:undefined})}
+  const emit=()=>{if(!signal.aborted) onStatus({phase:state.phase,progress,discovered,backend,hovered:mapHovered,greeting:state.phase!=="error"?state.greeting:undefined,error:state.phase==="error"?state.message:undefined})}
   const syncPhase=edge((s:MapState)=>s.phase,()=>emit())
   let backend=""
   const tuning:Tuning={manual:false,fold:1,reveal:0,noise:1,light:2.4}
@@ -183,16 +184,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         {text:"The Makers’",center:[700,285],size:20,heading:true},
         {text:"Map",center:[700,316],size:26,heading:true},
       ],
-      mockery: [
-        {text:"Moony, Wormtail,",center:[700,170],size:17},
-        {text:"Padfoot & Prongs",center:[700,190],size:17},
-        {text:"send their compliments",center:[700,212],size:15},
-        {text:"to Professor Snape",center:[700,234],size:16},
-        {text:"...and request he keep",center:[700,283],size:15},
-        {text:"his abnormally large nose",center:[700,302],size:14},
-        {text:"out of other people's",center:[700,321],size:15},
-        {text:"business.",center:[700,340],size:17},
-      ],
     } satisfies Record<string, Label[]>
     const coverGroups = Object.fromEntries(Object.entries(coverContent).map(([name,content])=>[name,content.map(label=>addText(label,coverScene,true))]))
     const edgeHint = addText({text:"Press anywhere to unfold",center:[700,655],size:10},coverScene,true)
@@ -336,6 +327,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const ambient=new AmbientLight("#f2dec4",1.7);ambient.layers.enable(1);scene.add(ambient)
     const light=new DirectionalLight("#ffedce",tuning.light);light.position.set(-4,6,9);light.castShadow=true
     light.layers.enable(1)
+    light.shadow.camera.layers.enable(1)
     light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-9;light.shadow.camera.right=9;light.shadow.camera.top=6;light.shadow.camera.bottom=-6;light.shadow.normalBias=.04;scene.add(light)
     const deskMaterial=disposer.add(new MeshStandardNodeMaterial({roughness:.85,metalness:0}))
     // Preserve the source's 2:1 aspect and a broad-plank scale on the large desk.
@@ -410,13 +402,14 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const next=transition(state,command,time)
       if(next===state)return
       cast()
-      if(command==="open")reset()
+      if(command==="welcome")wand.enchant("ritual")
+      if(command==="open"){wand.enchant("swipe");reset()}
       if(command==="close"){staticCached=false;cached.visible=false;setStatic(true);zoom=1;panX=panY=0}
       clearHover();focused=null
       state=next;syncPhase(state);emit()
     }
     const discover=()=> {
-      if(state.phase!=="exploring"||state.greeting==="mockery"||discovered)return
+      if(state.phase!=="exploring"||discovered)return
       cast()
       discovered=true;discoveredAt=time;staticCached=false;cached.visible=false;setStatic(true);staticDirty=true;emit()
     }
@@ -437,11 +430,13 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const clearHover=()=>{coverOverlayDirty=true;hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
+      const hovered=state.phase==="folded"&&!state.greeting&&!suspended&&(!!point||focused==="welcome")
+      if(hovered!==mapHovered){mapHovered=hovered;emit()}
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
 
     }
     const actorAt=(clientX:number,clientY:number)=> {
-      if(state.phase!=="exploring"||state.greeting==="mockery")return
+      if(state.phase!=="exploring")return
       const p=hit(clientX,clientY);if(!p)return
       // Match banner draw order, with passage/close hotspots always taking priority.
       return [...actors].reverse().find(actor=> {
@@ -527,13 +522,14 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         case "revealing":reveal=age;break
         case "erasing":reveal=3*(1-smooth(age));break
         case "closing":fold=smooth(age/3);reveal=-1;break
+        case "enchanting":
         case "folded":fold=1;reveal=-1;break
       }
       if(tuning.manual){fold=tuning.fold;reveal=tuning.reveal*3;staticCached=false;cached.visible=false;setStatic(true)}
       else{tuning.fold=fold;tuning.reveal=clamp(reveal/3)}
       noise.value=tuning.noise;light.intensity=tuning.light
       foldPaper(fold)
-      const casting=["opening","revealing","erasing","closing"].includes(state.phase)
+      const casting=["enchanting","opening","revealing","erasing","closing"].includes(state.phase)
       paper.updateMatrixWorld(true)
       const wandPanels=panels.map(panel=>panel.mesh)
       wand.update(camera,dt,wandHover||pointers.size>0||time<castingUntil||casting,fold,wandPanels)
@@ -553,10 +549,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!staticCached)for(const entry of reveals)entry.ink.progress.value=revealProgress(reveal,entry.timing.start,entry.timing.duration)
       const erase=state.phase==="erasing"?1-smooth(age):state.phase==="closing"||state.phase==="folded"?0:1
       if(discovered){const p=revealProgress(time-discoveredAt,0,1.6)*erase;passage.ink.progress.value=p;secret.ink.progress.value=p;note.ink.progress.value=p}
-      const activityActive=state.phase==="exploring"&&state.greeting!=="mockery"&&!tuning.manual
+      const activityActive=state.phase==="exploring"&&!tuning.manual
       if(!tuning.manual)journeys.tick(dt,activityActive)
       if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
-      const showPeople=(state.phase==="revealing"||state.phase==="exploring")&&state.greeting!=="mockery"
+      const showPeople=(state.phase==="revealing"||state.phase==="exploring")
       presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})))
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index]
@@ -587,7 +583,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       if(state.phase==="exploring"&&!tuning.manual&&(!discovered||time-discoveredAt>1.6)&&staticDirty)snapshot()
       // During exploration only pooled dynamic prints/names are redrawn over the cached map.
-      mapScene.visible=state.phase==="error"||state.greeting!=="mockery"
       composite(target,mapScene,mapCamera)
       renderer.setRenderTarget(null);renderer.setClearColor("#151714",1);renderer.render(scene,camera)
       wandCamera.copy(camera);wandCamera.layers.set(1)
