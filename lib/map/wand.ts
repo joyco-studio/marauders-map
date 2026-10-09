@@ -5,6 +5,7 @@ import {
 } from "three/webgpu"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import type { Assets } from "./assets"
+import { boundWandTarget } from "./wand-target"
 
 /** The handle is the pivot; the exported wand's length runs along local +Y. */
 export async function createWand(assets:Assets,disposer:Disposer) {
@@ -37,7 +38,7 @@ export async function createWand(assets:Assets,disposer:Disposer) {
   tip.position.y=4.72;root.add(tip)
   const light=new PointLight("#ffcc7f",0,3,2);light.position.y=4.7;root.add(light)
   const target=new Vector3(0,.5,0),rest=new Vector3(),raised=new Vector3(),direction=new Vector3()
-  const bounded=new Vector3(),candidate=new Vector3(),restTip=new Vector3(),endpoint=new Vector3(),offset=new Vector3()
+  const tracked=new Vector3(),bounded=new Vector3(),candidate=new Vector3(),restTip=new Vector3(),endpoint=new Vector3(),offset=new Vector3()
   const yAxis=new Vector3(0,1,0),pose=new Quaternion(),restPose=new Quaternion().setFromAxisAngle(new Vector3(0,0,1),.12)
   let lift=0,initialized=false
   return {
@@ -56,20 +57,12 @@ export async function createWand(assets:Assets,disposer:Disposer) {
       lift=lift+(desired-lift)*(1-Math.exp(-dt*6))
       if(Math.abs(lift-desired)<.001)lift=desired
       raised.copy(rest);raised.y+=.65;raised.z+=3.8
-      if(!initialized){root.position.copy(rest);root.quaternion.copy(restPose);initialized=true}
+      if(!initialized){root.position.copy(rest);root.quaternion.copy(restPose);tracked.copy(target);initialized=true}
       // Clamp the commanded endpoint to real panel geometry, including hinges.
-      let nearest=Infinity
       const aimPanels=fold>.98?panels.slice(0,1):panels
-      for(const panel of aimPanels){
-        candidate.copy(target);panel.worldToLocal(candidate)
-        candidate.x=Math.max(-1.26,Math.min(1.26,candidate.x))
-        candidate.y=Math.max(-3.34,Math.min(3.34,candidate.y))
-        candidate.z=.06
-        panel.localToWorld(candidate)
-        const distance=candidate.distanceToSquared(target)
-        if(distance<nearest){nearest=distance;bounded.copy(candidate)}
-      }
-      if(!panels.length)bounded.copy(target)
+      boundWandTarget(target,aimPanels,bounded,candidate)
+      tracked.lerp(bounded,1-Math.exp(-dt*16))
+      bounded.copy(tracked)
       // Lift along the camera ray: the glowing tip stays over the same ink point
       // in screen space even beside the map's outer edge.
       direction.copy(camera.position).sub(bounded).normalize()
