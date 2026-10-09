@@ -254,8 +254,6 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         const x=positions.getX(i),y=positions.getY(i)
         const curl=.025*Math.sin(y*.85+(x+(index-2)*2.8)*1.3)+.035*Math.pow(Math.abs(y)/3.5,8)
         positions.setZ(i,curl)
-        // Ragged outer silhouette, extremely small to retain a coherent sheet.
-        if(Math.abs(y)>3.49) positions.setY(i,y+Math.sin((x+(index-2)*2.8)*43)*.012)
       }
       geo.computeVertexNormals()
       const mat=disposer.add(new MeshStandardNodeMaterial({roughness:.96,metalness:0}))
