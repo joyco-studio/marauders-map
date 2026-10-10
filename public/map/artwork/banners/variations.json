@@ -1,0 +1,199 @@
+{
+  "schema": "magic-map-name-banner-variations/1.0",
+  "ink": "#4A2D1B",
+  "canvas": [
+    720,
+    300
+  ],
+  "png_pixel_ratio": 4,
+  "alpha": "Straight alpha; fully transparent color pixels have RGB=0.",
+  "background": "All SVG and PNG layers transparent. The JPG is a presentation-only neutral backdrop.",
+  "variants": [
+    {
+      "id": "v01_classic_scroll",
+      "title": "Classic scroll",
+      "note": "Opposing rolled ends",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v01_classic_scroll_silhouette.svg",
+        "ink": "svg/v01_classic_scroll_outlines.svg",
+        "color": "color/v01_classic_scroll_color.png",
+        "preview": "preview/v01_classic_scroll_preview.png"
+      }
+    },
+    {
+      "id": "v02_folded_ribbon",
+      "title": "Folded ribbon",
+      "note": "Angular folds and short tails",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v02_folded_ribbon_silhouette.svg",
+        "ink": "svg/v02_folded_ribbon_outlines.svg",
+        "color": "color/v02_folded_ribbon_color.png",
+        "preview": "preview/v02_folded_ribbon_preview.png"
+      }
+    },
+    {
+      "id": "v03_corner_folds",
+      "title": "Cartographer label",
+      "note": "Folded corners and compact edges",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v03_corner_folds_silhouette.svg",
+        "ink": "svg/v03_corner_folds_outlines.svg",
+        "color": "color/v03_corner_folds_color.png",
+        "preview": "preview/v03_corner_folds_preview.png"
+      }
+    },
+    {
+      "id": "v04_weathered_scroll",
+      "title": "Weathered scroll",
+      "note": "Asymmetric curl and restrained wear",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v04_weathered_scroll_silhouette.svg",
+        "ink": "svg/v04_weathered_scroll_outlines.svg",
+        "color": "color/v04_weathered_scroll_color.png",
+        "preview": "preview/v04_weathered_scroll_preview.png"
+      }
+    },
+    {
+      "id": "v05_botanical_scroll",
+      "title": "Botanical scroll",
+      "note": "Leaf flourishes at the ends",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v05_botanical_scroll_silhouette.svg",
+        "ink": "svg/v05_botanical_scroll_outlines.svg",
+        "color": "color/v05_botanical_scroll_color.png",
+        "preview": "preview/v05_botanical_scroll_preview.png"
+      }
+    },
+    {
+      "id": "v06_ceremonial_scroll",
+      "title": "Ceremonial scroll",
+      "note": "Paired ornamental rolls",
+      "viewBox": [
+        0,
+        0,
+        720,
+        300
+      ],
+      "png_dimensions": [
+        2880,
+        1200
+      ],
+      "text_safe_box": {
+        "x": 150,
+        "y": 105,
+        "width": 420,
+        "height": 90
+      },
+      "suggested_baselines": [
+        142,
+        178
+      ],
+      "layers": {
+        "silhouette": "svg/v06_ceremonial_scroll_silhouette.svg",
+        "ink": "svg/v06_ceremonial_scroll_outlines.svg",
+        "color": "color/v06_ceremonial_scroll_color.png",
+        "preview": "preview/v06_ceremonial_scroll_preview.png"
+      }
+    }
+  ]
+}
