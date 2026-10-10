@@ -7,7 +7,7 @@ import {
   PerspectiveCamera, PlaneGeometry, Raycaster, RenderTarget, Scene,
   Vector2, Vector3, Plane, type Node, WebGPURenderer, SRGBColorSpace, PCFShadowMap,
 } from "three/webgpu"
-import { color, mix, texture, uniform, uv, vec2, vec3, positionLocal, normalLocal, normalMap, smoothstep } from "three/tsl"
+import { sin, color, mix, texture, uniform, uv, vec2, vec3, positionLocal, normalLocal, normalMap, smoothstep } from "three/tsl"
 import { msdfDistance, createText, type TextHandle, type TextEffect } from "lettra/three"
 import { layout } from "lettra"
 import { loadAssets } from "./assets"
@@ -71,6 +71,12 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     backend=("isWebGPUBackend" in renderer.backend && renderer.backend.isWebGPUBackend)?"WebGPU":"WebGL2"
     const assets=await loadAssets(disposer,n=>{progress=n;emit()},retry);check()
     const noise=uniform(tuning.noise)
+    const emberClock=uniform(0)
+    const emberField=(seed:number)=>{
+      const broad=sin(positionLocal.x.mul(8).sub(emberClock.mul(.8)).add(seed)).mul(sin(positionLocal.y.mul(15).add(emberClock.mul(.5)).add(seed*.7)))
+      const fine=sin(positionLocal.x.mul(37).add(positionLocal.y.mul(29)).sub(emberClock.mul(1.4)).add(seed*2))
+      return smoothstep(-.25,.65,broad.mul(.7).add(fine.mul(.3)))
+    }
     const scene=new Scene()
     const camera=new PerspectiveCamera(35,1,.1,100)
     const wand=await createWand(assets,disposer);check();scene.add(wand.root)
@@ -98,7 +104,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const metrics=layout(font,text,{align:"center"})
       const measured=createInk(metrics.width*scale,metrics.height*scale,spec.center[0]*.07,noise)
       const glow=uniform(0)
-      if(magical)measured.effect.stages!.color=()=>mix(measured.pigment,color("#e84a08"),glow)
+      const heat=emberField(spec.center[0]*.07)
+      if(magical)measured.effect.stages!.color=()=>mix(measured.pigment,mix(color("#a63610"),color("#ff9638"),heat),glow)
       const handle=createText({font,map:atlas,text,layout:{align:"center"},geometry:{scale},material:{fill:"#593724",effect:measured.effect}})
       const [x,y]=sheetPoint(spec.center)
       handle.mesh.position.set(x,y,.04)
@@ -107,7 +114,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       disposer.add(()=>handle.dispose({map:false}))
       measured.progress.value=always?1:0
       if(!always)reveals.push({ink:measured,timing:{start:spec.start??1.3,duration:.85,seed:spec.center[0]}})
-      return {handle,glow,ink:measured,width:metrics.width*scale,height:metrics.height*scale}
+      return {handle,glow,heat,ink:measured,width:metrics.width*scale,height:metrics.height*scale}
     }
     const addDrawing=(src:string,size:readonly[number,number],center:readonly[number,number],seed:number,parent:Scene=mapScene,revealCenter?:readonly[number,number])=> {
       const w=size[0]/100,h=size[1]/100
@@ -153,8 +160,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       // Soft MSDF halo follows the letters, rather than illuminating the whole tag.
       const haloMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
       const glyphDistance=msdfDistance({msdf:texture(getTexture("fonts/beth-ellen-400.png"))})
-      haloMaterial.colorNode=color("#ff6b13")
-      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(.75).mul(title.ink.progress)
+      haloMaterial.colorNode=mix(color("#c94712"),color("#ff9a42"),title.heat)
+      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(title.heat.mul(.7).add(.3)).mul(.28).mul(title.ink.progress)
       const halo=new Mesh(title.handle.mesh.geometry,haloMaterial)
       halo.renderOrder=2.5+index*2;mapScene.add(halo)
       const safe=bannerMetadata.safe_text_box
@@ -169,7 +176,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const bannerInk=createInk(bannerWidth,bannerHeight,index+90,noise)
       const bannerMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
       const artwork=texture(getTexture("artwork/living-banner/living_banner_color.png"))
-      bannerMaterial.colorNode=artwork.rgb
+      // A narrow alpha-gradient rim tracks the illustrated paper outline and curl holes.
+      const bannerTexture=getTexture("artwork/living-banner/living_banner_color.png")
+      const du=2/bannerMetadata.canvas_px[0],dv=2/bannerMetadata.canvas_px[1]
+      const around=[vec2(du,0),vec2(-du,0),vec2(0,dv),vec2(0,-dv)].map(offset=>texture(bannerTexture,uv().add(offset)).a)
+      const neighbors=around.reduce((a,b)=>a.min(b))
+      const rim=artwork.a.sub(neighbors).max(0)
+      const heat=emberField(index*1.71+9)
+      const ember=mix(color("#b83b0c"),color("#ff9b39"),heat)
+      bannerMaterial.colorNode=mix(artwork.rgb,ember,rim.mul(title.glow).mul(heat.mul(.65).add(.35)).mul(.8))
       bannerMaterial.opacityNode=artwork.a.mul(bannerInk.coverage).mul(bannerInk.opacity)
       const banner=new Mesh(living.geometry,bannerMaterial)
       banner.renderOrder=2+index*2;mapScene.add(banner)
@@ -556,6 +571,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       }
       if(tuning.manual){fold=tuning.fold;reveal=tuning.reveal*3;staticCached=false;cached.visible=false;setStatic(true)}
       else{tuning.fold=fold;tuning.reveal=clamp(reveal/3)}
+      emberClock.value=time
       noise.value=tuning.noise;light.intensity=tuning.light
       foldPaper(fold)
       // Approach the desk only after unfolding; restore clearance while ink erases.
@@ -601,7 +617,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
         if(visible)actor.updateBanner(time,appearance.progress)
         const glowTarget=visible&&hoveredPerson===simulation.person.id ? 1:0
-        actor.title.glow.value+=(glowTarget-actor.title.glow.value)*(1-Math.exp(-dt*9))
+        actor.title.glow.value+=(glowTarget-actor.title.glow.value)*(1-Math.exp(-dt*4.5))
         actor.halo.visible=visible&&actor.title.glow.value>.001
         actor.halo.position.copy(actor.title.handle.mesh.position)
         actor.halo.scale.copy(actor.title.handle.mesh.scale)

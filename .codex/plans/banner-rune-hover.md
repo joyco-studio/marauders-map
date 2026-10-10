@@ -15,3 +15,7 @@ Keep hovered glyph cores dark brown for legibility on pale parchment; put the go
 ## Beth Ellen and fire-orange revision
 
 Bake Beth Ellen locally with its Google Fonts OFL license and load its metrics and MSDF atlas through the existing scene registry. Apply it only to person name tags, retaining proportional banner fitting. On hover, transition the complete glyph fill to vivid fire orange, with a brighter soft orange distance-field halo; remove the dark-core styling.
+
+## Restrained burning animation
+
+Replace uniform orange illumination with a slowly drifting two-scale ember field sampled in object coordinates. Letter cores vary between burnt orange and small amber hotspots, with a much softer halo. Animate a narrow alpha-gradient rim on the banner silhouette and curl holes using its unchanged UVs and the same scene clock. Fade the effect in and out slowly without erasing or damaging text.
