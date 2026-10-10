@@ -5,8 +5,8 @@ import { sdfImages } from "./sdf"
 import type { Disposer } from "@joycostudio/xyz"
 
 export async function loadAssets(disposer: Disposer, progress: (n:number)=>void, retry: boolean) {
-  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "paper/aged_paper_color_rgba.png", "desk/castle-stone.png", "relief/main_unfolded_displacement_web_8bit.png", "relief/main_unfolded_normal_opengl.png", ...Object.values(sdfImages).filter(entry=>!entry.texture.startsWith("sdf/banners/")).map(entry=>entry.texture), "artwork/living-banner/living_banner_color.png", "artwork/living-banner/motion_weights.png", "fonts/tangerine-700.png", "fonts/cinzel-400.png", "fonts/beth-ellen-400.png"]
-  const jsons = ["fonts/tangerine-700.json", "fonts/cinzel-400.json", "fonts/beth-ellen-400.json"]
+  const images = ["wand/wand_basecolor.png", "wand/wand_normal_opengl.png", "wand/wand_orm.png", "paper/aged_paper_color_rgba.png", "desk/castle-stone.png", "relief/main_unfolded_displacement_web_8bit.png", "relief/main_unfolded_normal_opengl.png", ...Object.values(sdfImages).filter(entry=>!entry.texture.startsWith("sdf/banners/")).map(entry=>entry.texture), "artwork/living-banner/living_banner_color.png", "artwork/living-banner/motion_weights.png", "fonts/tangerine-700.png", "fonts/cinzel-600.png", "fonts/beth-ellen-400.png"]
+  const jsons = ["fonts/tangerine-700.json", "fonts/cinzel-600.json", "fonts/beth-ellen-400.json"]
   const jsonArgs = (url:string) => ({ loadFn: ({done,error}: Parameters<GenericLoadFn>[0]) => {
     fetch(url).then(r=> { if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json() }).then(done,error)
   } })

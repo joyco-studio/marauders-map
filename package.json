@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test lib/map/*.test.ts lib/activity/*.test.ts",
-    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 400 --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/cinzel && lettra bake public/map/fonts/beth-ellen.ttf --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/beth-ellen",
+    "bake:fonts": "lettra bake public/map/fonts/tangerine-bold.ttf --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/tangerine && lettra bake public/map/fonts/cinzel.ttf --weights 600 --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/cinzel && lettra bake public/map/fonts/beth-ellen.ttf --charset scripts/map-charset.txt --size 64 --pxrange 8 --out public/map/fonts/beth-ellen",
     "bake:art": "node scripts/bake-art.mjs && tsx scripts/prepare-fallback.mts",
     "test:sdf": ".context/sdf-venv/bin/python scripts/test-sdf.py"
   },
