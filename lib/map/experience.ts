@@ -46,7 +46,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
   const emit=()=>{if(!signal.aborted) onStatus({phase:state.phase,progress,discovered,backend,hovered:mapHovered,greeting:state.phase!=="error"?state.greeting:undefined,error:state.phase==="error"?state.message:undefined})}
   const syncPhase=edge((s:MapState)=>s.phase,()=>emit())
   let backend=""
-  const tuning:Tuning={manual:false,fold:1,reveal:0,noise:1,light:2.4}
+  const tuning:Tuning={manual:false,fold:1,reveal:0,noise:1,light:1.5}
   try {
     const renderer=new WebGPURenderer({antialias:true,alpha:true,forceWebGL:new URLSearchParams(location.search).get("renderer")==="webgl"})
     disposer.add(()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove()})
@@ -341,7 +341,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const outer=new Group();outer.position.set(side*2.8,0,0);inner.add(outer)
       createPanel(side<0?0:4,outer,side*1.4,side,2)
     }
-    const ambient=new AmbientLight("#f2dec4",1.7);ambient.layers.enable(1);scene.add(ambient)
+    const ambient=new AmbientLight("#f2dec4",.85);ambient.layers.enable(1);scene.add(ambient)
     const light=new DirectionalLight("#ffedce",tuning.light);light.position.set(-4,6,9);light.castShadow=true
     light.layers.enable(1)
     light.shadow.camera.layers.enable(1)
