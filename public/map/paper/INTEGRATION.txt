@@ -1,42 +1,51 @@
-AGED MAP PAPER — THREE.JS INTEGRATION
+SOFTLY AGED PAPER + MATCHING LIVING BANNER
 
-This asset replaces the main unfolded paper color and perimeter cutout. Keep the existing normal map and its current strength. The color image is 1774 x 887 pixels (2:1), with blank paper, aging, and transparent damaged edges.
+This revision finds a middle ground between the initial clean golden paper
+and the later heavily stained, ripped sheet. Both surfaces now use warm
+ivory/light tan, faint cloudy wear and sparse faded age spots. The banner's
+sepia hatching is lighter while its thin paper tails remain readable.
 
-1. COLOR AND CUTOUT
+FILES
+paper_color_rgba.png: main unfolded paper, native 1774 x 887 px, 2:1.
+paper_opacity.png: exact extraction of that paper texture's alpha channel.
+banner_color_rgba.png: matched blank banner, native 1448 x 1086 px, 4:3.
+banner_motion_weights.png: original left/right movement mask, unchanged.
+banner_metadata.json: original text box and canvas, with updated asset names.
+animate_banner.mjs: the existing noise animation helper, unchanged.
 
-Assign the RGBA paper PNG to material.map and set its texture.colorSpace to THREE.SRGBColorSpace. Start with material.color = white, alphaTest = 0.5, transparent = false, and opacity = 1. This uses the PNG's own alpha for an opaque paper cutout. Preserve the existing normal map as non-color data.
+MAIN PAPER
+Use the new RGBA texture in place of the strongly aged version. Retain the
+existing normal map. Set the color texture to sRGB and material color to white
+so the old yellow tint is not multiplied into the new artwork.
 
-Official material and alpha-test references:
+The RGBA already includes the revised, mostly intact silhouette. A cutout
+material can use alphaTest=0.5, transparent=false and opacity=1.
+If the app also has the previous damaged alphaMap assigned, remove it when
+using this RGBA's coverage, or replace it with the NEW paper_opacity.png in a
+pipeline that applies opacity once. Keeping the old mask keeps the large tears.
+The optional separate mask is grayscale numerical data: black=missing paper,
+white=paper; use NoColorSpace. Do not multiply the same coverage twice through
+both the RGBA alpha and a separate alphaMap.
+
+Keep ink and borders clipped to the same paper silhouette, and retain fixed
+unfolded UVs during the folding animation. The new texture has no painted curl
+or projected fold shadow; keep the existing curled-corner geometry.
+
+BANNER
+The canvas, safe name rectangle and paper-strip anatomy remain aligned with
+the original controller. The old movement mask and helper are included for
+convenience. Load banner_color_rgba.png as artworkTexture,
+banner_motion_weights.png with loadMotionPixels(), and banner_metadata.json
+as metadata for createLivingBanner(). Physical width remains a scene-unit
+option. The helper's default material already configures sRGB and alphaTest.
+
+VALIDATION
+Paper opacity extraction is byte-exact. The banner's alpha silhouette overlaps
+the original by 99.372 percent intersection-over-union at the cutout threshold;
+its full text rectangle remains covered, and the canvas is unchanged. This
+supports retaining the smooth motion mask. The artwork and alpha are preserved
+as generated. The revised assets have not been render-tested in the app.
+
+OFFICIAL REFERENCES
 https://threejs.org/docs/pages/MeshStandardMaterial.html
 https://threejs.org/docs/pages/Material.html
-
-2. OPTIONAL SEPARATE OPACITY FILE
-
-The separate opacity PNG is an exact extraction of the color image's alpha. It is provided for pipelines that need a separate mask; the normal Three.js RGBA-map setup above does not require it.
-
-If using the separate file as alphaMap, set it to THREE.NoColorSpace. Three.js reads alphaMap's grayscale/RGB color (the green channel for RGB), not that file's alpha channel. Use an opaque RGB color input, or explicitly ignore its alpha in a custom shader, so paper coverage is applied once. Applying the same coverage through both map alpha and alphaMap compounds the partially transparent edge values.
-
-Official alphaMap reference:
-https://threejs.org/docs/pages/MeshStandardMaterial.html#alphaMap
-
-3. ONE CONTINUOUS SHEET WHILE FOLDING
-
-Keep UVs attached to the original unfolded material throughout the animation. The five panels occupy successive U ranges: 0–0.2, 0.2–0.4, 0.4–0.6, 0.6–0.8, and 0.8–1. Move the geometry while retaining those ranges; assigning the whole image to every panel would repeat and compress the paper wear. Match the texture orientation and UV convention already used by the normal map.
-
-Texture transform and UV-channel reference:
-https://threejs.org/docs/pages/Texture.html
-
-4. MATCH ALL PAPER-BOUND LAYERS
-
-Ink, borders, and text drawn on the sheet need the same paper-space cutout as the paper surface, alongside their own artwork coverage. Keep their UVs and fold deformation aligned. Otherwise artwork can remain visible across a missing corner.
-
-If the app uses custom depth/shadow passes, reproduce the cutout and folding deformation in those passes too. For WebGLRenderer vertex-shader deformation, Three.js documents customDepthMaterial for directional/spot-light shadows and customDistanceMaterial for point-light shadows.
-
-Official shadow-material reference:
-https://threejs.org/docs/pages/Object3D.html#customDepthMaterial
-
-5. SCOPE
-
-Alpha gives the sheet a torn silhouette. Actual thickness, a lifted fiber edge, and curled surfaces require geometry. Keep the existing curled corner in the model; this texture adds no painted curled flap or projected fold shadow.
-
-The aging and broken perimeter address the clean material appearance. Still images cannot establish the cause of unrealistic folding motion. Judge that separately in the app after applying the texture with stable UVs.

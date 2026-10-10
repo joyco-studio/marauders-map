@@ -1,6 +1,6 @@
 {
-  "name": "Living parchment name banner",
-  "version": 1,
+  "name": "Living parchment banner \u2014 softly aged matched finish",
+  "version": 2,
   "canvas_px": [
     1448,
     1086
@@ -47,5 +47,13 @@
     "segments_y": 36
   },
   "geometry_note": "Deforming 2.5D illustrated plane, with unchanged UVs and a pinned central text rectangle. Not a real unfolding paper simulation.",
-  "source": "Original reference-directed raster artwork. This package contains no SVG or separated reverse-face geometry."
+  "source": "Original raster artwork restyled using the revised main paper as a material reference; original canvas, text placement, motion weights and helper retained.",
+  "style": "Warm ivory and light tan, subtle cloudy wear and sparse age flecks; matched to paper_color_rgba.png.",
+  "validation": {
+    "canvas_unchanged": true,
+    "name_area_min_alpha": 252,
+    "silhouette_overlap_iou_with_original": 0.99372,
+    "motion_mask_unchanged": true,
+    "app_render_tested": false
+  }
 }

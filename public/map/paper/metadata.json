@@ -1,6 +1,6 @@
 {
-  "name": "Aged map paper with asymmetric worn corners",
-  "version": 2,
+  "name": "Softly aged balanced map paper",
+  "version": 3,
   "canvas_px": [
     1774,
     887
@@ -50,12 +50,6 @@
   "material_color": "#ffffff: avoid applying the previous yellow tint over the new colored texture",
   "cutout_scope": "Apply the same sheet mask to the paper-bound ink, ornaments, border and printed names, and to matching custom depth or shadow materials.",
   "geometry_note": "Corner losses are alpha cutouts. Retain the existing modeled curled corner. Additional lifting, thickness and realistic fold motion require geometry; not supplied by opacity.",
-  "content": "Blank paper only: mottling, foxing, water tidemarks, fibers, asymmetric wear and corner nicks; no ink or typography.",
-  "checks": {
-    "exact_opacity_extraction": true,
-    "unfolded_aspect_preserved": true,
-    "discarded_surface_at_alpha_0_5_pct": 3.689,
-    "app_integration_tested": false
-  },
+  "content": "Warm ivory and light tan paper with subtle wear and shallow corner nicks.",
   "resolution_note": "Native generated resolution; no upscaling was applied."
 }
