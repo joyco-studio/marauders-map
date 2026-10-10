@@ -134,7 +134,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     labels.forEach(label=>addText(label))
     const inscription=createInscription(disposer);mapScene.add(inscription.mesh)
     const notice=createInscription(disposer,arrivalMargin);mapScene.add(notice.mesh)
-    const statusQueue=new StatusQueue<Notice>({show:value=>notice.set(value),hide:()=>notice.set(null),isWritten:notice.isWritten,isHidden:notice.isHidden})
+    const statusQueue=new StatusQueue<Notice>({show:value=>notice.set(placeInscription(value)),hide:()=>notice.set(null),isWritten:notice.isWritten,isHidden:notice.isHidden})
     const key=addDrawing("artwork/ornaments/antique_key.svg",mapSize([76*12/7,36*12/7]),mapPoint([1645,1040]),24)
     reveals.push({ink:key.ink,timing:{start:1.8,duration:.9,seed:24}})
     const passage=addDrawing("artwork/architecture/pasaje_secreto.svg",mapSize([2400,1200]),mapPoint([1200,600]),31)
@@ -542,7 +542,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
     disposer.listen<WheelEvent>(canvas,"wheel",e=>{e.preventDefault();zoomBy(-e.deltaY*.001)},{passive:false})
-    const controls:MapControls={setInscription:value=>inscription.set(value),setNotice:value=>{if(value)statusQueue.enqueue(value)},setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
+    let nextGeneralSide:'left'|'right'='left'
+    const placeInscription=<T extends Inscription>(value:T):T=>{
+      const person=value.personId?journeys.actors.find(actor=>actor.person.id===value.personId):undefined
+      const side=person?(person.point[0]<700?'left':'right'):nextGeneralSide
+      if(!person)nextGeneralSide=side==='left'?'right':'left'
+      return {...value,side}
+    }
+    let writer:typeof inscription|null=null
+    const controls:MapControls={setInscription:value=>inscription.set(value?placeInscription(value):null),setNotice:value=>{if(value)statusQueue.enqueue(value)},setActivity:snapshot=>journeys.setActivity(snapshot),close:()=>change("close"),open:()=>change("open"),greet:greeting=>change(greeting),discover,zoom:zoomBy,resetView,setFocusedTrigger:target=>{suspended=false;focused=target;refreshHover()},dispose:()=>disposer.dispose()}
     if(new URLSearchParams(location.search).get("debug")==="true"){
       const {mountDebug}=await import("./debug");check()
       disposer.add(mountDebug(tuning,()=>{tuning.manual=false;reset();state={phase:"opening",enteredAt:time};syncPhase(state)}))
@@ -591,8 +599,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         if(previousValue!==f.value&&f.mesh.parent===coverOverlay)coverOverlayDirty=true
         f.opacity.value=.65*f.value
       }
-      inscription.update(dt)
-      if(state.phase==="exploring"){notice.update(dt);statusQueue.update(dt)}
+      if(writer&&!writer.isWriting())writer=null
+      if(!writer)writer=inscription.isWriting()?inscription:notice.isWriting()?notice:null
+      inscription.update(dt,writer===inscription)
+      if(state.phase==="exploring"){notice.update(dt,writer===notice);statusQueue.update(dt)}
       audio.update(state.phase==="opening"||state.phase==="closing",state.phase==="exploring"&&(inscription.isWriting()||notice.isWriting()))
       updateCover()
       if(coverDirty){composite(coverBase,coverScene,coverCamera);coverDirty=false;coverOverlayDirty=true}

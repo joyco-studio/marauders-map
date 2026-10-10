@@ -2,7 +2,7 @@ import { CanvasTexture, Mesh, MeshBasicNodeMaterial, PlaneGeometry, SRGBColorSpa
 import type { Disposer } from '@joycostudio/xyz'
 import { sheetPoint } from './data'
 
-export type Inscription = { title:string; lines:string[]; actions:{label:string; run:()=>void}[] }
+export type Inscription = { personId?:string; side?:'left'|'right'; title:string; lines:string[]; actions:{label:string; run:()=>void}[] }
 type Margin = { left:number; top:number; width:number; height:number }
 type WrittenLine = { text:string; size:number; y:number; width:number; start:number; duration:number; action?:number; revealed?:number; float?:number }
 
@@ -13,7 +13,8 @@ const identity=(value:Inscription|null)=>value?JSON.stringify([value.title,value
 const clamp=(value:number)=>Math.max(0,Math.min(1,value))
 
 /** Transparent lettering is written line by line into the paper's map texture. */
-export function createInscription(disposer:Disposer,margin:Margin=activityMargin) {
+export function createInscription(disposer:Disposer,initialMargin:Margin=activityMargin) {
+  let margin={...initialMargin}
   const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=Math.round(1000*margin.height/margin.width)
   const context=canvas.getContext('2d')!
   const ink=disposer.add(new CanvasTexture(canvas));ink.colorSpace=SRGBColorSpace
@@ -37,6 +38,9 @@ export function createInscription(disposer:Disposer,margin:Margin=activityMargin
     return result
   }
   const prepare=(value:Inscription)=>{
+    margin={...initialMargin,left:value.side==='left'?55:initialMargin.left}
+    const [sheetX,sheetY]=sheetPoint([margin.left+margin.width/2,margin.top+margin.height/2])
+    mesh.position.set(sheetX,sheetY,.12)
     current=value;rows=[];hoveredAction=undefined;elapsed=0;duration=0;phase='writing';mesh.visible=true
     let size=100
     const measure=()=>{
@@ -106,7 +110,7 @@ export function createInscription(disposer:Disposer,margin:Margin=activityMargin
       const y=point?(point.y-margin.top)/margin.height*canvas.height:-1
       hoveredAction=phase==='erasing'?undefined:rows.find(row=>row.action!==undefined&&x>=30&&x<=30+row.width&&y>=row.y-row.size&&y<=row.y+row.size*.2&&(phase==='visible'||elapsed>=row.start+row.duration))?.action
     },
-    update(dt:number){
+    update(dt:number,allowWriting=true){
       motionTime+=dt
       let floating=false,settling=false
       for(const row of rows){
@@ -119,6 +123,7 @@ export function createInscription(disposer:Disposer,margin:Margin=activityMargin
       }
       if(phase==='hidden')return
       if(phase==='visible'){if(floating||settling)draw();return}
+      if(phase==='writing'&&!allowWriting)return
       elapsed+=dt
       if(phase==='erasing'&&elapsed>=.55){
         const next=pending;pending=null;current=null;rows=[]

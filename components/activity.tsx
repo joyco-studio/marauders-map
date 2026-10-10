@@ -111,7 +111,7 @@ export function ActivityNotice({activity,controls,ready}:{activity:ActivityState
       const person=roster.find(person=>person.id===arrival.personId)
       if(!person)continue
       const title=arrivalInscription(person.shortName,arrival.event),detail=briefTitle(arrival.event.title)
-      map.setNotice({key:arrival.key,title,lines:[detail],actions:[],onShown:()=>setDisplayed({title,detail}),onRemoved:()=>setDisplayed(null)})
+      map.setNotice({key:arrival.key,personId:person.id,title,lines:[detail],actions:[],onShown:()=>setDisplayed({title,detail}),onRemoved:()=>setDisplayed(null)})
     }
     consumeAnnouncements(announcements.map(message=>message.key))
   },[controls,ready,announcements,consumeAnnouncements])
@@ -140,6 +140,7 @@ export function ActivityCard({activity,controls,ready}:{activity:ActivityState;c
     const links=url?[{label:`View on ${providerName(event!.source)}`,run:()=>{window.open(url,'_blank','noopener,noreferrer')}}]:[]
     const map=controls.current
     map?.setInscription({
+      personId:person.id,
       title:person.name,
       lines:event?[
         briefTitle(event.title),
