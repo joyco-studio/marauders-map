@@ -90,8 +90,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const textHandles:TextHandle<TextEffect>[]=[]
     const addText=(spec:Label,parent:Scene=mapScene,always=false,magical=false) => {
       const heading=parent===coverScene&&spec.heading
-      const font=magical?assets.font.bethEllen:heading?assets.font.cinzel:assets.font.tangerine
-      const atlas=getTexture(magical?"fonts/beth-ellen-400.png":heading?"fonts/cinzel-600.png":"fonts/tangerine-700.png")
+      const font=magical?assets.font.bethEllen:heading?assets.font.fondamento:assets.font.tangerine
+      const atlas=getTexture(magical?"fonts/beth-ellen-400.png":heading?"fonts/fondamento-italic-400.png":"fonts/tangerine-700.png")
       const text=heading?spec.text.toUpperCase():spec.text
       // Tangerine has a lower x-height; enlarge the script without moving its anchors.
       const scale=spec.size*(magical?1.25:heading?1:1.65)/font.size/100

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @font-face { font-family: "Tangerine"; src: url("/map/fonts/tangerine-bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Cinzel"; src: url("/map/fonts/cinzel.ttf") format("truetype"); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: "Fondamento"; src: url("/map/fonts/fondamento-italic.ttf") format("truetype"); font-weight: 400; font-style: italic; font-display: swap; }
 :root { color-scheme: dark; font-family: "Tangerine", cursive; font-weight: 700; color: #ddc89c; background: #151714; }
 * { box-sizing: border-box; }
 body { margin: 0; overflow: hidden; }
