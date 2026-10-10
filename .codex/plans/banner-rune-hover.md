@@ -11,3 +11,7 @@ Implemented warm gold lettering, an amber MSDF halo, a gentle brightness pulse, 
 ## Contrast and deployment correction
 
 Keep hovered glyph cores dark brown for legibility on pale parchment; put the golden illumination only in the softer outer halo. Include the living-banner adapter, vendored helper and type declarations, metadata, artwork, motion mask, and voice assets in Git before pushing the deployment fix. Validate the production build and tracked runtime asset completeness.
+
+## Beth Ellen and fire-orange revision
+
+Bake Beth Ellen locally with its Google Fonts OFL license and load its metrics and MSDF atlas through the existing scene registry. Apply it only to person name tags, retaining proportional banner fitting. On hover, transition the complete glyph fill to vivid fire orange, with a brighter soft orange distance-field halo; remove the dark-core styling.

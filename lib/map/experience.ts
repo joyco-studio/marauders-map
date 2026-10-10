@@ -90,15 +90,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const textHandles:TextHandle<TextEffect>[]=[]
     const addText=(spec:Label,parent:Scene=mapScene,always=false,magical=false) => {
       const heading=parent===coverScene&&spec.heading
-      const font=heading?assets.font.cinzel:assets.font.tangerine
-      const atlas=getTexture(heading?"fonts/cinzel-400.png":"fonts/tangerine-700.png")
+      const font=magical?assets.font.bethEllen:heading?assets.font.cinzel:assets.font.tangerine
+      const atlas=getTexture(magical?"fonts/beth-ellen-400.png":heading?"fonts/cinzel-400.png":"fonts/tangerine-700.png")
       const text=heading?spec.text.toUpperCase():spec.text
       // Tangerine has a lower x-height; enlarge the script without moving its anchors.
-      const scale=spec.size*(heading?1:1.65)/font.size/100
+      const scale=spec.size*(magical?1.25:heading?1:1.65)/font.size/100
       const metrics=layout(font,text,{align:"center"})
       const measured=createInk(metrics.width*scale,metrics.height*scale,spec.center[0]*.07,noise)
       const glow=uniform(0)
-      if(magical)measured.effect.stages!.color=()=>mix(measured.pigment,color("#38200b"),glow)
+      if(magical)measured.effect.stages!.color=()=>mix(measured.pigment,color("#e84a08"),glow)
       const handle=createText({font,map:atlas,text,layout:{align:"center"},geometry:{scale},material:{fill:"#593724",effect:measured.effect}})
       const [x,y]=sheetPoint(spec.center)
       handle.mesh.position.set(x,y,.04)
@@ -152,9 +152,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       title.handle.mesh.renderOrder=3+index*2
       // Soft MSDF halo follows the letters, rather than illuminating the whole tag.
       const haloMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
-      const glyphDistance=msdfDistance({msdf:texture(getTexture("fonts/tangerine-700.png"))})
-      haloMaterial.colorNode=color("#efa820")
-      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(.4).mul(title.ink.progress)
+      const glyphDistance=msdfDistance({msdf:texture(getTexture("fonts/beth-ellen-400.png"))})
+      haloMaterial.colorNode=color("#ff6b13")
+      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(.75).mul(title.ink.progress)
       const halo=new Mesh(title.handle.mesh.geometry,haloMaterial)
       halo.renderOrder=2.5+index*2;mapScene.add(halo)
       const safe=bannerMetadata.safe_text_box
@@ -600,7 +600,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
         if(visible)actor.updateBanner(time,appearance.progress)
-        const glowTarget=visible&&hoveredPerson===simulation.person.id ? .92+.08*Math.sin(time*3+index):0
+        const glowTarget=visible&&hoveredPerson===simulation.person.id ? 1:0
         actor.title.glow.value+=(glowTarget-actor.title.glow.value)*(1-Math.exp(-dt*9))
         actor.halo.visible=visible&&actor.title.glow.value>.001
         actor.halo.position.copy(actor.title.handle.mesh.position)
