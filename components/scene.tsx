@@ -8,7 +8,7 @@ import type { MapControls, Status } from "@/lib/map/experience"
 
 const initial:Status={phase:"loading",progress:0,discovered:false,backend:""}
 const descriptions:Record<Status["phase"],string>={
-  loading:"Preparing the parchment",enchanting:"The wand is enchanting the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Click the parchment to cast the oath, then press it again to unfold.",error:"The interactive map could not open",
+  loading:"Preparing the parchment",enchanting:"The wand is enchanting the parchment",opening:"The parchment is unfolding",revealing:"Ink is finding its way through the parchment",exploring:"The map is open. Drag to pan, scroll or pinch to zoom. Find the key to reveal a secret passage.",returning:"The map is returning to its full view",erasing:"Enough experimenting. For now. The ink is disappearing",closing:"The parchment is folding itself closed",folded:"The map is folded. Click the parchment to cast the oath, then press it again to unfold.",error:"The interactive map could not open",
 }
 export function Scene() {
   const container=useRef<HTMLDivElement>(null)

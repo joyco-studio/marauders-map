@@ -13,7 +13,7 @@ test("the whole folded paper casts the oath then opens after the welcome",()=>{
   assert.equal(resolveTrigger(null,state("folded","welcome"),false),null)
 })
 test("transitions have no triggers",()=>{
-  for(const phase of ["loading","enchanting","opening","revealing","erasing","closing"] as const)
+  for(const phase of ["loading","enchanting","opening","revealing","returning","erasing","closing"] as const)
     for(const p of [{x:700,y:288},{x:700,y:653},point("passage")])assert.equal(resolveTrigger(p,state(phase),false),null)
 })
 test("passage eligibility and closing spell outside the map",()=>{
