@@ -1,19 +1,19 @@
 /** Bounds and name centers in map-scene units; priority is the original draw order. */
 export type NameTag = {
   id:string; x:number; y:number; width:number; height:number
-  nameX:number; nameY:number; nameWidth:number; nameHeight:number
+  nameX:number; nameY:number; bodyX:number; bodyY:number; bodyWidth:number; bodyHeight:number
   priority:number; visible:boolean; interactive:boolean
 }
 
 export const NAME_TAG_OPACITY=.3
-export const NAME_TAG_OVERLAP=.65
+export const NAME_TAG_OVERLAP=.2
 
-/** Ignore transparent artwork margins and curls: only substantial name-area coverage counts. */
+/** Ignore transparent artwork margins and curls: only the central parchment bodies count. */
 function overlaps(a:NameTag,b:NameTag):boolean {
-  const width=Math.max(0,Math.min(a.nameX+a.nameWidth/2,b.nameX+b.nameWidth/2)-Math.max(a.nameX-a.nameWidth/2,b.nameX-b.nameWidth/2))
-  const height=Math.max(0,Math.min(a.nameY+a.nameHeight/2,b.nameY+b.nameHeight/2)-Math.max(a.nameY-a.nameHeight/2,b.nameY-b.nameHeight/2))
-  const area=Math.min(a.nameWidth*a.nameHeight,b.nameWidth*b.nameHeight)
-  return area>0&&width*height/area>=NAME_TAG_OVERLAP
+  const width=Math.max(0,Math.min(a.bodyX+a.bodyWidth/2,b.bodyX+b.bodyWidth/2)-Math.max(a.bodyX-a.bodyWidth/2,b.bodyX-b.bodyWidth/2))
+  const height=Math.max(0,Math.min(a.bodyY+a.bodyHeight/2,b.bodyY+b.bodyHeight/2)-Math.max(a.bodyY-a.bodyHeight/2,b.bodyY-b.bodyHeight/2))
+  const area=Math.min(a.bodyWidth*a.bodyHeight,b.bodyWidth*b.bodyHeight)
+  return area>0&&width*height/area+1e-9>=NAME_TAG_OVERLAP
 }
 
 /** Only direct neighbors collide: a distant member of a chain never steals priority. */

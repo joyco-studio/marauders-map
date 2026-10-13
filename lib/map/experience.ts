@@ -22,7 +22,7 @@ import { paperShape } from "./paper-shape"
 import { createWand } from "./wand"
 import { StatusQueue, type StatusMessage } from "./status-queue"
 import { createInscription, arrivalMargin, type Inscription } from "./inscription"
-import { createLivingBanner, readMotionPixels, bannerMetadata } from "./living-banner"
+import { createLivingBanner, readMotionPixels, bannerMetadata, bannerBodyBox } from "./living-banner"
 import { easeNameTagOpacity, nameTagAt, nameTagOpacities, type NameTag } from "./name-tags"
 import { ActorPresentation } from "../activity/presentation"
 import { MAX_RENDERED_PEOPLE } from "../activity/roster"
@@ -203,7 +203,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         return {...drawing,born:-100}
       })
       const tag:NameTag={id:simulation.person.id,x:0,y:0,width:bannerWidth,height:bannerHeight,nameX:0,nameY:0,
-        nameWidth:safeWidth*bannerWidth,nameHeight:safeHeight*bannerHeight,priority:index,visible:false,interactive:false}
+        bodyX:0,bodyY:0,bodyWidth:(bannerBodyBox[2]-bannerBodyBox[0])*bannerWidth,bodyHeight:(bannerBodyBox[3]-bannerBodyBox[1])*bannerHeight,priority:index,visible:false,interactive:false}
       return {simulation,title,halo,banner,bannerInk,footprints,step:0,lastStep:0,textOffset,tag,updateBanner:living.update}
     })
     const nameTags=actors.map(actor=>actor.tag)
@@ -664,6 +664,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
         Object.assign(actor.tag,{x:actor.banner.position.x,y:actor.banner.position.y,nameX:labelX,nameY:labelY,visible,
+          bodyX:actor.banner.position.x+((bannerBodyBox[0]+bannerBodyBox[2])/2-.5)*actor.tag.width,
+          bodyY:actor.banner.position.y+((bannerBodyBox[1]+bannerBodyBox[3])/2-.5)*actor.tag.height,
           interactive:(simulation.eligible||simulation===journeys.visitor)&&appearance.phase==="shown"})
       }
       hoveredPerson=!suspended&&(!pointers.size||engagedPerson)&&latest?actorAt(latest.x,latest.y):undefined

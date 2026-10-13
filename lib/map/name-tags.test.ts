@@ -3,21 +3,42 @@ import { test } from 'node:test'
 import { easeNameTagOpacity, nameTagAt, nameTagOpacities, type NameTag } from './name-tags'
 
 const tag=(id:string,x:number,priority:number,extra:Partial<NameTag>={}):NameTag=>({
-  id,x,y:0,width:1,height:.5,nameX:x,nameY:0,nameWidth:1,nameHeight:.5,priority,visible:true,interactive:true,...extra,
+  id,x,y:0,width:1,height:.5,nameX:x,nameY:0,bodyX:x,bodyY:0,bodyWidth:1,bodyHeight:.5,priority,visible:true,interactive:true,...extra,
 })
 
-test('fading needs 65% name-area coverage, ignoring transparent margins and slight overlaps',()=>{
+test('screenshot: Akella fades beneath Anderson while fabroos and Anderson stay opaque',()=>{
+  // Central paper rectangles estimated from the supplied 466 x 442 screenshot.
+  const tags=[
+    tag('akella',246,4,{bodyY:333,bodyWidth:185,bodyHeight:59}),
+    tag('anderson',250,5,{bodyY:282,bodyWidth:240,bodyHeight:77}),
+    tag('fabroos',250,9,{bodyY:143,bodyWidth:260,bodyHeight:84}),
+  ]
+  assert.deepEqual(nameTagOpacities(tags),[.3,1,1])
+  assert.deepEqual(nameTagOpacities(tags,'akella'),[1,.3,1])
+})
+
+test('screenshot: the rear tag fades behind sunag despite offset name centers',()=>{
+  // The rear panel is mostly behind sunag, with its right edge still visible.
+  const tags=[
+    tag('rear',303,0,{bodyY:113,bodyWidth:204,bodyHeight:78}),
+    tag('sunag',232,1,{bodyY:109,bodyWidth:220,bodyHeight:82}),
+  ]
+  assert.deepEqual(nameTagOpacities(tags),[.3,1])
+  assert.deepEqual(nameTagOpacities(tags,'rear'),[1,.3])
+})
+
+test('fading needs 20% central paper coverage, ignoring transparent margins and slight overlaps',()=>{
   const back=tag('back',0,0,{width:4,height:3})
   assert.deepEqual(nameTagOpacities([back,tag('front',1.06,1)]),[1,1])
-  assert.deepEqual(nameTagOpacities([back,tag('front',.351,1)]),[1,1])
-  assert.deepEqual(nameTagOpacities([back,tag('front',.35,1)]),[.3,1])
-  assert.deepEqual(nameTagOpacities([back,tag('front',0,1,{nameY:.176})]),[1,1])
-  assert.deepEqual(nameTagOpacities([back,tag('front',0,1,{nameY:.175})]),[.3,1])
-  assert.deepEqual(nameTagOpacities([back,tag('front',.2,1,{nameY:.1})]),[1,1],'diagonal coverage is only 64%')
+  assert.deepEqual(nameTagOpacities([back,tag('front',.801,1)]),[1,1])
+  assert.deepEqual(nameTagOpacities([back,tag('front',.8,1)]),[.3,1])
+  assert.deepEqual(nameTagOpacities([back,tag('front',0,1,{bodyY:.401})]),[1,1])
+  assert.deepEqual(nameTagOpacities([back,tag('front',0,1,{bodyY:.4})]),[.3,1])
+  assert.deepEqual(nameTagOpacities([back,tag('front',.6,1,{bodyY:.26})]),[1,1],'diagonal coverage is only 19.2%')
 })
 
-test('a smaller name area being covered counts even when banner sizes differ',()=>{
-  const back=tag('back',0,0,{nameWidth:.4,nameHeight:.2})
+test('a smaller paper body being covered counts even when banner sizes differ',()=>{
+  const back=tag('back',0,0,{bodyWidth:.4,bodyHeight:.2})
   assert.deepEqual(nameTagOpacities([back,tag('front',.3,1)]),[.3,1])
 })
 
@@ -33,7 +54,7 @@ test('hover promotes a covered tag, dims its neighbors, and resets on leave',()=
 })
 
 test('hover does not propagate through a chain to a nonintersecting tag',()=>{
-  const tags=[tag('a',0,0),tag('b',.3,1),tag('c',.6,2)]
+  const tags=[tag('a',0,0),tag('b',.6,1),tag('c',1.2,2)]
   assert.deepEqual(nameTagOpacities(tags,'a'),[1,.3,1])
   assert.deepEqual(nameTagOpacities(tags,'b'),[.3,1,.3])
 })

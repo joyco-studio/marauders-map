@@ -3,6 +3,8 @@ import metadata from "../../public/map/artwork/living-banner/metadata.json"
 import { createLivingBanner as create } from "./vendor/living-banner.mjs"
 
 export const bannerMetadata=metadata
+// Central paper panel in bottom-left UVs, excluding the rolled ends and empty canvas.
+export const bannerBodyBox=[.12,.34,.87,.66] as const
 
 /** Read numerical mask bytes once; never apply the artwork's sRGB conversion. */
 export function readMotionPixels(texture: THREE.Texture): ImageData {
