@@ -175,7 +175,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const safeWidth=safe[2]-safe[0],safeHeight=safe[3]-safe[1]
       // Preserve artwork proportions; fit the name inside its protected rectangle.
       const fitText=.8
-      const minBannerWidth=1.25,bannerGrowth=.55 // Lower growth makes all longer names more compact.
+      const minBannerWidth=1.25,bannerGrowth=.33 // Lower growth makes all longer names more compact.
       const naturalWidth=Math.max(minBannerWidth,(title.width*fitText+.10)/safeWidth,(title.height*fitText+.035)/(safeHeight*.75))
       const bannerWidth=minBannerWidth+(naturalWidth-minBannerWidth)*bannerGrowth
       const bannerHeight=bannerWidth*.75
