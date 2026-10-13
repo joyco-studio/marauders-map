@@ -107,3 +107,31 @@ test("welcome auto-opens after three seconds, while an early click cancels the d
   const closed=advance(transition({phase:"exploring",enteredAt:0,greeting:"welcome"},"close",10),14)
   assert.equal(shouldAutoOpen(closed,100),false)
 })
+
+
+test("a zoomed or panned map returns before erasing and folding",()=>{
+  const exploring:MapState={phase:"exploring",enteredAt:0,greeting:"welcome"}
+  const returning=transition(exploring,"close",10,true)
+  assert.deepEqual(returning,{phase:"returning",enteredAt:10,greeting:"welcome"})
+  assert.equal(advance(returning,10.59).phase,"returning")
+  assert.deepEqual(advance(returning,10.6),{phase:"erasing",enteredAt:10.6,greeting:"welcome"})
+  assert.equal(advance(returning,11.59).phase,"erasing")
+  assert.equal(advance(returning,11.6).phase,"closing")
+  assert.deepEqual(advance(returning,14.6),{phase:"folded",enteredAt:14.6})
+})
+
+test("closing the default view erases immediately without a return delay",()=>{
+  const exploring:MapState={phase:"exploring",enteredAt:0,greeting:"welcome"}
+  const erasing=transition(exploring,"close",10,false)
+  assert.deepEqual(erasing,{phase:"erasing",enteredAt:10,greeting:"welcome"})
+  assert.deepEqual(transition(exploring,"close",10),erasing)
+  assert.equal(advance(erasing,11).phase,"closing")
+})
+
+test("commands during the return cannot restart or interrupt closing",()=>{
+  const returning=transition({phase:"exploring",enteredAt:0},"close",10,true)
+  for(const command of ["close","open","welcome"] as const){
+    assert.equal(transition(returning,command,10.3,true),returning)
+  }
+  assert.deepEqual(advance(returning,100),{phase:"folded",enteredAt:14.6})
+})
