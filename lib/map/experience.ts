@@ -202,7 +202,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
       })
-      const tag:NameTag={id:simulation.person.id,x:0,y:0,width:bannerWidth,height:bannerHeight,nameX:0,nameY:0,priority:index,visible:false,interactive:false}
+      const tag:NameTag={id:simulation.person.id,x:0,y:0,width:bannerWidth,height:bannerHeight,nameX:0,nameY:0,
+        nameWidth:safeWidth*bannerWidth,nameHeight:safeHeight*bannerHeight,priority:index,visible:false,interactive:false}
       return {simulation,title,halo,banner,bannerInk,footprints,step:0,lastStep:0,textOffset,tag,updateBanner:living.update}
     })
     const nameTags=actors.map(actor=>actor.tag)
@@ -492,8 +493,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       return {x:(panel.index+intersection.uv.x)*280,y:(1-intersection.uv.y)*700,point:intersection.point}
     }
     let latest:{x:number;y:number}|null=null,hover:Trigger|null=null,focused:FocusedTrigger|null=null,suspended=false
-    let hoveredPerson:string|undefined,pressedPerson:string|undefined
-    const clearHover=()=>{coverOverlayDirty=true;hover=null;hoveredPerson=undefined;for(const f of feedback){f.value=0;f.opacity.value=0}}
+    let hoveredPerson:string|undefined,pressedPerson:string|undefined,engagedPerson:string|undefined
+    const clearTriggerHover=()=>{coverOverlayDirty=true;hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
+    const clearHover=()=>{clearTriggerHover();hoveredPerson=engagedPerson=undefined}
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       inscription.setHovered(!suspended&&!pointers.size?point:null)
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
@@ -506,22 +508,22 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(state.phase!=="exploring")return
       const p=hit(clientX,clientY);if(!p)return
       // Controls retain priority even when a tag is temporarily promoted.
-      if(resolveTrigger(p,state,discovered))return
-      return nameTagAt(nameTags,{x:(p.x-700)/100,y:(350-p.y)/100},preferred)
+      if(resolveTrigger(p,state,discovered)||inscription.hit(p))return
+      return nameTagAt(nameTags,{x:(p.x-700)/100,y:(350-p.y)/100},preferred,engagedPerson)
     }
     const pointers=new Map<number,{x:number;y:number}>()
     let dragDistance=0,startX=0,startY=0,pinch=0
     disposer.listen<PointerEvent>(canvas,"pointerdown",e=> {
       if(state.phase!=="exploring"&&state.phase!=="folded")return
-      pressedPerson=actorAt(e.clientX,e.clientY)
-      clearHover();latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
+      engagedPerson=pressedPerson=actorAt(e.clientX,e.clientY)
+      clearTriggerHover();latest={x:e.clientX,y:e.clientY};suspended=false
       const touch=hit(e.clientX,e.clientY);if(touch){wand.aim(touch.point);cast()}
       if(touch&&state.phase==="folded"&&state.greeting){change("open");return}
       canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});startX=e.clientX;startY=e.clientY;dragDistance=0
       if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}
     })
     disposer.listen<PointerEvent>(window,"pointermove",e=> {
-      latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
+      latest=e.pointerType!=="touch"||pointers.has(e.pointerId)?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY)
       wandHover=e.pointerType!=="touch"
       const aim=new Vector3()
@@ -538,7 +540,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
           const units=2*(baseDistance/zoom)*Math.tan(35*Math.PI/360)/container.clientHeight
           panX=targetPanX=clamp(panX-dx*units,-3.5,3.5);panY=targetPanY=clamp(panY+dy*units,-1.8,1.8);updateCamera()
         }
-        clearHover()
+        clearTriggerHover()
       }else refreshHover(touch)
     })
     disposer.listen<PointerEvent>(canvas,"pointerup",e=> {
@@ -547,6 +549,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)
       const preferred=pressedPerson;pressedPerson=undefined
       const point=hit(e.clientX,e.clientY)
+      if(e.pointerType==="touch")latest=null
       if(dragDistance<=6&&!pointers.size){
         if(inscription.hit(point,true)){refreshHover(point);return}
         const spot=resolveTrigger(point,state,discovered)
@@ -663,7 +666,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         Object.assign(actor.tag,{x:actor.banner.position.x,y:actor.banner.position.y,nameX:labelX,nameY:labelY,visible,
           interactive:(simulation.eligible||simulation===journeys.visitor)&&appearance.phase==="shown"})
       }
-      hoveredPerson=!suspended&&!pointers.size&&latest?actorAt(latest.x,latest.y):undefined
+      hoveredPerson=!suspended&&(!pointers.size||engagedPerson)&&latest?actorAt(latest.x,latest.y):undefined
+      if(hoveredPerson!==engagedPerson)engagedPerson=undefined
       const opacities=nameTagOpacities(nameTags,hoveredPerson)
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index],visible=actor.tag.visible
