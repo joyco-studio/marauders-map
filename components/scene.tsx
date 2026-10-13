@@ -17,7 +17,7 @@ export function Scene() {
   const [attempt,setAttempt]=useState(0)
   const [ready,setReady]=useState(false)
   const exploring=status.phase==="exploring"
-  const activity=useActivity(controls,ready,exploring)
+  const activity=useActivity(controls,ready,exploring,status.visitorId)
   const {select,arrive,dismiss}=activity
   const onMapStatus=useCallback((next:Status)=>{
     setStatus(next)

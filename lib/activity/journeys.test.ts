@@ -45,7 +45,7 @@ test('arrivals pause six seconds and return home; home events briefly retrace a 
   assert.equal(sim.actors[0].journey,undefined);assert.deepEqual(sim.actors[0].point,home)
 })
 test('JOYCO eligibility excludes cold failures and expires exactly at the boundary',()=>{
-  const person=roster[7]
+  const person=roster.find(person=>person.id==='alejopequeno')!
   assert.equal(eligible(person,[],now),false)
   assert.equal(eligible(person,[event('a',person.id,WINDOW_MS-1)],now),true)
   assert.equal(eligible(person,[event('a',person.id,WINDOW_MS)],now),false)
@@ -53,10 +53,10 @@ test('JOYCO eligibility excludes cold failures and expires exactly at the bounda
   assert.equal(eligible(roster[0],[],now),true)
 })
 test('stale eligibility expires during a journey, finishes, hides, and re-enters once',()=>{
-  const sim=new ActivityJourneys(),id=roster[7].id,old=event('old',id,WINDOW_MS-1000)
+  const sim=new ActivityJourneys(),id='alejopequeno',old=event('old',id,WINDOW_MS-1000)
   sim.setActivity(snapshot([old]),now)
-  sim.tick(15,true,now)
-  const actor=sim.actors[7];assert.ok(actor.journey)
+  const actor=sim.actors.find(actor=>actor.person.id===id)!
+  sim.tick(actor.delay+.1,true,now);assert.ok(actor.journey)
   sim.tick(.1,true,now+1000)
   assert.equal(actor.eligible,false);assert.equal(actor.visible,true);assert.equal(actor.queue.length,0)
   for(let i=0;i<200;i++)sim.tick(1,true,now+1000)
@@ -68,7 +68,7 @@ test('stale eligibility expires during a journey, finishes, hides, and re-enters
 })
 test('unavailable cold snapshots do not consume initial staging or reveal JOYCO',()=>{
   const sim=new ActivityJourneys();sim.setActivity({mode:'activity',fetchedAt:new Date(now).toISOString(),events:[],sources:[]},now)
-  assert.equal(sim.actors.filter(a=>a.visible).length,7)
+  assert.equal(sim.actors.filter(a=>a.visible).length,roster.filter(p=>p.group==='ecosystem').length)
   sim.setActivity(snapshot([event('old'),event('new','mrdoob',1)]),now)
   assert.deepEqual(sim.actors[0].queue.map(e=>e.id),['new'])
 })
@@ -216,4 +216,76 @@ test('new activity during ordinary idle roaming waits for the loop and replays e
     arrivals.push(...sim.arrivals.filter(arrival=>arrival.personId===actor.person.id).map(arrival=>arrival.event.id))
   }
   assert.deepEqual(arrivals,['during-idle'])
+})
+
+test('passage reveals one hidden maker with an extra slot and pauses for entrance',async()=>{
+  const { passageMidpoint }=await import('./navigation')
+  const sim=new ActivityJourneys(8,()=>0),id='alejopequeno'
+  const visitor=sim.revealPassage([id])!
+  assert.equal(visitor.person.id,id);assert.equal(visitor.eligible,false)
+  assert.deepEqual(visitor.point,passageMidpoint)
+  assert.equal(sim.actors.filter(actor=>actor.rendered).length,9)
+  assert.equal(sim.revealPassage(['fabroos']),visitor)
+  sim.tick(.4,true,now);assert.deepEqual(visitor.point,passageMidpoint)
+  sim.tick(.4,true,now);assert.deepEqual(visitor.point,passageMidpoint)
+  sim.tick(.1,true,now);assert.notDeepEqual(visitor.point,passageMidpoint)
+  const paused=visitor.point;sim.tick(10,false,now);assert.deepEqual(visitor.point,paused)
+})
+test('passage visitor reaches a room continuously, then roams without fabricated arrivals',()=>{
+  const sim=new ActivityJourneys(8,()=>.5),visitor=sim.revealPassage(['alejopequeno'])!
+  for(let frame=0;frame<1000&&visitor.passage;frame++) {
+    const previous=visitor.point;sim.tick(.1,true,now)
+    assert.ok(Math.hypot(visitor.point[0]-previous[0],visitor.point[1]-previous[1])<=2.60001)
+    assert.equal(sim.arrivals.length,0)
+  }
+  assert.equal(visitor.passage,undefined)
+  assert.deepEqual(visitor.point,roomObjective(visitor.person,visitor.base!))
+  sim.tick(.1,true,now);assert.ok(visitor.wander)
+  assert.equal(visitor.eligible,false);assert.equal(visitor.rendered,true)
+  for(let frame=0;frame<1000&&visitor.wander;frame++)sim.tick(.1,true,now)
+  assert.equal(visitor.wander,undefined)
+  assert.deepEqual(visitor.point,roomObjective(visitor.person,visitor.base!))
+  sim.resetPassage()
+  assert.equal(sim.visitor,undefined);assert.equal(visitor.base,undefined)
+  assert.equal(visitor.visible,false);assert.equal(visitor.rendered,false)
+  assert.deepEqual(visitor.point,roomObjective(visitor.person,visitor.person.home))
+  assert.ok(sim.revealPassage(['fabroos']))
+})
+test('real activity waits for the passage walk and starts at the temporary base',()=>{
+  const sim=new ActivityJourneys(8,()=>.5),visitor=sim.revealPassage(['alejopequeno'])!
+  sim.tick(.2,true,now)
+  const incoming=event('passage-code',visitor.person.id)
+  sim.setActivity(snapshot([incoming]),now)
+  assert.ok(visitor.delay<=.5)
+  for(let frame=0;frame<1000&&visitor.passage;frame++) {
+    sim.tick(.1,true,now)
+    assert.equal(visitor.journey,undefined)
+    assert.deepEqual(visitor.queue.map(e=>e.id),[incoming.id])
+  }
+  const base=visitor.base!
+  assert.deepEqual(visitor.point,roomObjective(visitor.person,base))
+  sim.tick(.1,true,now)
+  assert.equal(visitor.journey?.event.id,incoming.id)
+  assert.deepEqual(visitor.journey?.path[0],roomObjective(visitor.person,base))
+  sim.resetPassage()
+  assert.equal(visitor.journey,undefined);assert.equal(visitor.queue[0].id,incoming.id)
+  assert.equal(visitor.base,undefined);assert.equal(visitor.eligible,true)
+})
+test('discovery ignores an empty hidden candidate list',()=>{
+  const sim=new ActivityJourneys()
+  assert.equal(sim.revealPassage([]),undefined)
+  assert.equal(sim.visitor,undefined)
+})
+
+test('revealing or resetting a maker does not replay an already announced arrival',()=>{
+  const sim=new ActivityJourneys(8,()=>0),id='alejopequeno'
+  sim.setActivity(snapshot([event('already-arrived',id)]),now)
+  const actor=sim.actors.find(actor=>actor.person.id===id)!
+  sim.tick(actor.delay+.1,true,now)
+  for(let frame=0;frame<1000&&actor.journey?.phase!=='arrival';frame++)sim.tick(.1,true,now)
+  assert.equal(actor.journey?.phase,'arrival')
+  sim.revealPassage([id])
+  assert.equal(actor.queue.length,0)
+  sim.resetPassage()
+  assert.equal(actor.queue.length,0)
 })

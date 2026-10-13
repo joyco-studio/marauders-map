@@ -6,7 +6,9 @@ import { eligible, eventDestination, arrivalInscription } from '@/lib/activity/j
 import { recentEvents, REFRESH_MS, safeActivityUrl, type ActivityEvent, type ActivitySnapshot } from '@/lib/activity/types'
 import type { MapControls } from '@/lib/map/experience'
 
-export function useActivity(controls:React.RefObject<MapControls|null>, ready:boolean, exploring:boolean) {
+export function useActivity(controls:React.RefObject<MapControls|null>, ready:boolean, exploring:boolean, visitorId?:string) {
+  const visitorRef=useRef(visitorId)
+  useEffect(()=>{visitorRef.current=visitorId},[visitorId])
   const [snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null)
   const [now,setNow]=useState(()=>Date.now())
   const [selected,setSelected]=useState<string|null>(null)
@@ -53,7 +55,7 @@ export function useActivity(controls:React.RefObject<MapControls|null>, ready:bo
         snapshotRef.current=value;setSnapshot(value);setNow(Date.now());setUnavailable(false)
         controls.current?.setActivity(value)
         const chosen=roster.find(p=>p.id===selectedRef.current)
-        if(chosen&&!eligible(chosen,value.events,Date.now()))dismiss()
+        if(chosen&&chosen.id!==visitorRef.current&&!eligible(chosen,value.events,Date.now()))dismiss()
       } catch {
         if(!controller.signal.aborted)setUnavailable(true)
       } finally {
@@ -74,13 +76,13 @@ export function useActivity(controls:React.RefObject<MapControls|null>, ready:bo
       if(document.hidden)return
       const time=Date.now();setNow(time)
       const chosen=roster.find(p=>p.id===selectedRef.current)
-      if(chosen&&!eligible(chosen,snapshotRef.current?.events??[],time))dismiss()
+      if(chosen&&chosen.id!==visitorRef.current&&!eligible(chosen,snapshotRef.current?.events??[],time))dismiss()
     }
     const timer=setInterval(update,1000)
     document.addEventListener('visibilitychange',update)
     return ()=>{clearInterval(timer);document.removeEventListener('visibilitychange',update)}
   },[ready,dismiss])
-  return {snapshot,now,selected:exploring?selected:null,select,dismiss,arrive,announcements:exploring?announcements:[],consumeAnnouncements,unavailable,refreshing,refresh:()=>refreshRef.current()}
+  return {snapshot,now,visitorId,selected:exploring?selected:null,select,dismiss,arrive,announcements:exploring?announcements:[],consumeAnnouncements,unavailable,refreshing,refresh:()=>refreshRef.current()}
 }
 export type ActivityState=ReturnType<typeof useActivity>
 const providerName=(source:string)=>source==='github'?'GitHub':'YouTube'
@@ -95,7 +97,7 @@ function age(date:string,now:number) {
 }
 export function ActivityRoster({activity}:{activity:ActivityState}) {
   return <>
-    {roster.filter(p=>eligible(p,activity.snapshot?.events??[],activity.now)).map(person=><button key={person.id} onClick={()=>activity.select(person.id)}>{person.name}</button>)}
+    {roster.filter(p=>p.id===activity.visitorId||eligible(p,activity.snapshot?.events??[],activity.now)).map(person=><button key={person.id} onClick={()=>activity.select(person.id)}>{person.name}</button>)}
     <button disabled={activity.refreshing} onClick={activity.refresh}>{activity.refreshing?'Gathering activity…':'Refresh public activity'}</button>
   </>
 }

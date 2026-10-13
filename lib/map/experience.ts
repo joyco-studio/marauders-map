@@ -1,3 +1,4 @@
+import { createPathDebug } from "./path-debug"
 import { createMapAudio } from "./audio"
 import { Disposer, edge } from "@joycostudio/xyz"
 import { Warmup } from "@joycostudio/xyz/three"
@@ -28,7 +29,7 @@ import { ActivityJourneys } from "../activity/journeys"
 import type { ActivitySnapshot, ActivityEvent } from "../activity/types"
 import type { Tuning } from "./debug"
 
-export type Status = { phase:Phase; progress:number; discovered:boolean; backend:string; error?:string; greeting?:Greeting; hovered?:boolean }
+export type Status = { phase:Phase; progress:number; discovered:boolean; visitorId?:string; backend:string; error?:string; greeting?:Greeting; hovered?:boolean }
 export type Notice = Inscription & StatusMessage
 export type MapControls = { setInscription:(value:Inscription|null)=>void; setNotice:(value:Notice|null)=>void; close:()=>void; open:()=>void; greet:(greeting:Greeting)=>void; discover:()=>void; zoom:(delta:number)=>void; resetView:()=>void; setFocusedTrigger:(target:FocusedTrigger|null)=>void; setActivity:(snapshot:ActivitySnapshot)=>void; dispose:()=>void }
 type Reveal = {ink:Ink; timing:RevealTiming}
@@ -43,10 +44,11 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
   let state:MapState={phase:"loading",enteredAt:0}
   let mapHovered=false
   let time=0, discovered=false, discoveredAt=0, progress=0
-  const emit=()=>{if(!signal.aborted) onStatus({phase:state.phase,progress,discovered,backend,hovered:mapHovered,greeting:state.phase!=="error"?state.greeting:undefined,error:state.phase==="error"?state.message:undefined})}
+  const emit=()=>{if(!signal.aborted) onStatus({phase:state.phase,progress,discovered,visitorId:discovered?visitorId:undefined,backend,hovered:mapHovered,greeting:state.phase!=="error"?state.greeting:undefined,error:state.phase==="error"?state.message:undefined})}
   const syncPhase=edge((s:MapState)=>s.phase,()=>emit())
+  let visitorId:string|undefined
   let backend=""
-  const tuning:Tuning={manual:false,fold:1,reveal:0,noise:1,light:1.5}
+  const tuning:Tuning={manual:false,showPaths:false,fold:1,reveal:0,noise:1,light:1.5}
   try {
     const renderer=new WebGPURenderer({antialias:true,alpha:true,forceWebGL:new URLSearchParams(location.search).get("renderer")==="webgl"})
     disposer.add(()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove()})
@@ -151,6 +153,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     cached.position.z=-.02;mapScene.add(cached);cached.visible=false
 
     const journeys=new ActivityJourneys()
+    const pathDebug=new URLSearchParams(location.search).get("debug")==="true"?createPathDebug(disposer):undefined
+    if(pathDebug)mapScene.add(pathDebug.group)
+    let reservedVisitorIndex:number|undefined
     const motionPixels=readMotionPixels(getTexture("artwork/living-banner/motion_weights.png"))
     const actors=journeys.actors.map((simulation,index)=> {
       const title=addText({text:simulation.person.shortName,center:simulation.point,size:12},mapScene,true,true)
@@ -426,7 +431,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     progress=1
     state=transition(state,"ready",time);syncPhase(state)
     let staticCached=false,staticDirty=true
-    const staticObjects=mapScene.children.filter(obj=>obj!==cached && obj!==accents && obj!==inscription.mesh && obj!==notice.mesh && !actors.some(a=>obj===a.title.handle.mesh||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
+    const staticObjects=mapScene.children.filter(obj=>obj!==pathDebug?.group && obj!==cached && obj!==accents && obj!==inscription.mesh && obj!==notice.mesh && !actors.some(a=>obj===a.title.handle.mesh||obj===a.halo||obj===a.banner||a.footprints.some(f=>obj===f.mesh)))
     const setStatic=(visible:boolean)=>staticObjects.forEach(obj=>{obj.visible=visible})
     const snapshot=()=> {
       for(const obj of staticObjects)staticScene.add(obj)
@@ -435,6 +440,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       setStatic(false);cached.visible=true;staticCached=true;staticDirty=false
     }
     const reset=()=> {
+      journeys.resetPassage();visitorId=undefined
       discovered=false;staticCached=false;staticDirty=true;cached.visible=false;setStatic(true)
       zoom=1;panX=panY=0
       passage.ink.progress.value=0;secret.ink.progress.value=0;note.ink.progress.value=0
@@ -453,6 +459,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const discover=()=> {
       if(state.phase!=="exploring"||discovered)return
       cast()
+      const hiddenIds=actors.filter((_,index)=>presentation.actors[index].phase==="hidden").map(actor=>actor.simulation.person.id)
+      const visitor=journeys.revealPassage(hiddenIds)
+      if(visitor){reservedVisitorIndex=journeys.actors.indexOf(visitor);visitorId=visitor.person.id}
       discovered=true;discoveredAt=time;staticCached=false;cached.visible=false;setStatic(true);staticDirty=true;emit()
     }
     const zoomBy=(delta:number)=> {if(state.phase!=="exploring")return;cast();zoom=clamp(zoom+delta,1,2);if(zoom===1)panX=panY=0;updateCamera()}
@@ -484,7 +493,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       // Match banner draw order, with passage/close hotspots always taking priority.
       return [...actors].reverse().find(actor=> {
         const sim=actor.simulation
-        return sim.eligible&&presentation.actors[actors.indexOf(actor)].phase==="shown"&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
+        return (sim.eligible||sim===journeys.visitor)&&presentation.actors[actors.indexOf(actor)].phase==="shown"&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
       })?.simulation.person.id
     }
     const pointers=new Map<number,{x:number;y:number}>()
@@ -614,7 +623,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!tuning.manual)journeys.tick(dt,activityActive)
       if(!tuning.manual)for(const arrival of journeys.arrivals)onArrival?.(arrival.personId,arrival.event)
       const showPeople=(state.phase==="revealing"||state.phase==="exploring")
-      presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})))
+      pathDebug?.update(tuning.showPaths&&(state.phase==="revealing"||state.phase==="exploring"),discovered)
+      presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})),reservedVisitorIndex)
+      if(!journeys.visitor&&reservedVisitorIndex!==undefined&&presentation.actors[reservedVisitorIndex].phase==="hidden")reservedVisitorIndex=undefined
       const hoveredPerson=!suspended&&!pointers.size&&latest?actorAt(latest.x,latest.y):undefined
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index]
@@ -635,7 +646,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.title.ink.opacity.value=1
         actor.bannerInk.progress.value=appearance.progress
         actor.bannerInk.opacity.value=1
-        if(activityActive&&appearance.phase!=="exiting"&&visible&&(simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
+        if(activityActive&&appearance.phase!=="exiting"&&visible&&(simulation.passage&&simulation.delay===0||simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
           actor.lastStep+=dt
           if(actor.lastStep>=.42){
             const f=actor.footprints[actor.step%actor.footprints.length]
