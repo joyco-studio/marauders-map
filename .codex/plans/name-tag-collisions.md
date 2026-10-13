@@ -61,7 +61,9 @@ Screenshot refinement validation passed: all 14 focused tests, typechecking,
 linting, and diff whitespace checks. The new examples are geometric regression
 fixtures estimated from the supplied images, not a live replay of those scenes.
 
-Size refinement: reduce Bruno Simon and Don McCurdy's tags to 75% of their
-previous dimensions. Scale parchment and lettering together; hover and collision
-bounds continue to derive from the resulting banner dimensions. This cosmetic
-adjustment uses focused inspection, typechecking, and linting rather than new tests.
+Size refinement: replace per-person scaling with a global `bannerGrowth` of 0.55.
+Preserve the 1.25-unit minimum and apply only 55% of the natural width above it,
+so mid-length and long names both grow more slowly. Scale lettering by the ratio
+of final to natural banner width to preserve fit; hover and collision bounds
+continue to derive from the resulting dimensions. This cosmetic adjustment uses
+focused inspection, typechecking, and linting rather than new tests.
