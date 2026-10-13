@@ -175,9 +175,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const safeWidth=safe[2]-safe[0],safeHeight=safe[3]-safe[1]
       // Preserve artwork proportions; fit the name inside its protected rectangle.
       const fitText=.8
-      const bannerWidth=Math.max(1.25,(title.width*fitText+.10)/safeWidth,(title.height*fitText+.035)/(safeHeight*.75))
+      const tagScale=(simulation.person.id==='brunosimon'||simulation.person.id==='donmccurdy') ? .75 : 1
+      const bannerWidth=Math.max(1.25,(title.width*fitText+.10)/safeWidth,(title.height*fitText+.035)/(safeHeight*.75))*tagScale
       const bannerHeight=bannerWidth*.75
-      title.handle.mesh.scale.setScalar(fitText)
+      title.handle.mesh.scale.setScalar(fitText*tagScale)
       const living=createLivingBanner(motionPixels,bannerWidth,index*1.71)
       disposer.add(living.geometry)
       const bannerInk=createInk(bannerWidth,bannerHeight,index+90,noise)

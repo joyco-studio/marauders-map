@@ -60,3 +60,8 @@ remain opaque while Akella fades, and the rear tag fades behind sunag.
 Screenshot refinement validation passed: all 14 focused tests, typechecking,
 linting, and diff whitespace checks. The new examples are geometric regression
 fixtures estimated from the supplied images, not a live replay of those scenes.
+
+Size refinement: reduce Bruno Simon and Don McCurdy's tags to 75% of their
+previous dimensions. Scale parchment and lettering together; hover and collision
+bounds continue to derive from the resulting banner dimensions. This cosmetic
+adjustment uses focused inspection, typechecking, and linting rather than new tests.
