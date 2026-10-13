@@ -11,7 +11,7 @@ export class ActorPresentation {
   constructor(points:readonly Point[],private maximum:number) {
     this.actors=points.map(point=>({phase:'hidden',elapsed:0,progress:0,point}))
   }
-  update(dt:number,targets:readonly PresentationTarget[]) {
+  update(dt:number,targets:readonly PresentationTarget[],reservedIndex?:number) {
     for(const [index,actor] of this.actors.entries()) {
       const target=targets[index]
       // Walking is continuous; any unexpected relocation must happen between appearances.
@@ -30,11 +30,11 @@ export class ActorPresentation {
         if(actor.elapsed===EXIT_SECONDS){actor.phase='hidden';actor.elapsed=0}
       }
     }
-    let occupied=this.actors.filter(actor=>actor.phase!=='hidden').length
+    let occupied=this.actors.filter((actor,index)=>actor.phase!=='hidden'&&index!==reservedIndex).length
     for(const [index,actor] of this.actors.entries()) {
-      if(occupied>=this.maximum)break
+      if(index!==reservedIndex&&occupied>=this.maximum)continue
       if(actor.phase==='hidden'&&targets[index].visible){
-        actor.point=targets[index].point;actor.phase='entering';actor.elapsed=0;actor.progress=0;occupied++
+        actor.point=targets[index].point;actor.phase='entering';actor.elapsed=0;actor.progress=0;if(index!==reservedIndex)occupied++
       }
     }
   }
