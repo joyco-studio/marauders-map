@@ -23,6 +23,7 @@ import { createWand } from "./wand"
 import { StatusQueue, type StatusMessage } from "./status-queue"
 import { createInscription, arrivalMargin, type Inscription } from "./inscription"
 import { createLivingBanner, readMotionPixels, bannerMetadata } from "./living-banner"
+import { easeNameTagOpacity, nameTagAt, nameTagOpacities, type NameTag } from "./name-tags"
 import { ActorPresentation } from "../activity/presentation"
 import { MAX_RENDERED_PEOPLE } from "../activity/roster"
 import { ActivityJourneys } from "../activity/journeys"
@@ -88,6 +89,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
     const mapCamera=new OrthographicCamera(-7,7,3.5,-3.5,.1,10);mapCamera.position.z=5
     const coverCamera=new OrthographicCamera(-1.4,1.4,3.5,-3.5,.1,10);coverCamera.position.z=5
     const mobile=matchMedia("(max-width: 700px)").matches
+    const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)")
     const resolution=mobile?2048:4096
     const target=disposer.add(new RenderTarget(resolution,resolution/2,{depthBuffer:false}))
     const staticTarget=disposer.add(new RenderTarget(resolution,resolution/2,{depthBuffer:false}))
@@ -166,7 +168,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       const haloMaterial=disposer.add(new MeshBasicNodeMaterial({transparent:true,depthWrite:false}))
       const glyphDistance=msdfDistance({msdf:texture(getTexture("fonts/beth-ellen-400.png"))})
       haloMaterial.colorNode=mix(color("#c94712"),color("#ff9a42"),title.heat)
-      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(title.heat.mul(.7).add(.3)).mul(.28).mul(title.ink.progress)
+      haloMaterial.opacityNode=smoothstep(.12,.52,glyphDistance).mul(title.glow).mul(title.heat.mul(.7).add(.3)).mul(.28).mul(title.ink.progress).mul(title.ink.opacity)
       const halo=new Mesh(title.handle.mesh.geometry,haloMaterial)
       halo.renderOrder=2.5+index*2;mapScene.add(halo)
       const safe=bannerMetadata.safe_text_box
@@ -200,8 +202,10 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         drawing.ink.opacity.value=0
         return {...drawing,born:-100}
       })
-      return {simulation,title,halo,banner,bannerInk,footprints,step:0,lastStep:0,bannerWidth,bannerHeight,textOffset,updateBanner:living.update}
+      const tag:NameTag={id:simulation.person.id,x:0,y:0,width:bannerWidth,height:bannerHeight,nameX:0,nameY:0,priority:index,visible:false,interactive:false}
+      return {simulation,title,halo,banner,bannerInk,footprints,step:0,lastStep:0,textOffset,tag,updateBanner:living.update}
     })
+    const nameTags=actors.map(actor=>actor.tag)
     const presentation=new ActorPresentation(journeys.actors.map(actor=>actor.point),MAX_RENDERED_PEOPLE)
     // Cover lives on the center panel and uses the same real MSDF lettering.
     const coverContent = {
@@ -488,7 +492,8 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       return {x:(panel.index+intersection.uv.x)*280,y:(1-intersection.uv.y)*700,point:intersection.point}
     }
     let latest:{x:number;y:number}|null=null,hover:Trigger|null=null,focused:FocusedTrigger|null=null,suspended=false
-    const clearHover=()=>{coverOverlayDirty=true;hover=null;for(const f of feedback){f.value=0;f.opacity.value=0}}
+    let hoveredPerson:string|undefined,pressedPerson:string|undefined
+    const clearHover=()=>{coverOverlayDirty=true;hover=null;hoveredPerson=undefined;for(const f of feedback){f.value=0;f.opacity.value=0}}
     const refreshHover=(point=latest?hit(latest.x,latest.y):null)=> {
       inscription.setHovered(!suspended&&!pointers.size?point:null)
       if(focused&&!eligibleTrigger(focused,state,discovered))focused=null
@@ -497,19 +502,18 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       hover=!suspended&&!pointers.size&&latest?resolveTrigger(point,state,discovered):null
 
     }
-    const actorAt=(clientX:number,clientY:number)=> {
+    const actorAt=(clientX:number,clientY:number,preferred=hoveredPerson)=> {
       if(state.phase!=="exploring")return
       const p=hit(clientX,clientY);if(!p)return
-      // Match banner draw order, with passage/close hotspots always taking priority.
-      return [...actors].reverse().find(actor=> {
-        const sim=actor.simulation
-        return (sim.eligible||sim===journeys.visitor)&&presentation.actors[actors.indexOf(actor)].phase==="shown"&&Math.abs(p.x-(actor.banner.position.x*100+700))<actor.bannerWidth*50&&Math.abs(p.y-(350-actor.banner.position.y*100))<Math.max(18,actor.bannerHeight*50)
-      })?.simulation.person.id
+      // Controls retain priority even when a tag is temporarily promoted.
+      if(resolveTrigger(p,state,discovered))return
+      return nameTagAt(nameTags,{x:(p.x-700)/100,y:(350-p.y)/100},preferred)
     }
     const pointers=new Map<number,{x:number;y:number}>()
     let dragDistance=0,startX=0,startY=0,pinch=0
     disposer.listen<PointerEvent>(canvas,"pointerdown",e=> {
       if(state.phase!=="exploring"&&state.phase!=="folded")return
+      pressedPerson=actorAt(e.clientX,e.clientY)
       clearHover();latest=e.pointerType!=="touch"?{x:e.clientX,y:e.clientY}:null;suspended=false
       const touch=hit(e.clientX,e.clientY);if(touch){wand.aim(touch.point);cast()}
       if(touch&&state.phase==="folded"&&state.greeting){change("open");return}
@@ -541,6 +545,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       if(!pointers.has(e.pointerId))return
       pointers.delete(e.pointerId)
       if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)
+      const preferred=pressedPerson;pressedPerson=undefined
       const point=hit(e.clientX,e.clientY)
       if(dragDistance<=6&&!pointers.size){
         if(inscription.hit(point,true)){refreshHover(point);return}
@@ -548,15 +553,15 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         if(spot==="passage")discover()
         else if(spot==="open-left"||spot==="open-right")change("open")
         else if(spot)change(spot)
-        else {const personId=actorAt(e.clientX,e.clientY);if(personId){canvas.focus();onSelect?.(personId)}}
+        else {const personId=actorAt(e.clientX,e.clientY,preferred);if(personId){canvas.focus();onSelect?.(personId)}}
       }
       const rect=canvas.getBoundingClientRect()
       latest=e.pointerType!=="touch"&&e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom?{x:e.clientX,y:e.clientY}:null
       refreshHover(point)
     })
-    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);latest=null;wandHover=false;clearHover()})
+    disposer.listen<PointerEvent>(canvas,"pointercancel",e=>{pointers.delete(e.pointerId);pressedPerson=undefined;latest=null;wandHover=false;clearHover()})
     disposer.listen<PointerEvent>(document,"pointerout",e=>{if(!e.relatedTarget){latest=null;wandHover=false;clearHover()}})
-    const suspend=()=>{suspended=true;focused=null;latest=null;pointers.clear();wandHover=false;clearHover()}
+    const suspend=()=>{suspended=true;focused=null;latest=null;pressedPerson=undefined;pointers.clear();wandHover=false;clearHover()}
     disposer.listen(window,"blur",suspend)
     disposer.listen(document,"visibilitychange",()=>{if(document.hidden)suspend()})
     disposer.add(suspend)
@@ -645,7 +650,7 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
       pathDebug?.update(tuning.showPaths&&showPeople,discovered)
       presentation.update(dt,actors.map(actor=>({visible:showPeople&&actor.simulation.rendered,point:actor.simulation.point})),reservedVisitorIndex)
       if(!journeys.visitor&&reservedVisitorIndex!==undefined&&presentation.actors[reservedVisitorIndex].phase==="hidden")reservedVisitorIndex=undefined
-      const hoveredPerson=!suspended&&!pointers.size&&latest?actorAt(latest.x,latest.y):undefined
+      // Resolve against this frame's presented positions, including entering/exiting tags.
       for(const [index,actor] of actors.entries()){
         const simulation=actor.simulation,appearance=presentation.actors[index]
         const [x,y]=sheetPoint(appearance.point)
@@ -655,6 +660,17 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         const labelX=x,labelY=y+.5
         actor.title.handle.mesh.position.set(labelX,labelY,.04)
         actor.banner.position.set(labelX-actor.textOffset.x,labelY-actor.textOffset.y,.035)
+        Object.assign(actor.tag,{x:actor.banner.position.x,y:actor.banner.position.y,nameX:labelX,nameY:labelY,visible,
+          interactive:(simulation.eligible||simulation===journeys.visitor)&&appearance.phase==="shown"})
+      }
+      hoveredPerson=!suspended&&!pointers.size&&latest?actorAt(latest.x,latest.y):undefined
+      const opacities=nameTagOpacities(nameTags,hoveredPerson)
+      for(const [index,actor] of actors.entries()){
+        const simulation=actor.simulation,appearance=presentation.actors[index],visible=actor.tag.visible
+        const [x,y]=sheetPoint(appearance.point)
+        const order=2+(hoveredPerson===simulation.person.id?actors.length:index)*2
+        actor.banner.renderOrder=order;actor.halo.renderOrder=order+.5;actor.title.handle.mesh.renderOrder=order+1
+        const opacity=visible?easeNameTagOpacity(actor.title.ink.opacity.value,opacities[index],dt,reducedMotion.matches):1
         if(visible)actor.updateBanner(time,appearance.progress)
         const glowTarget=visible&&hoveredPerson===simulation.person.id ? 1:0
         actor.title.glow.value+=(glowTarget-actor.title.glow.value)*(1-Math.exp(-dt*4.5))
@@ -662,9 +678,9 @@ export async function startMap(container:HTMLElement,onStatus:(status:Status)=>v
         actor.halo.position.copy(actor.title.handle.mesh.position)
         actor.halo.scale.copy(actor.title.handle.mesh.scale)
         actor.title.ink.progress.value=appearance.progress
-        actor.title.ink.opacity.value=1
+        actor.title.ink.opacity.value=opacity
         actor.bannerInk.progress.value=appearance.progress
-        actor.bannerInk.opacity.value=1
+        actor.bannerInk.opacity.value=opacity
         if(activityActive&&appearance.phase!=="exiting"&&visible&&(simulation.passage&&simulation.delay===0||simulation.wander||simulation.journey&&simulation.journey.phase!=="arrival")){
           actor.lastStep+=dt
           if(actor.lastStep>=.42){
