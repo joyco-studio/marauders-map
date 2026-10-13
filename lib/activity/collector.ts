@@ -53,7 +53,7 @@ export function createCollector(fetcher:Fetcher, token:()=>string|undefined, clo
   async function refresh():Promise<ActivitySnapshot> {
     const sources:SourceStatus[]=[], events:ActivityEvent[]=[]
     // Sequential GitHub requests honor a token-wide rate/credential failure immediately.
-    for(const person of roster) for(const source of (person.youtube ? ['github','youtube'] : ['github']) as Provider[]) {
+    for(const person of roster) for(const source of [...(person.github?['github' as const]:[]),...(person.youtube?['youtube' as const]:[])]) {
       const key=`${person.id}:${source}`, now=clock()
       let entry=cache.get(key)
       if(!entry || now>=entry.nextAttempt) {
