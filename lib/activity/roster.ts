@@ -9,7 +9,7 @@ export const roster: readonly Person[] = [
   { id:'donmccurdy', name:'Don McCurdy', shortName:'Don McCurdy', github:'donmccurdy', home:'library', group:'ecosystem' },
   { id:'drcmda', name:'drcmda', shortName:'drcmda', github:'drcmda', home:'stairs', group:'ecosystem' },
   { id:'akella', name:'Yuri Artiukh / Akella', shortName:'Akella', github:'akella', youtube:'UCDo7RTzizoOdPjY8A-xDR7g', home:'classrooms', group:'ecosystem' },
-  { id:'andersonmancini', name:'Anderson Mancini', shortName:'Anderson', youtube:'UCEZqgdPDnbpX9Ihbw_k4VUA', youtubeUrl:'https://www.youtube.com/andersonmancini', x:'https://x.com/Andersonmancini', home:'classrooms', group:'ecosystem' },
+  { id:'andersonmancini', name:'Anderson Mancini', shortName:'Anderson', github:'ektogamat', youtube:'UCEZqgdPDnbpX9Ihbw_k4VUA', youtubeUrl:'https://www.youtube.com/andersonmancini', x:'https://x.com/Andersonmancini', home:'classrooms', group:'ecosystem' },
   { id:'brunosimon', name:'Bruno Simon', shortName:'Bruno Simon', github:'brunosimon', home:'courtyard', group:'ecosystem' },
   { id:'looeee', name:'Lewy Blue', shortName:'Lewy Blue', github:'looeee', home:'library', group:'ecosystem' },
   { id:'alejopequeno', name:'pek', shortName:'pek', github:'alejopequeno', home:'courtyard', group:'joyco' },

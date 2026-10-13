@@ -148,6 +148,7 @@ export function ActivityCard({activity,controls,ready}:{activity:ActivityState;c
         age(event.occurredAt,now),
       ]:['An imagined journey through the creative web.','No recent public activity.'],
       actions:[{label:'Close inscription',run:dismiss},...links,
+        ...(person.id==='andersonmancini'&&person.github?[{label:'GitHub profile',run:()=>{window.open(`https://github.com/${person.github}`,'_blank','noopener,noreferrer')}}]:[]),
         ...(person.youtubeUrl?[{label:'YouTube channel',run:()=>{window.open(person.youtubeUrl,'_blank','noopener,noreferrer')}}]:[]),
         ...(person.x?[{label:'X profile',run:()=>{window.open(person.x,'_blank','noopener,noreferrer')}}]:[]),
       ],
