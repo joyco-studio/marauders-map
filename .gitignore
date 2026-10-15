@@ -43,4 +43,7 @@ next-env.d.ts
 # Local artwork baking environment and scratch files
 .context/
 
+# Local Codex implementation plans
+/.codex/plans/
+
 __pycache__/
